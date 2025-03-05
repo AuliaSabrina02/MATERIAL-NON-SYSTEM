@@ -1,0 +1,395 @@
+﻿@using SEMB_ERP.Models
+@*@model ViewModel*@
+@using System.Globalization;
+@using Microsoft.AspNetCore.Http;
+@using SEMB_ERP.Controllers;
+@inject IHttpContextAccessor Accessor
+
+@{
+    string sesa_id = ViewBag.sesa_id;
+    string name = ViewBag.name;
+    string plant = ViewBag.plant;
+    string todayDate = DateTime.Today.ToString("yyyy-MM-dd");
+
+    List<string> supplierList = ViewBag.supplierList;
+}
+
+<style>
+
+    .table-row {
+        cursor: pointer;
+    }
+
+    .modal {
+        overflow-y: auto;
+    }
+
+    .box_form_input {
+        background-color: #fcfcfc;
+        border-radius: 5px;
+        box-shadow: 1px 2px 8px 2px rgba(152,152,152,0.7);
+    }
+
+    /* .content {
+        font-family: Verdana
+    } */
+
+</style>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row pt-3">
+            <div class="col-md-12">
+                <div class="card card-success card-outline">
+                    <div class="card-header bg-success">
+                        <h5 class="text-center"><i class="fa fa-plus"></i> Add New Request</h5>
+                        @*<div class="card-tools">
+                        <a href="~/Template/TemplateUploadPallet.xlsx" class="btn btn-danger mr-1">
+                        <i class="fa fa-download"></i> Template
+                        </a>
+                        <button class="btn btn-success mr-1" name="btn_filter" data-bs-toggle="modal" data-bs-target="#ImportDataModel"><i class="fas fa-file-import"></i> Upload Pallet List</button>
+                        </div>*@
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="offset-1 col-10 pt-2 pb-2 pl-4 pr-4 box_form_input">
+                                <div class="text-center"><label class="badge bg-warning" style="font-size:16pt;border-radius:30px;padding:10px 20px"><i class="fas fa-upload"></i> Upload Request</label></div>
+                                <form id="form_upload_order">
+                                    <div class="row">
+                                        <div class="offset-3 col-6 mb-4" style="border-top: 2px #e3e3e3 solid"></div>
+                                        <div class="col-6 pl-4 pr-4">
+                                            <div class="form-group">
+                                                <label>Upload File Request (Excel File)<span class="text-danger">*</span></label>
+                                                @* <input class="form-control" type="file" name="file_upload" required /> *@
+                                                <div class="input-group">
+                                                    <input type="file" class="form-control" id="file_upload" name="file_upload" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" aria-label="Upload" required>
+                                                    <a href="~/Template/Template_Upload_Material.xlsx" class="btn btn-primary">
+                                                        <i class="fas fa-file-download"></i> Download Template
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 pl-4 pr-4">
+
+                                            <div class="form-group">
+                                                <label>Supporting Documents (Excel or PDF)</label>
+                                                <input type="file" class="form-control" name="file_support" >
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group text-center">
+                                        <button type="submit" class="btn btn-success mt-2" name="btn_confirm_upload">Submit Order <i class="fa fa-arrow-right"></i></button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="offset-1 col-10 text-center p-2">
+                                <h4 style="color:grey">------------- OR -------------</h4>
+                            </div>
+
+                            <div class="offset-1 col-10 pt-2 pb-2 pl-4 pr-4 box_form_input">
+                                <div class="text-center"><label class="badge bg-warning" style="font-size:16pt;border-radius:30px;padding:10px 20px"><i class="fas fa-file-alt"></i> Input Request</label></div>
+                                <form id="form_add_order">
+                                    <div class="row">
+                                        <div class="offset-3 col-6 mb-4" style="border-top: 2px #e3e3e3 solid"></div>
+                                        <div class="col-6 pl-4 pr-4">
+                                            <div class="form-group">
+                                                <label>Material Type<span class="text-danger">*</span></label>
+                                                <select class="form-control" name="material_type" required>
+                                                    <option value="">--SELECT--</option>
+                                                    <option value="RW">Raw Material (RW)</option>
+                                                    <option value="FG">Finish Goods (FG)</option>
+                                                    <option value="WIP">Work In Progress (WIP)</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Part No<span class="text-danger">*</span></label>
+                                                <input class="form-control" type="text" name="partno" placeholder="Part Number" autocomplete="off" required />
+                                            </div>
+                                            <div class="form-group">
+                                                <label>PO No<span class="text-danger">*</span></label>
+                                                <input class="form-control" type="text" name="po_no" placeholder="PO Number" autocomplete="off" required />
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Qty<span class="text-danger">*</span></label>
+                                                <input class="form-control" type="number" name="qty" placeholder="Qty" autocomplete="off" required />
+                                            </div>
+                                            <div class="form-group">
+                                                <label>UOM<span class="text-danger">*</span></label>
+                                                <input class="form-control" type="text" name="uom" placeholder="PC, PALLET, ..." autocomplete="off" required />
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Revision<span class="text-danger">*</span></label>
+                                                <input class="form-control" type="text" name="revision" placeholder="Revision" autocomplete="off" required />
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Project Name<span class="text-danger">*</span></label>
+                                                <input class="form-control" type="text" name="project_name" placeholder="Project Name" autocomplete="off" required />
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Storage Requirement<span class="text-danger">*</span></label>
+                                                <select class="form-control" name="storage_requirement" required>
+                                                    <option value="">--SELECT--</option>
+                                                    <option value="AC">AC</option>
+                                                    <option value="Non AC">Non AC</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 pl-4 pr-4">
+                                            <div class="form-group">
+                                                <label>Supplier Name<span class="text-danger">*</span></label>
+                                                <input class="form-control" type="text" name="supplier_name" placeholder="Supplier" autocomplete="off" required />
+                                            </div>
+                                            <div class="form-group">
+                                                <label>PIC<span class="text-danger">*</span></label>
+                                                <input class="form-control" type="hidden" name="pic" value="@sesa_id" />
+                                                <input class="form-control" type="text" name="pic_display" value="@sesa_id - @name" autocomplete="off" required readonly />
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Order Type<span class="text-danger">*</span></label>
+                                                <select class="form-control" name="order_type" required>
+                                                    <option value="">--SELECT--</option>
+                                                    <option value="Apollo">Apollo</option>
+                                                    <option value="Coupa">Coupa</option>
+                                                    <option value="FOC">FOC</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Price<span class="text-danger">*</span></label>
+                                                <input class="form-control" type="number" name="unit_price" placeholder="Price" autocomplete="off" required />
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-4">
+                                                    <div class="form-group">
+                                                        <label>Length (mm)</label>
+                                                        <input class="form-control" type="number" name="length_mm" placeholder="Length (mm)" autocomplete="off" />
+                                                    </div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="form-group">
+                                                        <label>Width (mm)</label>
+                                                        <input class="form-control" type="number" name="width_mm" placeholder="Width (mm)" autocomplete="off" />
+                                                    </div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="form-group">
+                                                        <label>Height (mm)</label>
+                                                        <input class="form-control" type="number" name="height_mm" placeholder="Height (mm)" autocomplete="off" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Remark</label>
+                                                <textarea class="form-control" name="remark" rows="3"></textarea>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Supporting Documents (Excel or PDF)</label>
+                                                <input type="file" class="form-control" name="file_support">
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="form-group text-center">
+                                                <button type="submit" class="btn btn-success mt-2" name="btn_confirm">Submit Order <i class="fa fa-arrow-right"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal_temp_order" class="modal fade">
+    <div class="modal-dialog" role="document" style="min-width:80%">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-file-import"></i> Review Order</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row" id="body_temp_order"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" data-bs-dismiss="modal"><i class="fas fa-times"></i> Cancel</button>
+                <button class="btn btn-success" name="btn_confirm_order"><i class="fas fa-save"></i> Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        var Table;
+        var loading = "<i class='fa fa-4x fa-spinner fa-spin'></i>";
+
+        $(document).ready(function () {
+
+            $("form#form_upload_order").submit(function (e) {
+                e.preventDefault();
+                $("div#body_temp_order").html("<div class='text-center'>" + loading + "</div>");
+                $("div#modal_temp_order").modal("show");
+                let formData = new FormData(this);
+                $.ajax({
+                    url: "@Url.Action("UploadOrder")",
+                    type: 'POST',
+                    data: formData,
+                    cache: false,
+                    contentType: false,
+                    processData: false
+                }).done(function (res) {
+                    $("div#body_temp_order").html(res);
+                    // Swal.fire({
+                    //     icon: 'success',
+                    //     title: 'Done!!',
+                    //     html: res,
+                    //     width: 800
+                    // }).then(function () {
+                    //     location.reload();
+                    // })
+                }).fail(function (err) {
+                    swal.fire("Error", "Upload Failed -> " + err, "error");
+                })
+                // Swal.fire({
+                //     title: 'Confirm',
+                //     text: "Are you sure ?",
+                //     icon: 'warning',
+                //     showCancelButton: true,
+                //     confirmButtonColor: '#28a745',
+                //     cancelButtonColor: '#dc3545',
+                //     confirmButtonText: 'Yes!',
+                //     cancelButtonText: 'No!',
+                //     showLoaderOnConfirm: true,
+                //     preConfirm: function () {
+                //         return new Promise(function (resolve, reject) {
+                //             $.ajax({
+                //                 url: "@Url.Action("UploadOrder")",
+                //                 type: 'POST',
+                //                 data: formData,
+                //                 cache: false,
+                //                 contentType: false,
+                //                 processData: false
+                //             }).done(function (res) {
+                //                 $("div#body_temp_order").html(res);
+                //                 // Swal.fire({
+                //                 //     icon: 'success',
+                //                 //     title: 'Done!!',
+                //                 //     html: res,
+                //                 //     width: 800
+                //                 // }).then(function () {
+                //                 //     location.reload();
+                //                 // })
+                //             }).fail(function (err) {
+                //                 swal.fire("Error", "Upload Failed -> " + err, "error");
+                //             })
+                //         })
+                //     },
+                //     allowOutsideClick: () => !Swal.isLoading()
+                // })
+            })
+
+            $("button[name=btn_confirm_order]").click(function(){
+                let total_error = $("input[name=total_error]").val();
+                let total_upload = $("input[name=total_upload]").val();
+                if (total_error > 0) {
+                    swal.fire("Error!", "Cannot submit with error data!!", "error");
+                }
+                else if (total_upload == 0) {
+                    swal.fire("Error!", "No data!!", "error");
+                }
+                else {
+                    let id_upload = $("input[name=id_upload]").val();
+                    let file_support = $("form#form_upload_order").find("input[name=file_support]")[0].files[0];
+
+                    // var fileInput = $('#fileInput')[0];
+                    // var file = fileInput.files[0];
+                    let formData = new FormData();
+                    formData.append('id_upload', id_upload);
+                    formData.append('file_support', file_support);
+
+                    Swal.fire({
+                        title: 'Confirmation!!',
+                        text: "Are you sure ?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#28a745',
+                        cancelButtonColor: '#dc3545',
+                        confirmButtonText: 'Yes!',
+                        cancelButtonText: 'No!',
+                        showLoaderOnConfirm: true,
+                        preConfirm: function () {
+                            return new Promise(function (resolve, reject) {
+                                $.ajax({
+                                    url: "@Url.Action("SubmitUploadOrder")",
+                                    type: 'POST',
+                                    data: formData,
+                                    processData: false, // Important: prevent jQuery from processing the data
+                                    contentType: false// Important: prevent jQuery from setting contentType
+                                }).done(function (msg) {
+                                    let arr = msg.split(";");
+                                    if (arr[0] == "success") {
+                                        swal.fire("Success!", arr[1], "success").then(function () {
+                                            location.reload();
+                                        })
+                                    }
+                                    else {
+                                        swal.fire("Failed!", msg, "error");
+                                    }
+                                })
+                            })
+                        },
+                        allowOutsideClick: () => !Swal.isLoading()
+                    })
+                }
+            })
+
+            $("form#form_add_order").submit(function (e) {
+                e.preventDefault();
+                let formData = new FormData(this);
+                // console.log(formData);
+                Swal.fire({
+                    title: 'Confirmation!!',
+                    text: "Are you sure ?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#dc3545',
+                    confirmButtonText: 'Yes!',
+                    cancelButtonText: 'No!',
+                    showLoaderOnConfirm: true,
+                    preConfirm: function () {
+                        return new Promise(function (resolve, reject) {
+                            $.ajax({
+                                url: "@Url.Action("SubmitOrder")",
+                                type: 'POST',
+                                data: formData,
+                                cache: false,
+                                contentType: false,
+                                processData: false
+                            }).done(function (msg) {
+                                let arr = msg.split(";");
+                                if (arr[0] == "success") {
+                                    swal.fire("Success!", arr[1], "success").then(function () {
+                                        location.reload();
+                                    })
+                                }
+                                else {
+                                    swal.fire("Failed!", msg, "error");
+                                }
+                            })
+                        })
+                    },
+                    allowOutsideClick: () => !Swal.isLoading()
+                })
+            })
+        })
+
+    </script>
+}

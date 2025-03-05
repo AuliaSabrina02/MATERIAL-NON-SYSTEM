@@ -1,0 +1,96 @@
+﻿@model List<OrderListModel>
+@{
+    int id_gr = ViewBag.id_gr;
+    List<string> listPrinter = ViewBag.listPrinter;
+    int no = 0;
+}
+
+<div class="modal-body">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered" id="table_gr" style="font-size:11pt;white-space:nowrap">
+                    <thead class="bg-info text-center">
+                        <tr>
+                            <th class="align-middle">No</th>
+                            <th class="align-middle">Material Type</th>
+                            <th class="align-middle">Part No</th>
+                            <th class="align-middle">PO No</th>
+                            <th class="align-middle">Qty</th>
+                            <th class="align-middle">UOM</th>
+                            <th class="align-middle">Revision</th>
+                            <th class="align-middle">Supplier Name</th>
+                            <th class="align-middle">SPQ</th>
+                            <th class="align-middle">Total Box</th>
+                            <th class="align-middle">GR No</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            no++;
+                            <tr class="text-center">
+                                <td>@no</td>
+                                <td>@item.material_type</td>
+                                <td>@item.partno</td>
+                                <td>@item.po_no</td>
+                                <td>@item.qty</td>
+                                <td>@item.uom</td>
+                                <td>@item.revision</td>
+                                <td>@item.supplier_name</td>
+                                <td>@item.spq</td>
+                                <td>@item.total_box</td>
+                                <td class="font-weight-bold text-success">
+                                    @item.gr_no
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="offset-3 col-lg-6 text-center">
+            <div class="form-group">
+                <input type="hidden" name="id_gr" value="@id_gr" />
+                <select class="form-control" name="printer_name">
+                    <option value="">--SELECT PRINTER--</option>
+                    @foreach(var printer in listPrinter)
+                    {
+                        <option value="@printer">@printer</option>   
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <button class="btn btn-success" name="print_label"><i class="fas fa-print"></i> Print Label</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        $("button[name=print_label]").click(function(){
+            let id_gr = $("input[name=id_gr]").val();
+            let printer_name = $("input[name=printer_name]").val();
+            if(printer_name==""){
+                swal.fire("Error","Please select printer!!","error");
+            }
+            else{
+                $.ajax({
+                    type: "POST",
+                    url: "https://eajdigitization.se.com/wh_trans/SEMBERP_PrintLabel_Webservices.aspx",
+                    data: {
+                        id_gr: id_gr,
+                        printer_name: printer_name
+                    }
+                }).done(function(res){
+                    let arr = res.split(";");
+                    if(res=="OK"){
+                        swal.fire("OK","Print Succesfully!","success");
+                    }
+                }).fail(function(err){
+                    swal.fire("Error",err,"error");
+                })
+            }
+        })
+    })
+</script>

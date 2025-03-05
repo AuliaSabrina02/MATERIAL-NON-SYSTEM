@@ -1,0 +1,331 @@
+﻿@using SEMB_ERP.Models
+@*@model ViewModel*@
+@using System.Globalization;
+@using Microsoft.AspNetCore.Http;
+@using SEMB_ERP.Controllers;
+@inject IHttpContextAccessor Accessor
+
+@{
+    string sesa_id = ViewBag.sesa_id;
+    string name = ViewBag.name;
+    string plant = ViewBag.plant;
+    string todayDate = DateTime.Today.ToString("yyyy-MM-dd");
+
+}
+
+<style>
+
+    .table-row {
+        cursor: pointer;
+    }
+
+    .modal {
+        overflow-y: auto;
+    }
+
+    .box_form_input {
+        background-color: #fcfcfc;
+        border-radius: 5px;
+        box-shadow: 1px 2px 8px 2px rgba(152,152,152,0.7);
+    }
+
+    /* .content {
+        font-family: Verdana
+    } */
+
+</style>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row pt-3">
+            <div class="col-md-12">
+                <div class="card card-success card-outline">
+                    <div class="card-header bg-success">
+                        <h5 class="text-center"><i class="fas fa-exclamation"></i> Non Conformity</h5>
+                        @*<div class="card-tools">
+                        <a href="~/Template/TemplateUploadPallet.xlsx" class="btn btn-danger mr-1">
+                        <i class="fa fa-download"></i> Template
+                        </a>
+                        <button class="btn btn-success mr-1" name="btn_filter" data-bs-toggle="modal" data-bs-target="#ImportDataModel"><i class="fas fa-file-import"></i> Upload Pallet List</button>
+                        </div>*@
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="offset-1 col-10 pt-2 pb-2 pl-4 pr-4 box_form_input">
+                                <div class="text-center"><label class="badge bg-warning" style="font-size:16pt;border-radius:30px;padding:10px 20px"><i class="fas fa-plus"></i> Add Non Conformity</label></div>
+                                <form id="form_add">
+                                    <div class="row">
+                                        <div class="offset-3 col-6 mb-4" style="border-top: 2px #e3e3e3 solid"></div>
+                                        <div class="col-6 pl-4 pr-4">
+                                            <div class="form-group">
+                                                <label>Material Type<span class="text-danger">*</span></label>
+                                                <select class="form-control" name="material_type" required>
+                                                    <option value="">--SELECT--</option>
+                                                    <option value="RW">Raw Material (RW)</option>
+                                                    <option value="FG">Finish Goods (FG)</option>
+                                                    <option value="WIP">Work In Progress (WIP)</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Part No<span class="text-danger">*</span></label>
+                                                <input class="form-control" type="text" name="partno" placeholder="Part Number" autocomplete="off" required />
+                                            </div>
+                                            <div class="form-group">
+                                                <label>PO No<span class="text-danger">*</span></label>
+                                                <input class="form-control" type="text" name="po_no" placeholder="PO Number" autocomplete="off" required />
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Qty<span class="text-danger">*</span></label>
+                                                <input class="form-control" type="number" name="qty" placeholder="Qty" autocomplete="off" required />
+                                            </div>
+                                            <div class="form-group">
+                                                <label>UOM<span class="text-danger">*</span></label>
+                                                <input class="form-control" type="text" name="uom" placeholder="PC, PALLET, ..." autocomplete="off" required />
+                                            </div>
+                                        </div>
+                                        <div class="col-6 pl-4 pr-4">
+                                            <div class="form-group">
+                                                <label>Supplier Name<span class="text-danger">*</span></label>
+                                                <input class="form-control" type="text" name="supplier_name" placeholder="Supplier" autocomplete="off" required />
+                                            </div>
+                                            <div class="form-group">
+                                                <label>PIC<span class="text-danger">*</span></label>
+                                                <select class="form-control" name="pic">
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Category Issue<span class="text-danger">*</span></label>
+                                                <select class="form-control" name="category_issue" required>
+                                                    <option value="">--SELECT--</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Detail Issue</label>
+                                                <textarea class="form-control" name="detail_issue" rows="3"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="form-group text-center">
+                                                <button type="submit" class="btn btn-success mt-2" name="btn_submit">Submit <i class="fa fa-arrow-right"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal_temp_order" class="modal fade">
+    <div class="modal-dialog" role="document" style="min-width:80%">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-file-import"></i> Review Order</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row" id="body_temp_order"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" data-bs-dismiss="modal"><i class="fas fa-times"></i> Cancel</button>
+                <button class="btn btn-success" name="btn_confirm_order"><i class="fas fa-save"></i> Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        var Table;
+        var loading = "<i class='fa fa-4x fa-spinner fa-spin'></i>";
+
+        $(document).ready(function () {
+            $('select[name=pic]').select2({
+                // dropdownParent: $("#modal_gate_pass > .modal-dialog > .modal-content"),
+                placeholder: 'Select PIC',
+                width: '100%',
+                ajax: {
+                    url: "@Url.Action("GetPIC")",
+                    data: function (params) {
+                        return {
+                            search_value: params.term
+                        };
+                    },
+                    processResults: function (data) {
+                        //console.log(data);
+                        return {
+                            results: data.items
+                        }
+                    },
+                }
+            })
+
+
+            $("form#form_upload_order").submit(function (e) {
+                e.preventDefault();
+                $("div#body_temp_order").html("<div class='text-center'>" + loading + "</div>");
+                $("div#modal_temp_order").modal("show");
+                let formData = new FormData(this);
+                $.ajax({
+                    url: "@Url.Action("UploadOrder")",
+                    type: 'POST',
+                    data: formData,
+                    cache: false,
+                    contentType: false,
+                    processData: false
+                }).done(function (res) {
+                    $("div#body_temp_order").html(res);
+                    // Swal.fire({
+                    //     icon: 'success',
+                    //     title: 'Done!!',
+                    //     html: res,
+                    //     width: 800
+                    // }).then(function () {
+                    //     location.reload();
+                    // })
+                }).fail(function (err) {
+                    swal.fire("Error", "Upload Failed -> " + err, "error");
+                })
+                // Swal.fire({
+                //     title: 'Confirm',
+                //     text: "Are you sure ?",
+                //     icon: 'warning',
+                //     showCancelButton: true,
+                //     confirmButtonColor: '#28a745',
+                //     cancelButtonColor: '#dc3545',
+                //     confirmButtonText: 'Yes!',
+                //     cancelButtonText: 'No!',
+                //     showLoaderOnConfirm: true,
+                //     preConfirm: function () {
+                //         return new Promise(function (resolve, reject) {
+                //             $.ajax({
+                //                 url: "@Url.Action("UploadOrder")",
+                //                 type: 'POST',
+                //                 data: formData,
+                //                 cache: false,
+                //                 contentType: false,
+                //                 processData: false
+                //             }).done(function (res) {
+                //                 $("div#body_temp_order").html(res);
+                //                 // Swal.fire({
+                //                 //     icon: 'success',
+                //                 //     title: 'Done!!',
+                //                 //     html: res,
+                //                 //     width: 800
+                //                 // }).then(function () {
+                //                 //     location.reload();
+                //                 // })
+                //             }).fail(function (err) {
+                //                 swal.fire("Error", "Upload Failed -> " + err, "error");
+                //             })
+                //         })
+                //     },
+                //     allowOutsideClick: () => !Swal.isLoading()
+                // })
+            })
+
+            $("button[name=btn_confirm_order]").click(function(){
+                let total_error = $("input[name=total_error]").val();
+                let total_upload = $("input[name=total_upload]").val();
+                if (total_error > 0) {
+                    swal.fire("Error!", "Cannot submit with error data!!", "error");
+                }
+                else if (total_upload == 0) {
+                    swal.fire("Error!", "No data!!", "error");
+                }
+                else {
+                    let id_upload = $("input[name=id_upload]").val();
+                    let file_support = $("form#form_upload_order").find("input[name=file_support]")[0].files[0];
+
+                    // var fileInput = $('#fileInput')[0];
+                    // var file = fileInput.files[0];
+                    let formData = new FormData();
+                    formData.append('id_upload', id_upload);
+                    formData.append('file_support', file_support);
+
+                    Swal.fire({
+                        title: 'Confirmation!!',
+                        text: "Are you sure ?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#28a745',
+                        cancelButtonColor: '#dc3545',
+                        confirmButtonText: 'Yes!',
+                        cancelButtonText: 'No!',
+                        showLoaderOnConfirm: true,
+                        preConfirm: function () {
+                            return new Promise(function (resolve, reject) {
+                                $.ajax({
+                                    url: "@Url.Action("SubmitUploadOrder")",
+                                    type: 'POST',
+                                    data: formData,
+                                    processData: false, // Important: prevent jQuery from processing the data
+                                    contentType: false// Important: prevent jQuery from setting contentType
+                                }).done(function (msg) {
+                                    let arr = msg.split(";");
+                                    if (arr[0] == "success") {
+                                        swal.fire("Success!", arr[1], "success").then(function () {
+                                            location.reload();
+                                        })
+                                    }
+                                    else {
+                                        swal.fire("Failed!", msg, "error");
+                                    }
+                                })
+                            })
+                        },
+                        allowOutsideClick: () => !Swal.isLoading()
+                    })
+                }
+            })
+
+            $("form#form_add_order").submit(function (e) {
+                e.preventDefault();
+                let formData = new FormData(this);
+                // console.log(formData);
+                Swal.fire({
+                    title: 'Confirmation!!',
+                    text: "Are you sure ?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#dc3545',
+                    confirmButtonText: 'Yes!',
+                    cancelButtonText: 'No!',
+                    showLoaderOnConfirm: true,
+                    preConfirm: function () {
+                        return new Promise(function (resolve, reject) {
+                            $.ajax({
+                                url: "@Url.Action("SubmitOrder")",
+                                type: 'POST',
+                                data: formData,
+                                cache: false,
+                                contentType: false,
+                                processData: false
+                            }).done(function (msg) {
+                                let arr = msg.split(";");
+                                if (arr[0] == "success") {
+                                    swal.fire("Success!", arr[1], "success").then(function () {
+                                        location.reload();
+                                    })
+                                }
+                                else {
+                                    swal.fire("Failed!", msg, "error");
+                                }
+                            })
+                        })
+                    },
+                    allowOutsideClick: () => !Swal.isLoading()
+                })
+            })
+        })
+
+    </script>
+}

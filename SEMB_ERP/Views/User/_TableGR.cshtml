@@ -1,0 +1,134 @@
+﻿@model List<OrderListModel>
+@{
+    int no = 0;
+}
+
+<div class="modal-body">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered" id="table_gr" style="font-size:11pt;white-space:nowrap">
+                    <thead class="bg-info text-center">
+                        <tr>
+                            <th class="align-middle">No</th>
+                            <th class="align-middle">Material Type</th>
+                            <th class="align-middle">Part No</th>
+                            <th class="align-middle">PO No</th>
+                            <th class="align-middle">Qty</th>
+                            <th class="align-middle">UOM</th>
+                            <th class="align-middle">Revision</th>
+                            <th class="align-middle">Supplier Name</th>
+                            <th class="align-middle">SPQ</th>
+                            @* <th class="align-middle">Total Box</th> *@
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            no++;
+                            <tr class="text-center" id="id_order-@item.id_order" data-id="@item.id_order">
+                                <td>@no</td>
+                                <td>@item.material_type</td>
+                                <td>@item.partno</td>
+                                <td>@item.po_no</td>
+                                <td class="gr_qty">@item.qty</td>
+                                <td>@item.uom</td>
+                                <td>@item.revision</td>
+                                <td>@item.supplier_name</td>
+                                <td>
+                                    <input type="number" class="form-control qty_perbox" placeholder="Qty Perbox" onchange="update_total_box(this)" />
+                                </td>
+                                @* <td>
+                            <input type="text" class="form-control" placeholder="Total Box" id="total_box-@item.id_order" readonly />
+                            </td> *@
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-lg-12 text-center">
+            <button class="btn btn-success" name="process_gr"><i class="fas fa-arrow-right"></i> Proceed GR</button><br />
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        $("button[name=process_gr]").click(function () {
+            let id_order_spq_array = [];
+            let errorFound = false; // Flag to track if an error has been found
+            $("table#table_gr tbody tr").each(function (i) { // Iterate through each row in the table body
+                let id_order = $(this).data("id");
+                let gr_qty = $(this).find("td.gr_qty").html();
+                let spq = $(this).find("td > input.qty_perbox").val();
+                if (parseFloat(spq) < 0 || parseFloat(spq) > parseFloat(gr_qty) || spq == "") {
+                    console.log(spq);
+                    console.log(gr_qty);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid SPQ Detected (Line ' + (i + 1) + ')',
+                        text: 'Please enter a value greater than 0 and below or equal to request qty.',
+                    });
+                    errorFound = true; // Set the error flag
+                    return false;
+                }
+                id_order_spq_array.push(id_order + "," + spq);
+            });
+            if (!errorFound) { // Only run AJAX if no errors were found
+                Swal.fire({
+                    title: 'Confirmation!',
+                    text: "Are you sure ?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#dc3545',
+                    confirmButtonText: 'Yes!',
+                    cancelButtonText: 'No!',
+                    showLoaderOnConfirm: true,
+                    preConfirm: function () {
+                        return new Promise(function (resolve, reject) {
+                            let id_order_spq_string = id_order_spq_array.join(";");
+                            $.ajax({
+                                type: "POST",
+                                url: "@Url.Action("SubmitGR")",
+                                data: {
+                                    id_order_spq_string: id_order_spq_string
+                                }
+                            }).done(function (res) {
+                                let arr = res.split(";");
+                                if (arr[0] == "OK") {
+                                    swal.fire("Success", "Success GR!", "success").then(function () {
+                                        $("#table_order").DataTable().ajax.reload(null, false);
+                                        $("div#modal_gr").modal("hide");
+
+                                        $("div#body_gr_done").html(loading);
+                                        $("div#modal_gr_done").modal("show");
+                                        $.ajax({
+                                            type: "GET",
+                                            url: "@Url.Action("GetGRDetail")",
+                                            data: {
+                                                id_gr: arr[1]
+                                            }
+                                        }).done(function (res) {
+                                            $("div#body_gr_done").html(res);
+                                        }).fail(function (err) {
+                                            swal.fire("Error", err, "error");
+                                        })
+                                    })
+                                }
+                                // Handle success
+                            }).fail(function (err) {
+                                swal.fire("Error!", err, "error");
+                            });
+                        })
+                    },
+                    allowOutsideClick: () => !Swal.isLoading()
+                })
+            }
+        })
+    })
+    function update_total_box(input) {
+        let id_order = $(this).data("id");
+        // console.log(id_order);
+    }
+</script>

@@ -1,0 +1,442 @@
+﻿@* @using System.Data; *@
+@model List<UserDetailModel>
+@using Microsoft.AspNetCore.Mvc.Rendering;
+@using Microsoft.AspNetCore.Http;
+@using SEMB_ERP.Function;
+@{
+    var user = Model.First();
+    List<string> listStatus = ViewBag.listStatus;
+    List<string> userRoles = ViewBag.userRoles;
+}
+
+<style>
+    /* CSS untuk membuat modal berada di tengah layar */
+    #loadingSpinner {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5); /* Transparan hitam */
+    }
+
+    #loadingSpinner img {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .box_form_input {
+        background-color: #fcfcfc;
+        border-radius: 5px;
+        box-shadow: 1px 2px 8px 2px rgba(152,152,152,0.7);
+    }
+
+    .modal{
+        overflow: auto !important
+    }
+
+    .smaller-input {
+        height: 25px; /* Adjust height as necessary */
+        padding: 5px; /* Adjust padding as necessary */
+        font-size: 10px; /* Optional: Adjust font size */
+        line-height: 1; /* Optional: Reset line height */
+    }
+
+    /* Customize the font size for DataTables elements */
+    .dataTables_info, .dataTables_paginate, .dataTables_filter {
+        font-size: 10pt; /* Adjust the value to your desired font size */
+    }
+
+    .dataTables_filter {
+        display: none; /* Hides just the input field */
+    }
+
+    table#table_order tr > th {
+        padding: 5px;
+    }
+
+    table#table_order tr > td {
+        padding: 5px;
+    }
+
+    .btn-group-xs > .btn, .btn-xs {
+        padding: .25rem .4rem;
+        font-size: .875rem;
+        line-height: .5;
+        border-radius: .2rem;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .form-check-input.bigger-checkbox {
+        margin-left: 15px;
+        transform: scale(2); /* Adjust the scale as needed */
+    }
+
+</style>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 mt-3">
+                <div class="card card-success card-outline">
+@*                     <div class="card-header">
+                        <h3 class="text-center half-underline">
+                            <i class="fas fa-list"></i>
+                            Asset List
+                        </h3>
+                    </div> *@
+                    <div class="card-header">
+                        <h5 class="text-center">
+                            <i class="fas fa-list"></i>
+                            Request List
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @* <div class="col-12 d-flex justify-content-end mb-2">
+                                <a href="@Url.Action("DOWNLOAD_ASSET_LIST", "Requestor")" id="btn_download_data" class="btn btn-dark">
+                                    <i class="fas fa-download"></i> Download Asset List
+                                </a>
+                            </div> *@
+                            @* <div class="col-12 text-right">
+                                <button class="btn btn-success" name="btn_gr"><i class="fas fa-boxes"></i> GR</button>
+                            </div> *@
+                            <div class="col-12 table-responsive">
+                                <table class="table table-bordered table-striped align-center nowrap" id="table_order" style="font-size:10pt;width:100%">
+                                    <thead class="bg-secondary align-middle text-center">
+                                        <tr>
+                                            <th>Status</th>
+                                            <th rowspan="2">Goods<br />Receipt</th>
+                                            <th>Material Type</th>
+                                            <th>Part No</th>
+                                            <th>PO NO</th>
+                                            <th>Qty</th>
+                                            <th>UOM</th>
+                                            <th>Revision</th>
+                                            <th>Project Name</th>
+                                            <th>Storage Requirement</th>
+                                            <th>Supplier Name</th>
+                                            <th>PIC</th>
+                                            <th>Order Type</th>
+                                            <th>Unit Price</th>
+                                            <th rowspan="2">File<br />Support</th>
+                                            <th class="align-middle" colspan="3">Dimension</th> <!-- Merged cell for File Tag -->
+                                            <th rowspan="2">Action</th>
+                                        </tr>
+                                        @* <tr>
+                                            <th>Length(mm)</th>
+                                            <th>Width(mm)</th>
+                                            <th>Height(mm)</th>
+                                        </tr> *@
+                                        <tr>
+                                            @for (int i = 0; i < 14; i++) // Adjusted the loop to 24 to exclude Img Tagging
+                                            {
+                                                if (i != 1) // i!=1, because column index 1 is for button GR
+                                                {
+                                                    if (i == 0)
+                                                    {
+                                                        <td>
+                                                            <select class="form-control smaller-input filter_table" target="@i">
+                                                                <option value="">#ALL</option>
+                                                                @foreach (var status in listStatus)
+                                                                {
+                                                                    <option value="@status">@status</option>
+                                                                }
+                                                            </select>
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="@i" /></td>
+                                                    }
+                                                }
+                                            }
+                                            <th>Length(mm)</th>
+                                            <th>Width(mm)</th>
+                                            <th>Height(mm)</th>
+                                        </tr>
+                                    </thead>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="19" class="text-center">
+                                                <button class="btn btn-info" name="start_gr"><i class="fas fa-arrow-right"></i> GR <span id="total_gr_line"></span></button>
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Element spinner -->
+            <div id="loadingSpinner" style="display: none;">
+                <img src="~/images/icon/loading.gif" alt="Loading..." />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal_gr" class="modal fade" data-bs-backdrop="static">
+    <div class="modal-dialog" role="document" style="min-width:80%">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-boxes"></i> Goods Receive</h5>
+                @* <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+                </button> *@
+                <button class="btn btn-warning mt-2" data-bs-dismiss="modal" aria-label="Close"><i class="fas fa-times"></i> Cancel</button>
+            </div>
+            <div id="body_gr"></div>
+        </div>
+    </div>
+</div>
+
+<div id="modal_gr_done" class="modal fade" data-bs-backdrop="static">
+    <div class="modal-dialog" role="document" style="min-width:80%">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-boxes"></i> Goods Receive</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div id="body_gr_done"></div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+
+    <script>
+        var table;
+        var loading = "<div class='text-center'><i class='fa fa-4x fa-spinner fa-spin'></i></div>";
+        var id_order_array = [];
+        var sesa_id = "@user.sesa_id".toUpperCase();
+
+        $(document).ready(function () {
+            var table = $("#table_order").DataTable({
+                // "searching": false,
+                // "scrollX": true,
+                // "fixedColumns": {
+                //     rightColumns: 1
+                // },
+                "orderCellsTop": true,
+                "processing": true,
+                "serverSide": true,
+                "filter": true,
+                "ajax": {
+                    "url": "@Url.Action("GetOrderList")",
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                "columns": [
+                    { "data": "status_desc", 
+                        "className": "align-middle",
+                        "render": function (data, type, row) {
+                            return data;
+                        }
+                    },
+                    {
+                        "data": "id_order",
+                        "className": "align-middle",
+                        "render": function (data, type, row) {
+                            if (row["status_desc"].toLowerCase() == "submission") {
+                                let order_check = "";
+                                let is_checked = "";
+                                if (id_order_array.includes(data)) { 
+                                    order_check = "checked";
+                                    is_checked = "1";
+                                }
+                                // return `<button class="btn btn-sm btn-info" onclick="start_gr('${data}')"><i class="fas fa-arrow-right"></i> GR</button>`;
+                                return `<input type="checkbox" class="form-input form-check-input bigger-checkbox all_row" name='id_order[]' onclick="select_id(${data})" id="id_order-${data}" value="${data}" ${order_check} />
+                                        <label class="form-check-label" for="id_order-${data}"></label>
+                                        <div class="check_sort" id="sort-${data}" hidden>${is_checked}</div>`;
+                            }
+                            else{
+                                return "";
+                            }
+                        }
+                    },
+                    { "data": "material_type", "className": "align-middle" },
+                    { "data": "partno", "className": "align-middle" },
+                    { "data": "po_no", "className": "align-middle" },
+                    { "data": "qty", "className": "align-middle" },
+                    { "data": "uom", "className": "align-middle" },
+                    { "data": "revision", "className": "align-middle" },
+                    { "data": "project_name", "className": "align-middle" },
+                    { "data": "storage_requirement", "className": "align-middle" },
+                    { "data": "supplier_name", "className": "align-middle" },
+                    { "data": "pic", "className": "align-middle" },
+                    { "data": "order_type", "className": "align-middle" },
+                    {
+                        "data": "unit_price",
+                        "className": "text-center align-middle",
+                        "render": function (data, type, row) {
+                            if (data === null || data == "") {
+                                return "";
+                            }
+                            else {
+                                return `$ `+ data.toFixed(2);
+                            }
+                        }
+                    },
+                    {
+                        "data": "file_support",
+                        "className": "text-center align-middle",
+                        "render": function (data, type, row) {
+                            if (data === null || data == "") {
+                                return "";
+                            }
+                            else {
+                                return `<button class="btn btn-sm btn-danger"><i class="fas fa-file-alt"></i></button>`;
+                            }
+                        }
+                    },
+                    { "data": "length_mm", "className": "align-middle" },
+                    { "data": "width_mm", "className": "align-middle" },
+                    { "data": "height_mm", "className": "align-middle" },
+                    {
+                        "data": "id_order",
+                        "className": "align-middle",
+                        "render": function (data, type, row) {
+                            return `<button class="btn btn-sm btn-warning"><i class="fas fa-edit"></i> Edit</button>`;
+                        }
+                    }
+                ],
+                "drawCallback": function (settings) {
+                    // Set the background color for the second column (index 1)
+                    this.api().rows().every(function () {
+                        var rowNode = this.node();
+                        let status_desc = $(rowNode).find('td:eq(0)').html();
+                        status_desc = status_desc.toLowerCase();
+                        let bg_color = "";
+                        if(status_desc=="submission"){
+                            bg_color = "bg-warning";
+                        }
+                        else if(status_desc="received"){
+                            bg_color = "bg-success";
+                        }
+                        else if (status_desc = "putaway") {
+                            bg_color = "bg-info";
+                        } 
+                        else if (status_desc = "partially picked") {
+                            bg_color = "bg-info";
+                        } 
+                        else if (status_desc = "closed") {
+                            bg_color = "bg-secondary";
+                        }
+                        $(rowNode).find('td').css("background-color", "#edfcf1")
+                        $(rowNode).find('td:eq(0)').addClass(bg_color); // Change to desired color
+
+                    });
+                }
+            });
+
+
+            $('input.filter_table, select.filter_table', this).on('keyup change', function () {
+                let trgt = $(this).attr('target');
+                // alert(trgt);
+                if (table.column(trgt).search() !== this.value) {
+                    table
+                        .column(trgt)
+                        .search(this.value)
+                        .draw();
+                }
+            });
+
+            $("button[name=start_gr]").click(function () {
+                if (id_order_array.length > 0) {
+                    let id_order_string = id_order_array.join(";");
+                    $("div#body_gr").html(loading);
+                    $("div#modal_gr").modal("show");
+                    $.ajax({
+                        type: "GET",
+                        url: "@Url.Action("GetDataGR")",
+                        data: {
+                            id_order_string: id_order_string
+                        }
+                    }).done(function (res) {
+                        $("div#body_gr").html(res);
+                    }).fail(function (err) {
+                        swal.fire("Error", err, "error");
+                    })
+                }
+                else{
+                    swal.fire("Error!", "No Data Selected!", "error");
+                }
+            })
+
+            // $("button[name=btn_gr]").click(function () {
+            //     $.ajax({
+            //         type: "GET",
+            //         url: "@Url.Action("GetListGR")"
+            //     }).done(function (res) {
+
+            //     }).fail(function (err) {
+            //         swal.fire("Error", err, "error");
+            //     })
+            // })
+        })
+
+        function select_id(id_order) {
+            let checked = 0;
+            setTimeout(() => {
+                // console.log($("input#id_order-" + id_order).is(":checked"));
+                if ($("input#id_order-" + id_order).is(":checked")) {
+                    id_order_array.push(id_order);
+                    checked = 1;
+                    // $("tr#row-material-" + id_order).addClass("bg-warning");
+                }
+                else {
+                    removeValue(id_order_array, id_order);
+                    checked = 0
+                    // $("tr#row-material-" + id_order).removeClass("bg-warning");
+                }
+                console.log(id_order_array);
+                $("div#sort-" + id_order).html(checked);
+                $("#table_order").DataTable().rows().invalidate();
+                $("span#total_gr_line").html("("+id_order_array.length + " Lines)");
+            }, 100);
+        }
+
+        function removeValue(arr) {
+            var what, a = arguments, L = a.length, ax;
+            while (L > 1 && arr.length) {
+                what = a[--L];
+                while ((ax = arr.indexOf(what)) !== -1) {
+                    arr.splice(ax, 1);
+                }
+            }
+            return arr;
+        }
+
+        // function start_gr(id_order) {
+        //     $("div#body_gr").html(loading);
+        //     $("div#modal_gr").modal("show");
+        //     $.ajax({
+        //         type: "GET",
+        //         url: "@Url.Action("GetDataGR")",
+        //         data: {
+        //             id_order: id_order
+        //         }
+        //     }).done(function (res) {
+        //         $("div#body_gr").html(res);
+        //     }).fail(function (err) {
+        //         swal.fire("Error", err, "error");
+        //     })
+        // }
+
+    </script>
+}
