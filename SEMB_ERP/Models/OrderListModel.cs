@@ -17,6 +17,7 @@ namespace SEMB_ERP.Models
         public string? sbin { get; set; }
         public string? supplier_name { get; set; }
         public string? pic { get; set; }
+        public string? pic_name { get; set; }
         public string? order_type { get; set; }
         public double? length_mm { get; set; }
         public double? width_mm { get; set; }
@@ -29,5 +30,6 @@ namespace SEMB_ERP.Models
         public int? id_gr { get; set; }
         public string gr_no { get; set; }
         public int? total_box { get; set; }
+        public string? remark { get; set; }
     }
 }

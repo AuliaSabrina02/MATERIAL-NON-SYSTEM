@@ -7,6 +7,7 @@ using SEMB_ERP.Service;
 using System.Security.Claims;
 using System.Linq.Dynamic.Core;
 using Microsoft.AspNetCore.Http;
+using System.Diagnostics;
 
 namespace SEMB_ERP.Controllers
 {
@@ -104,7 +105,7 @@ namespace SEMB_ERP.Controllers
                 string file_support_db = "";
                 if (file_support != null && file_support.Length > 0)
                 {
-                    string filePath = getNextFileName(_environment.WebRootPath + "\\Documents\\" + id_upload + "-" +file_support.FileName);
+                    string filePath = getNextFileName(_environment.WebRootPath + "\\Documents\\" + id_upload + " - " +file_support.FileName);
                     //filePaths.Add(filePath);
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
@@ -116,6 +117,7 @@ namespace SEMB_ERP.Controllers
                 return Content("success;Succesfully Submitted!", "text/plain");
             }
         }
+
         [Authorize(Policy = "RequireRequestor")]
         [HttpPost]
         public async Task<IActionResult> SubmitOrder(IFormFile file_support, string material_type, string partno, string po_no, double qty, string uom, string revision, string project_name, 
@@ -134,7 +136,7 @@ namespace SEMB_ERP.Controllers
                 string file_support_db = "";
                 if (file_support != null && file_support.Length > 0)
                 {
-                    string filePath = getNextFileName(_environment.WebRootPath + "\\Documents\\" + id_upload + "-" + file_support.FileName);
+                    string filePath = getNextFileName(_environment.WebRootPath + "\\Documents\\" + id_upload + " - " + file_support.FileName);
                     //filePaths.Add(filePath);
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
@@ -147,6 +149,38 @@ namespace SEMB_ERP.Controllers
                 return Content("success;Succesfully Submitted!", "text/plain");
             }
         }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateOrder(IFormFile file_support, string id_order, string material_type, string partno, string po_no, double qty, string uom, string revision, string project_name,
+            string storage_requirement, string supplier_name, string order_type, double unit_price, double length_mm, double width_mm, double height_mm, string remark)
+        {
+            DateTime now = DateTime.Now;
+            string id_upload = now.ToString("yyMMddHHmmssfff");
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (sesa_id == "")
+            {
+                return Content("Session Timeout, Please relogin!!", "text/plain");
+            }
+            else
+            {
+                var db = new DatabaseAccessLayer();
+                string file_support_db = "";
+                if (file_support != null && file_support.Length > 0)
+                {
+                    string filePath = getNextFileName(_environment.WebRootPath + "\\Documents\\" + id_upload + " - " + file_support.FileName);
+                    //filePaths.Add(filePath);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file_support.CopyToAsync(stream);
+                        file_support_db = Path.GetFileName(filePath);
+                    }
+                }
+                string submit = db.UpdateOrder(id_order, id_upload, material_type, partno, po_no, qty, uom, revision, project_name, storage_requirement, supplier_name,
+                                                order_type, unit_price, length_mm, width_mm, height_mm, remark, file_support_db, sesa_id);
+                return Content("success;Updated Succesfully!", "text/plain");
+            }
+        }
+
         [Authorize(Policy = "RequireRequestor")]
         public IActionResult OrderList()
         {
@@ -161,6 +195,9 @@ namespace SEMB_ERP.Controllers
                 var db = new DatabaseAccessLayer();
                 List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
                 List<string> listStatus = db.GetStatus();
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
                 ViewBag.listStatus = listStatus;
                 ViewBag.userRoles = userRoles;
                 return View(userDetail);
@@ -206,7 +243,9 @@ namespace SEMB_ERP.Controllers
                                        OrderList.unit_price,
                                        OrderList.file_support,
                                        OrderList.status_code,
-                                       OrderList.status_desc
+                                       OrderList.status_desc,
+                                       OrderList.pic_name,
+                                       OrderList.remark
                                    });
 
                 //var mstData = (from temp in _context.mst_material_plant select temp);
@@ -348,13 +387,207 @@ namespace SEMB_ERP.Controllers
                 string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 string name = User.FindFirst("semb_erp_name")?.Value;
                 string plant = db.GetUserPlant(sesa_id);
+                List<string> catList = db.GET_CAT_NON_CONF();
                 //List<string> supplierList = db.GetSupplierList();
                 //ViewBag.supplierList = supplierList;
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.plant = plant;
+                ViewBag.catList = catList;
+                return View();
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SUBMIT_NON_CONF(IFormFile file_support, string material_type, string partno, string po_no, double qty, string uom, 
+            string supplier_name, string pic, string category_issue, string detail_issue)
+        {
+            DateTime now = DateTime.Now;
+            string id_upload = now.ToString("yyMMddHHmmssfff");
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (sesa_id == "")
+            {
+                return Content("Session Timeout, Please relogin!!", "text/plain");
+            }
+            else
+            {
+                var db = new DatabaseAccessLayer();
+                string file_support_non_conf = "";
+                if (file_support != null && file_support.Length > 0)
+                {
+                    string filePath = getNextFileName(_environment.WebRootPath + "\\Documents\\Non_Conf\\" + material_type + " - " + file_support.FileName);
+                    //filePaths.Add(filePath);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file_support.CopyToAsync(stream);
+                        file_support_non_conf = Path.GetFileName(filePath);
+                    }
+                }
+                string submit = db.SUBMIT_NON_CONF(material_type, partno, po_no, qty, uom, supplier_name,
+                                                pic, category_issue, detail_issue, file_support_non_conf, sesa_id);
+                return Content("success;Succesfully Submitted!", "text/plain");
+            }
+        }
+
+        public IActionResult NonConfList()
+        {
+            return this.CheckSession(() =>
+            {
+                var db = new DatabaseAccessLayer();
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                string plant = db.GetUserPlant(sesa_id);
+                List<string> catList = db.GET_CAT_NON_CONF();
+                ViewBag.catList = catList;
                 ViewBag.name = name;
                 ViewBag.sesa_id = sesa_id;
                 ViewBag.plant = plant;
                 return View();
             });
         }
+
+        public IActionResult GET_NON_CONF_LIST()
+        {
+            try
+            {
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = Request.Form["start"].FirstOrDefault();
+                var length = Request.Form["length"].FirstOrDefault();
+                //var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][name]"].FirstOrDefault();
+                var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][data]"].FirstOrDefault();
+                var sortColumnDirection = Request.Form["order[0][dir]"].FirstOrDefault();
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                var column0Value = Request.Form["columns[0][search][value]"];
+                var column1Value = Request.Form["columns[1][search][value]"];
+                var column2Value = Request.Form["columns[2][search][value]"];
+                int pageSize = length != null ? Convert.ToInt32(length) : 0;
+                int skip = start != null ? Convert.ToInt32(start) : 0;
+                int recordsTotal = 0;
+                var mstData = (from NonConfList in _context.V_NON_CONF
+                               select
+                                   new
+                                   {
+                                       NonConfList.id_non_conf,
+                                       NonConfList.material_type,
+                                       NonConfList.partno,
+                                       NonConfList.po_no,
+                                       NonConfList.qty,
+                                       NonConfList.uom,
+                                       NonConfList.supplier_name,
+                                       NonConfList.pic,
+                                       NonConfList.category_issue,
+                                       NonConfList.detail_issue,
+                                       NonConfList.file_doc,
+                                       NonConfList.created_by
+                                   });
+
+                //var mstData = (from temp in _context.mst_material_plant select temp);
+                if (!(string.IsNullOrEmpty(sortColumn) && string.IsNullOrEmpty(sortColumnDirection)))
+                {
+                    mstData = mstData.OrderBy(sortColumn + " " + sortColumnDirection);
+                }
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    mstData = mstData.Where(m => m.partno.Contains(searchValue)
+                                                || m.pic.Contains(searchValue));
+                }
+
+                for (int i = 0; i < 9; i++)
+                {
+                    var searchColVal = Request.Form["columns[" + i.ToString() + "][search][value]"];
+                    var fieldName = Request.Form["columns[" + i.ToString() + "][data]"].FirstOrDefault();
+                    if (!string.IsNullOrEmpty(searchColVal))
+                    {
+                        if (fieldName == "material_type")
+                        {
+                            mstData = mstData.Where(m => m.material_type.Contains(searchColVal));
+                        }
+                        else if (fieldName == "partno")
+                        {
+                            mstData = mstData.Where(m => m.partno.Contains(searchColVal));
+                        }
+                        else if (fieldName == "po_no")
+                        {
+                            mstData = mstData.Where(m => m.po_no.Contains(searchColVal));
+                        }
+                        else if (fieldName == "qty")
+                        {
+                            mstData = mstData.Where(m => m.qty.ToString().Contains(searchColVal));
+                        }
+                        else if (fieldName == "uom")
+                        {
+                            mstData = mstData.Where(m => m.uom.Contains(searchColVal));
+                        }
+                        else if (fieldName == "supplier_name")
+                        {
+                            mstData = mstData.Where(m => m.supplier_name.Contains(searchColVal));
+                        }
+                        else if (fieldName == "pic")
+                        {
+                            mstData = mstData.Where(m => m.pic.Contains(searchColVal));
+                        }
+                        else if (fieldName == "category_issue")
+                        {
+                            mstData = mstData.Where(m => m.category_issue.Contains(searchColVal));
+                        }
+                        else if (fieldName == "detail_issue")
+                        {
+                            mstData = mstData.Where(m => m.detail_issue.Contains(searchColVal));
+                        }
+                    }
+                }
+
+                recordsTotal = mstData.Count();
+                var data = mstData.Skip(skip).Take(pageSize).ToList();
+                var jsonData = new { draw = draw, recordsFiltered = recordsTotal, recordsTotal = recordsTotal, data = data };
+                return Ok(jsonData);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetCatNonConf(string search_value)
+        {
+            var db = new DatabaseAccessLayer();
+            List<CategoryModel> listCAT = db.GetCatNonConf(search_value);
+            return Json(new { items = listCAT });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UPDATE_NON_CONF(IFormFile file_support, string id_non_conf, string material_type, string partno, string po_no, double qty, string uom,
+        string supplier_name, string pic, string category_issue, string detail_issue)
+        {
+            DateTime now = DateTime.Now;
+            string id_upload = now.ToString("yyMMddHHmmssfff");
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (sesa_id == "")
+            {
+                return Content("Session Timeout, Please relogin!!", "text/plain");
+            }
+            else
+            {
+                var db = new DatabaseAccessLayer();
+                string file_support_non_conf = "";
+                if (file_support != null && file_support.Length > 0)
+                {
+                    string filePath = getNextFileName(_environment.WebRootPath + "\\Upload\\Non_Conf\\" + material_type + " - " + file_support.FileName);
+                    //filePaths.Add(filePath);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file_support.CopyToAsync(stream);
+                        file_support_non_conf = Path.GetFileName(filePath);
+                    }
+                }
+                string submit = db.UPDATE_NON_CONF(id_non_conf, material_type, partno, po_no, qty, uom, supplier_name,
+                                                pic, category_issue, detail_issue, file_support_non_conf, sesa_id);
+                return Content("success;Updated Succesfully!", "text/plain");
+            }
+        }
+
+
+
     }
 }

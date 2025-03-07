@@ -5,6 +5,8 @@
 @using SEMB_ERP.Function;
 @{
     var user = Model.First();
+    string sesa_id = ViewBag.sesa_id;
+    string name = ViewBag.name;
     List<string> listStatus = ViewBag.listStatus;
     List<string> userRoles = ViewBag.userRoles;
 }
@@ -187,6 +189,125 @@
     </div>
 </div>
 
+<div class="modal fade" id="modal_update_order" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <h5 class="modal-title" id="chart_title"><i class="fas fa-edit"></i> Update Non Conformity</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="body_update_posting">
+                <form id="form_update_order">
+                    <div class="row">
+                        <div class="col-6 pl-4 pr-4">
+                            <input class="form-control" type="hidden" name="id_order"  autocomplete="off" required />
+                            <div class="form-group">
+                                <label>Material Type<span class="text-danger">*</span></label>
+                                <select class="form-select" name="material_type" required>
+                                    <option value="">--SELECT--</option>
+                                    <option value="RW">Raw Material (RW)</option>
+                                    <option value="FG">Finish Goods (FG)</option>
+                                    <option value="WIP">Work In Progress (WIP)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Part No<span class="text-danger">*</span></label>
+                                <input class="form-control" type="text" name="partno" placeholder="Part Number" autocomplete="off" required />
+                            </div>
+                            <div class="form-group">
+                                <label>PO No<span class="text-danger">*</span></label>
+                                <input class="form-control" type="text" name="po_no" placeholder="PO Number" autocomplete="off" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Qty<span class="text-danger">*</span></label>
+                                <input class="form-control" type="number" name="qty" placeholder="Qty" autocomplete="off" required />
+                            </div>
+                            <div class="form-group">
+                                <label>UOM<span class="text-danger">*</span></label>
+                                <input class="form-control" type="text" name="uom" placeholder="PC, PALLET, ..." autocomplete="off" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Revision<span class="text-danger">*</span></label>
+                                <input class="form-control" type="text" name="revision" placeholder="Revision" autocomplete="off" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Project Name<span class="text-danger">*</span></label>
+                                <input class="form-control" type="text" name="project_name" placeholder="Project Name" autocomplete="off" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Storage Requirement<span class="text-danger">*</span></label>
+                                <select class="form-select" name="storage_requirement" required>
+                                    <option value="">--SELECT--</option>
+                                    <option value="AC">AC</option>
+                                    <option value="Non AC">Non AC</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-6 pl-4 pr-4">
+                            <div class="form-group">
+                                <label>Supplier Name<span class="text-danger">*</span></label>
+                                <input class="form-control" type="text" name="supplier_name" placeholder="Supplier" autocomplete="off" required />
+                            </div>
+                            <div class="form-group">
+                                <label>PIC<span class="text-danger">*</span></label>
+                                <input class="form-control" type="text" name="pic_display" autocomplete="off" required readonly />
+                            </div>
+                            <div class="form-group">
+                                <label>Order Type<span class="text-danger">*</span></label>
+                                <select class="form-select" name="order_type" required>
+                                    <option value="">--SELECT--</option>
+                                    <option value="Apollo">Apollo</option>
+                                    <option value="Coupa">Coupa</option>
+                                    <option value="FOC">FOC</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Price<span class="text-danger">*</span></label>
+                                <input class="form-control" type="number" name="unit_price" placeholder="Price" autocomplete="off" required />
+                            </div>
+                            <div class="row">
+                                <div class="col-4">
+                                    <div class="form-group">
+                                        <label>Length (mm)</label>
+                                        <input class="form-control" type="number" name="length_mm" placeholder="Length (mm)" autocomplete="off" />
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-group">
+                                        <label>Width (mm)</label>
+                                        <input class="form-control" type="number" name="width_mm" placeholder="Width (mm)" autocomplete="off" />
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-group">
+                                        <label>Height (mm)</label>
+                                        <input class="form-control" type="number" name="height_mm" placeholder="Height (mm)" autocomplete="off" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Remark</label>
+                                <textarea class="form-control" name="remark" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Supporting Documents (Excel or PDF)</label>
+                                <input type="file" class="form-control" name="file_support">
+                                <div id="file_preview" class="mt-2"></div> <!-- Add this line for file preview -->
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-group text-center">
+                                <button type="submit" class="btn btn-success mt-2" name="btn_confirm">Update Order <i class="fa fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <div id="modal_gr" class="modal fade" data-bs-backdrop="static">
     <div class="modal-dialog" role="document" style="min-width:80%">
         <div class="modal-content">
@@ -309,9 +430,12 @@
                     { "data": "height_mm", "className": "align-middle" },
                     {
                         "data": "id_order",
-                        "className": "align-middle",
+                        "className": "align-middle text-center",
                         "render": function (data, type, row) {
-                            return `<button class="btn btn-sm btn-warning"><i class="fas fa-edit"></i> Edit</button>`;
+                            return `<button class="btn btn-sm btn-warning" onclick="update_order('${data}', '${row['material_type']}','${row['partno']}',
+                                    '${row['po_no']}','${row['qty']}','${row['uom']}','${row['revision']}','${row['project_name']}','${row['storage_requirement']}'
+                                    ,'${row['supplier_name']}','${row['pic']}','${row['order_type']}','${row['unit_price']}','${row['length_mm']}'
+                                    ,'${row['width_mm']}','${row['height_mm']}','${row['remark']}','${row['file_support']}','${row['pic_name']}')"><i class="fas fa-edit"></i> Edit</button>`;
                         }
                     }
                 ],
@@ -437,6 +561,100 @@
         //         swal.fire("Error", err, "error");
         //     })
         // }
+
+        function update_order(id_order, material_type, partno, po_no, qty, uom, revision, project_name, storage_requirement, supplier_name, pic, order_type, unit_price
+            , length_mm, width_mm, height_mm, remark, file_support, pic_name) {
+            $("input[name='id_order']").val(id_order);
+
+            if (material_type === null || material_type === 'null') {
+                $("select[name='material_type']").val('');
+            } else {
+                $("select[name='material_type']").val(material_type);
+            }
+
+            $("input[name='partno']").val(partno);
+
+            if (po_no === null || po_no === 'null') {
+                $("input[name='po_no']").val('');
+            } else {
+                $("input[name='po_no']").val(po_no);
+            }
+
+            $("input[name='qty']").val(qty);
+            $("input[name='uom']").val(uom);
+            $("input[name='revision']").val(revision);
+            $("input[name='project_name']").val(project_name);
+
+            if (storage_requirement === null || storage_requirement === 'null') {
+                $("select[name='storage_requirement']").val('');
+            } else {
+                $("select[name='storage_requirement']").val(storage_requirement);
+            }
+
+            $("input[name='supplier_name']").val(supplier_name);
+            $("input[name='pic_display']").val(pic + ' - ' + pic_name);
+            $("select[name='order_type']").val(order_type);
+            $("input[name='unit_price']").val(unit_price);
+            $("input[name='length_mm']").val(length_mm);
+            $("input[name='width_mm']").val(width_mm);
+            $("input[name='height_mm']").val(height_mm);
+
+            if (remark === null || remark === 'null') {
+                $("textarea[name='remark']").val('');
+            } else {
+                $("textarea[name='remark']").val(remark);
+            }
+
+            if (file_support && file_support !== 'null' && file_support !== '') {
+                var fileLink = `<a href="../Documents/${file_support}" target="_blank">View Existing File</a>`;
+                $("#file_preview").html(fileLink);
+            } else {
+                $("#file_preview").html("No file uploaded");
+            }
+
+
+            $("div#modal_update_order").modal("show");
+        }
+
+        $("form#form_update_order").submit(function (e) {
+            e.preventDefault();
+            let formData = new FormData(this);
+            // console.log(formData);
+            Swal.fire({
+                title: 'Confirmation!!',
+                text: "Are you sure ?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Yes!',
+                cancelButtonText: 'No!',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve, reject) {
+                        $.ajax({
+                            url: "@Url.Action("UpdateOrder")",
+                            type: 'POST',
+                            data: formData,
+                            cache: false,
+                            contentType: false,
+                            processData: false
+                        }).done(function (msg) {
+                            let arr = msg.split(";");
+                            if (arr[0] == "success") {
+                                swal.fire("Success!", arr[1], "success").then(function () {
+                                    location.reload();
+                                })
+                            }
+                            else {
+                                swal.fire("Failed!", msg, "error");
+                            }
+                        })
+                    })
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            })
+        })
 
     </script>
 }

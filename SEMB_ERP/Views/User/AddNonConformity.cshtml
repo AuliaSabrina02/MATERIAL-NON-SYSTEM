@@ -10,6 +10,7 @@
     string name = ViewBag.name;
     string plant = ViewBag.plant;
     string todayDate = DateTime.Today.ToString("yyyy-MM-dd");
+    List<string> catList = ViewBag.catList;
 
 }
 
@@ -53,14 +54,14 @@
                         <div class="row">
                             <div class="offset-1 col-10 pt-2 pb-2 pl-4 pr-4 box_form_input">
                                 <div class="text-center"><label class="badge bg-warning" style="font-size:16pt;border-radius:30px;padding:10px 20px"><i class="fas fa-plus"></i> Add Non Conformity</label></div>
-                                <form id="form_add">
+                                <form id="form_add_non_conf">
                                     <div class="row">
                                         <div class="offset-3 col-6 mb-4" style="border-top: 2px #e3e3e3 solid"></div>
                                         <div class="col-6 pl-4 pr-4">
                                             <div class="form-group">
                                                 <label>Material Type<span class="text-danger">*</span></label>
-                                                <select class="form-control" name="material_type" required>
-                                                    <option value="">--SELECT--</option>
+                                                <select class="form-control" name="material_type" id="material_type" required>
+                                                    <option value="">-- SELECT TYPE --</option>
                                                     <option value="RW">Raw Material (RW)</option>
                                                     <option value="FG">Finish Goods (FG)</option>
                                                     <option value="WIP">Work In Progress (WIP)</option>
@@ -95,13 +96,21 @@
                                             </div>
                                             <div class="form-group">
                                                 <label>Category Issue<span class="text-danger">*</span></label>
-                                                <select class="form-control" name="category_issue" required>
-                                                    <option value="">--SELECT--</option>
+                                                <select class="form-control" name="category_issue" id="category_issue" required>
+                                                    <option value="">-- SELECT CATEGORY ISSUE --</option>
+                                                    @foreach (var cat in catList)
+                                                    {
+                                                        <option value="@cat">@cat</option>
+                                                    }
                                                 </select>
                                             </div>
                                             <div class="form-group">
                                                 <label>Detail Issue</label>
-                                                <textarea class="form-control" name="detail_issue" rows="3"></textarea>
+                                                <textarea class="form-control" name="detail_issue" rows="2"></textarea>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Supporting Documents (Optional)</label>
+                                                <input type="file" class="form-control" name="file_support">
                                             </div>
                                         </div>
                                         <div class="col-12">
@@ -149,7 +158,7 @@
         $(document).ready(function () {
             $('select[name=pic]').select2({
                 // dropdownParent: $("#modal_gate_pass > .modal-dialog > .modal-content"),
-                placeholder: 'Select PIC',
+                placeholder: '-- SELECT PIC --',
                 width: '100%',
                 ajax: {
                     url: "@Url.Action("GetPIC")",
@@ -167,126 +176,16 @@
                 }
             })
 
+            $('#category_issue').select2({
+                placeholder: "-- SELECT CATEGORY ISSUE --"
+            });
 
-            $("form#form_upload_order").submit(function (e) {
-                e.preventDefault();
-                $("div#body_temp_order").html("<div class='text-center'>" + loading + "</div>");
-                $("div#modal_temp_order").modal("show");
-                let formData = new FormData(this);
-                $.ajax({
-                    url: "@Url.Action("UploadOrder")",
-                    type: 'POST',
-                    data: formData,
-                    cache: false,
-                    contentType: false,
-                    processData: false
-                }).done(function (res) {
-                    $("div#body_temp_order").html(res);
-                    // Swal.fire({
-                    //     icon: 'success',
-                    //     title: 'Done!!',
-                    //     html: res,
-                    //     width: 800
-                    // }).then(function () {
-                    //     location.reload();
-                    // })
-                }).fail(function (err) {
-                    swal.fire("Error", "Upload Failed -> " + err, "error");
-                })
-                // Swal.fire({
-                //     title: 'Confirm',
-                //     text: "Are you sure ?",
-                //     icon: 'warning',
-                //     showCancelButton: true,
-                //     confirmButtonColor: '#28a745',
-                //     cancelButtonColor: '#dc3545',
-                //     confirmButtonText: 'Yes!',
-                //     cancelButtonText: 'No!',
-                //     showLoaderOnConfirm: true,
-                //     preConfirm: function () {
-                //         return new Promise(function (resolve, reject) {
-                //             $.ajax({
-                //                 url: "@Url.Action("UploadOrder")",
-                //                 type: 'POST',
-                //                 data: formData,
-                //                 cache: false,
-                //                 contentType: false,
-                //                 processData: false
-                //             }).done(function (res) {
-                //                 $("div#body_temp_order").html(res);
-                //                 // Swal.fire({
-                //                 //     icon: 'success',
-                //                 //     title: 'Done!!',
-                //                 //     html: res,
-                //                 //     width: 800
-                //                 // }).then(function () {
-                //                 //     location.reload();
-                //                 // })
-                //             }).fail(function (err) {
-                //                 swal.fire("Error", "Upload Failed -> " + err, "error");
-                //             })
-                //         })
-                //     },
-                //     allowOutsideClick: () => !Swal.isLoading()
-                // })
-            })
+            $('#material_type').select2({
+                placeholder: "-- SELECT TYPE --"
 
-            $("button[name=btn_confirm_order]").click(function(){
-                let total_error = $("input[name=total_error]").val();
-                let total_upload = $("input[name=total_upload]").val();
-                if (total_error > 0) {
-                    swal.fire("Error!", "Cannot submit with error data!!", "error");
-                }
-                else if (total_upload == 0) {
-                    swal.fire("Error!", "No data!!", "error");
-                }
-                else {
-                    let id_upload = $("input[name=id_upload]").val();
-                    let file_support = $("form#form_upload_order").find("input[name=file_support]")[0].files[0];
+            });
 
-                    // var fileInput = $('#fileInput')[0];
-                    // var file = fileInput.files[0];
-                    let formData = new FormData();
-                    formData.append('id_upload', id_upload);
-                    formData.append('file_support', file_support);
-
-                    Swal.fire({
-                        title: 'Confirmation!!',
-                        text: "Are you sure ?",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#28a745',
-                        cancelButtonColor: '#dc3545',
-                        confirmButtonText: 'Yes!',
-                        cancelButtonText: 'No!',
-                        showLoaderOnConfirm: true,
-                        preConfirm: function () {
-                            return new Promise(function (resolve, reject) {
-                                $.ajax({
-                                    url: "@Url.Action("SubmitUploadOrder")",
-                                    type: 'POST',
-                                    data: formData,
-                                    processData: false, // Important: prevent jQuery from processing the data
-                                    contentType: false// Important: prevent jQuery from setting contentType
-                                }).done(function (msg) {
-                                    let arr = msg.split(";");
-                                    if (arr[0] == "success") {
-                                        swal.fire("Success!", arr[1], "success").then(function () {
-                                            location.reload();
-                                        })
-                                    }
-                                    else {
-                                        swal.fire("Failed!", msg, "error");
-                                    }
-                                })
-                            })
-                        },
-                        allowOutsideClick: () => !Swal.isLoading()
-                    })
-                }
-            })
-
-            $("form#form_add_order").submit(function (e) {
+            $("form#form_add_non_conf").submit(function (e) {
                 e.preventDefault();
                 let formData = new FormData(this);
                 // console.log(formData);
@@ -303,7 +202,7 @@
                     preConfirm: function () {
                         return new Promise(function (resolve, reject) {
                             $.ajax({
-                                url: "@Url.Action("SubmitOrder")",
+                                url: "@Url.Action("SUBMIT_NON_CONF")",
                                 type: 'POST',
                                 data: formData,
                                 cache: false,

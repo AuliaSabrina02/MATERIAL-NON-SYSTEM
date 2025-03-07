@@ -294,6 +294,47 @@ namespace SEMB_ERP.Function
                 }
             }
         }
+
+        public string UpdateOrder(string id_order, string id_upload, string material_type, string partno, string po_no, double qty, string uom, string revision, string project_name,
+    string storage_requirement, string supplier_name, string order_type, double unit_price, double length_mm, double width_mm, double height_mm,
+    string remark, string file_support, string sesa_id)
+        {
+            if (file_support == "")
+            {
+                file_support = null;
+            }
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand("UPDATE_ORDER", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@id_order", id_order);
+                    cmd.Parameters.AddWithValue("@id_upload", id_upload);
+                    cmd.Parameters.AddWithValue("@material_type", material_type);
+                    cmd.Parameters.AddWithValue("@partno", partno);
+                    cmd.Parameters.AddWithValue("@po_no", po_no);
+                    cmd.Parameters.AddWithValue("@qty", qty);
+                    cmd.Parameters.AddWithValue("@uom", uom);
+                    cmd.Parameters.AddWithValue("@revision", revision);
+                    cmd.Parameters.AddWithValue("@project_name", project_name);
+                    cmd.Parameters.AddWithValue("@storage_requirement", storage_requirement);
+                    cmd.Parameters.AddWithValue("@supplier_name", supplier_name);
+                    cmd.Parameters.AddWithValue("@order_type", order_type);
+                    cmd.Parameters.AddWithValue("@unit_price", unit_price);
+                    cmd.Parameters.AddWithValue("@length_mm", length_mm);
+                    cmd.Parameters.AddWithValue("@width_mm", width_mm);
+                    cmd.Parameters.AddWithValue("@height_mm", height_mm);
+                    cmd.Parameters.AddWithValue("@remark", remark);
+                    cmd.Parameters.AddWithValue("@file_support", file_support);
+                    cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                    cmd.ExecuteNonQuery();
+                    //cmd.ExecuteScalar();
+                    return "success";
+                }
+            }
+        }
+
         public List<OrderListModel> GetDataGR(string id_order_string)
         {
             List<OrderListModel> dataGR = new List<OrderListModel>();
@@ -404,6 +445,117 @@ namespace SEMB_ERP.Function
             }
             return dataGR;
         }
+
+        public List<string> GET_CAT_NON_CONF()
+        {
+            List<string> catList = new List<string>();
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand("SELECT DISTINCT category_name FROM mst_category_non_conf ORDER BY category_name ASC", conn))
+                {
+                    using SqlDataReader reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            catList.Add(reader["category_name"].ToString() ?? "");
+                        }
+                    }
+                }
+
+                conn.Close();
+            }
+            return catList;
+        }
+
+        public string SUBMIT_NON_CONF(string material_type, string partno, string po_no, double qty, string uom,
+            string supplier_name, string pic, string category_issue, string detail_issue, string file_support, string sesa_id)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand("INSERT_NON_CONF", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@material_type", material_type);
+                    cmd.Parameters.AddWithValue("@partno", partno);
+                    cmd.Parameters.AddWithValue("@po_no", po_no);
+                    cmd.Parameters.AddWithValue("@qty", qty);
+                    cmd.Parameters.AddWithValue("@uom", uom);
+                    cmd.Parameters.AddWithValue("@supplier_name", supplier_name);
+                    cmd.Parameters.AddWithValue("@pic", pic);
+                    cmd.Parameters.AddWithValue("@category_issue", category_issue);
+                    cmd.Parameters.AddWithValue("@detail_issue", detail_issue);
+                    cmd.Parameters.AddWithValue("@file_support", file_support);
+                    cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                    cmd.ExecuteNonQuery();
+                    //cmd.ExecuteScalar();
+                    return "success";
+                }
+            }
+        }
+
+        public List<CategoryModel> GetCatNonConf(string search_value)
+        {
+            List<CategoryModel> listCAT = new List<CategoryModel>();
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand(@"SELECT DISTINCT category_name FROM mst_category_non_conf WHERE category_name LIKE '%" + search_value + "%' ORDER BY category_name ASC", conn))
+                {
+                    //cmd.CommandType = CommandType.StoredProcedure;
+                    //cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                    using SqlDataReader reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            CategoryModel row = new CategoryModel();
+                            row.Id = reader["category_name"].ToString();
+                            row.Text = reader["category_name"].ToString();
+                            listCAT.Add(row);
+                        }
+                    }
+                }
+
+                conn.Close();
+            }
+            return listCAT;
+        }
+
+        public string UPDATE_NON_CONF(string id_non_conf, string material_type, string partno, string po_no, double qty, string uom,
+    string supplier_name, string pic, string category_issue, string detail_issue, string file_support, string sesa_id)
+        {
+            if (file_support == "")
+            {
+                file_support = null;
+            } 
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand("UPDATE_NON_CONF", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@id_non_conf", id_non_conf);
+                    cmd.Parameters.AddWithValue("@material_type", material_type);
+                    cmd.Parameters.AddWithValue("@partno", partno);
+                    cmd.Parameters.AddWithValue("@po_no", po_no);
+                    cmd.Parameters.AddWithValue("@qty", qty);
+                    cmd.Parameters.AddWithValue("@uom", uom);
+                    cmd.Parameters.AddWithValue("@supplier_name", supplier_name);
+                    cmd.Parameters.AddWithValue("@pic", pic);
+                    cmd.Parameters.AddWithValue("@category_issue", category_issue);
+                    cmd.Parameters.AddWithValue("@detail_issue", detail_issue);
+                    cmd.Parameters.AddWithValue("@file_support", file_support ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                    cmd.ExecuteNonQuery();
+                    //cmd.ExecuteScalar();
+                    return "success";
+                }
+            }
+        }
+
 
     }
 }

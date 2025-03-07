@@ -18,4 +18,8 @@
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.4.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\Upload\Non_Conf\" />
+  </ItemGroup>
+
 </Project>

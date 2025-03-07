@@ -1,0 +1,434 @@
+﻿@* @using System.Data; *@
+@model List<UserDetailModel>
+@using Microsoft.AspNetCore.Mvc.Rendering;
+@using Microsoft.AspNetCore.Http;
+@using SEMB_ERP.Function;
+@{
+    List<string> catList = ViewBag.catList;
+}
+
+<style>
+    /* CSS untuk membuat modal berada di tengah layar */
+    #loadingSpinner {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5); /* Transparan hitam */
+    }
+
+        #loadingSpinner img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+    .box_form_input {
+        background-color: #fcfcfc;
+        border-radius: 5px;
+        box-shadow: 1px 2px 8px 2px rgba(152,152,152,0.7);
+    }
+
+    .modal {
+        overflow: auto !important;
+    }
+
+    .smaller-input {
+        height: 25px; /* Adjust height as necessary */
+        padding: 5px; /* Adjust padding as necessary */
+        font-size: 10px; /* Optional: Adjust font size */
+        line-height: 1; /* Optional: Reset line height */
+    }
+
+    /* Customize the font size for DataTables elements */
+    .dataTables_info, .dataTables_paginate, .dataTables_filter {
+        font-size: 10pt; /* Adjust the value to your desired font size */
+    }
+
+    .dataTables_filter {
+        display: none; /* Hides just the input field */
+    }
+
+    table#table_non_conf tr > th,
+    table#table_non_conf tr > td {
+        padding: 5px;
+        vertical-align: middle;
+    }
+
+    .btn-group-xs > .btn, .btn-xs {
+        padding: .25rem .4rem;
+        font-size: .875rem;
+        line-height: .5;
+        border-radius: .2rem;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+</style>
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 mt-3">
+                <div class="card card-success card-outline">
+                    <div class="card-header">
+                        <h5 class="text-center">
+                            <i class="fas fa-list"></i>
+                            Non Conformity List
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 table-responsive">
+                                <table class="table table-bordered table-sm table-striped align-center nowrap" id="tbl_non_conf" style="font-size:10pt;width:100%">
+                                    <thead class="bg-secondary align-middle text-center">
+                                        <tr>
+                                            <th class="align-middle text-center">Material<br /> Type</th>
+                                            <th class="align-middle text-center">Part No</th>
+                                            <th class="align-middle text-center">PO NO</th>
+                                            <th class="align-middle text-center">Qty</th>
+                                            <th class="align-middle text-center">UOM</th>
+                                            <th class="align-middle text-center">Supplier Name</th>
+                                            <th class="align-middle text-center">PIC</th>
+                                            <th class="align-middle text-center">Category Issue</th>
+                                            <th class="align-middle text-center">Detail Issue</th>
+                                            <th class="align-middle text-center" rowspan="2">File<br />Support</th>
+                                            <th class="align-middle text-center" rowspan="2">Action</th>
+                                        </tr>
+                                        <tr class="align-middle text-center">
+                                            @for (int i = 0; i < 9; i++) // Adjusted the loop to 24 to exclude Img Tagging
+                                            {
+                                                if (i == 0)
+                                                {
+                                                    <td style="padding: 5px;">
+                                                        <select class="form-control smaller-input filter_table"  target="@i">
+                                                            <option value="">#ALL</option>
+                                                            <option value="RW">Raw Material (RW)</option>
+                                                            <option value="FG">Finish Goods (FG)</option>
+                                                            <option value="WIP">Work In Progress (WIP)</option>
+                                                        </select>
+                                                    </td>
+                                                } else if (i == 7)
+                                                {
+                                                    <td style="padding: 5px;">
+                                                        <select class="form-control smaller-input filter_table" target="@i">
+                                                            <option value="">#ALL</option>
+                                                            @foreach (var cat in catList)
+                                                            {
+                                                                <option value="@cat">@cat</option>
+                                                            }
+                                                        </select>
+                                                    </td>
+                                                }
+                                                else
+                                                {
+                                                    <td style="padding: 5px;"><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="@i" /></td>
+                                                }
+                                            }
+                                        </tr>
+                                    </thead>
+                                    <tbody class="align-middle text-center">
+                                        <!-- Table data goes here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Element spinner -->
+            <div id="loadingSpinner" style="display: none;">
+                <img src="~/images/icon/loading.gif" alt="Loading..." />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal_update_conf" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <h5 class="modal-title" id="chart_title"><i class="fas fa-edit"></i> Update Non Conformity</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="body_update_posting">
+                <form id="form_update_conf" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-6 pl-4 pr-4">
+                            <input class="form-control" type="hidden" name="id_non_conf" required />
+                            <div class="form-group">
+                                <label>Material Type<span class="text-danger">*</span></label>
+                                <select class="form-control" name="material_type" id="material_type" required>
+                                    <option value="">-- SELECT TYPE --</option>
+                                    <option value="RW">Raw Material (RW)</option>
+                                    <option value="FG">Finish Goods (FG)</option>
+                                    <option value="WIP">Work In Progress (WIP)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Part No<span class="text-danger">*</span></label>
+                                <input class="form-control" type="text" name="partno" placeholder="Part Number" autocomplete="off" required />
+                            </div>
+                            <div class="form-group">
+                                <label>PO No<span class="text-danger">*</span></label>
+                                <input class="form-control" type="text" name="po_no" placeholder="PO Number" autocomplete="off" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Qty<span class="text-danger">*</span></label>
+                                <input class="form-control" type="number" name="qty" placeholder="Qty" autocomplete="off" required />
+                            </div>
+                            <div class="form-group">
+                                <label>UOM<span class="text-danger">*</span></label>
+                                <input class="form-control" type="text" name="uom" placeholder="PC, PALLET, ..." autocomplete="off" required />
+                            </div>
+                        </div>
+                        <div class="col-6 pl-4 pr-4">
+                            <div class="form-group">
+                                <label>Supplier Name<span class="text-danger">*</span></label>
+                                <input class="form-control" type="text" name="supplier_name" placeholder="Supplier" autocomplete="off" required />
+                            </div>
+                            <div class="form-group">
+                                <label>PIC<span class="text-danger">*</span></label>
+                                <select class="form-control" name="pic">
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Category Issue<span class="text-danger">*</span></label>
+                                <select class="form-control" name="category_issue" id="category_issue" required>
+                                    <option value="">-- SELECT CATEGORY ISSUE --</option>
+@*                                     @foreach (var cat in catList)
+                                    {
+                                        <option value="@cat">@cat</option>
+                                    } *@
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Detail Issue</label>
+                                <textarea class="form-control" name="detail_issue" rows="2"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Supporting Documents (Optional)</label>
+                                <input type="file" class="form-control" name="file_support">
+                                <div id="file_preview" class="mt-2"></div> <!-- Add this line for file preview -->
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-group text-center">
+                                <button type="submit" class="btn btn-success mt-2" name="btn_submit">Update <i class="fa fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts {
+    <script>
+        var table;
+        var loading = "<div class='text-center'><i class='fa fa-4x fa-spinner fa-spin'></i></div>";
+
+        $(document).ready(function () {
+            var table = $("#tbl_non_conf").DataTable({
+                // "searching": false,
+                // "scrollX": true,
+                // "fixedColumns": {
+                //     rightColumns: 1
+                // },
+                "orderCellsTop": true,
+                "processing": true,
+                "serverSide": true,
+                "searching": true,
+                "ajax": {
+                    "url": "@Url.Action("GET_NON_CONF_LIST")",
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                "columns": [
+                    { "data": "material_type", "className": "align-middle" },
+                    { "data": "partno", "className": "align-middle" },
+                    { "data": "po_no", "className": "align-middle" },
+                    { "data": "qty", "className": "align-middle" },
+                    { "data": "uom", "className": "align-middle" },
+                    { "data": "supplier_name", "className": "align-middle" },
+                    { "data": "pic", "className": "align-middle" },
+                    { "data": "category_issue", "className": "align-middle" },
+                    { "data": "detail_issue", "className": "align-middle" },
+                    {
+                        "data": "file_doc",
+                        "className": "text-center align-middle",
+                        "render": function (data, type, row) {
+                            if (data === null || data == "") {
+                                return "";
+                            } else {
+                                return `<a href="../Upload/Non_Conf/${data}" target="_blank">
+                                <button class="btn btn-sm btn-danger">
+                                    <i class="fas fa-file-alt"></i>
+                                </button>
+                            </a>`;
+                            }
+                        }
+                    },
+                    {
+                        "data": "id_non_conf",
+                        "className": "align-middle text-center",
+                        "render": function (data, type, row) {
+                            return `<button class="btn btn-sm btn-warning" onclick="update_non_conf('${data}', '${row['material_type']}','${row['partno']}',
+                                    '${row['po_no']}','${row['qty']}','${row['uom']}', '${row['supplier_name']}', '${row['pic']}', '${row['category_issue']}', '${row['detail_issue']}','${row['file_doc']}')"><i class="fas fa-edit"></i> Edit</button>`;
+                        }
+                    }
+                ]
+            });
+
+            $('input.filter_table, select.filter_table', this).on('keyup change', function () {
+                let trgt = $(this).attr('target');
+                if (table.column(trgt).search() !== this.value) {
+                    table
+                        .column(trgt)
+                        .search(this.value)
+                        .draw();
+                }
+            });
+
+            $('select[name=pic]').select2({
+                dropdownParent: $("#modal_update_conf > .modal-dialog > .modal-content"),
+                placeholder: '-- SELECT PIC --',
+                width: '100%',
+                ajax: {
+                    url: "@Url.Action("GetPIC")",
+                    data: function (params) {
+                        return {
+                            search_value: params.term
+                        };
+                    },
+                    processResults: function (data) {
+                        //console.log(data);
+                        return {
+                            results: data.items
+                        }
+                    },
+                }
+            })
+
+            $('select[name=category_issue]').select2({
+                dropdownParent: $("#modal_update_conf > .modal-dialog > .modal-content"),
+                placeholder: '-- SELECT CATEGORY ISSUE --',
+                width: '100%',
+                ajax: {
+                    url: "@Url.Action("GetCatNonConf")",
+                    data: function (params) {
+                        return {
+                            search_value: params.term
+                        };
+                    },
+                    processResults: function (data) {
+                        //console.log(data);
+                        return {
+                            results: data.items
+                        }
+                    },
+                }
+            })
+
+        });
+
+        function update_non_conf(id_non_conf, material_type, partno, po_no, qty, uom, supplier_name, pic, category_issue, detail_issue, file_doc) {
+            // Set the value of the input field with the name 'id_non_conf'
+            $("input[name='id_non_conf']").val(id_non_conf);
+            $("select[name='material_type']").val(material_type);
+            $("input[name='partno']").val(partno);
+            $("input[name='po_no']").val(po_no);
+            $("input[name='qty']").val(qty);
+            $("input[name='uom']").val(uom);
+            $("input[name='supplier_name']").val(supplier_name);
+
+            // Set the value for Select2 elements after the data has been loaded
+            $("select[name='pic']").val(null).trigger('change'); // Clear current value
+            $("select[name='category_issue']").val(null).trigger('change'); // Clear current value
+
+            // Load the data for Select2 elements and set the value
+            $.ajax({
+                url: "@Url.Action("GetPIC")",
+                data: { search_value: pic },
+                success: function (data) {
+                    var option = new Option(data.items[0].text, data.items[0].id, true, true);
+                    $("select[name='pic']").append(option).trigger('change');
+                }
+            });
+
+            $.ajax({
+                url: "@Url.Action("GetCatNonConf")",
+                data: { search_value: category_issue },
+                success: function (data) {
+                    var option = new Option(data.items[0].text, data.items[0].id, true, true);
+                    $("select[name='category_issue']").append(option).trigger('change');
+                }
+            });
+
+            $("textarea[name='detail_issue']").val(detail_issue);
+
+            // Display the existing file if available
+            if (file_doc) {
+                var fileLink = `<a href="../Upload/Non_Conf/${file_doc}" target="_blank">View Existing File</a>`;
+                $("#file_preview").html(fileLink);
+            } else {
+                $("#file_preview").html("No file uploaded");
+            }
+
+            // Show the modal
+            $("div#modal_update_conf").modal("show");
+        }
+
+        $("form#form_update_conf").submit(function (e) {
+            e.preventDefault();
+            let formData = new FormData(this);
+            // console.log(formData);
+            Swal.fire({
+                title: 'Confirmation!!',
+                text: "Are you sure ?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Yes!',
+                cancelButtonText: 'No!',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve, reject) {
+                        $.ajax({
+                            url: "@Url.Action("UPDATE_NON_CONF")",
+                            type: 'POST',
+                            data: formData,
+                            cache: false,
+                            contentType: false,
+                            processData: false
+                        }).done(function (msg) {
+                            let arr = msg.split(";");
+                            if (arr[0] == "success") {
+                                swal.fire("Success!", arr[1], "success").then(function () {
+                                    location.reload();
+                                })
+                            }
+                            else {
+                                swal.fire("Failed!", msg, "error");
+                            }
+                        })
+                    })
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            })
+        })
+
+    </script>
+
+}

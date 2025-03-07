@@ -10,6 +10,7 @@ namespace SEMB_ERP.Function
 
         }
         public DbSet<OrderListModel> v_order { get; set; }
+        public DbSet<NonConfModel> V_NON_CONF { get; set; }
 
     }
 }
