@@ -233,7 +233,6 @@ namespace SEMB_ERP.Controllers
                                        OrderList.revision,
                                        OrderList.project_name,
                                        OrderList.storage_requirement,
-                                       OrderList.sbin,
                                        OrderList.supplier_name,
                                        OrderList.pic,
                                        OrderList.order_type,
@@ -587,7 +586,33 @@ namespace SEMB_ERP.Controllers
             }
         }
 
-
+        [Authorize(Policy = "RequireRequestor")]
+        public IActionResult Putaway()
+        {
+            return this.CheckSession(() =>
+            {
+                var db = new DatabaseAccessLayer();
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                string plant = db.GetUserPlant(sesa_id);
+                List<string> catList = db.GET_CAT_NON_CONF();
+                //List<string> supplierList = db.GetSupplierList();
+                //ViewBag.supplierList = supplierList;
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.plant = plant;
+                ViewBag.catList = catList;
+                return View();
+            });
+        }
+        [HttpGet]
+        public IActionResult GetPartBin(string box_id)
+        {
+            var db = new DatabaseAccessLayer();
+            List<PartModel> listBin = db.GetPartBin(box_id);
+            return PartialView("_TablePartBin", listBin);
+            //return Json(new { status = "OK" });
+        }
 
     }
 }

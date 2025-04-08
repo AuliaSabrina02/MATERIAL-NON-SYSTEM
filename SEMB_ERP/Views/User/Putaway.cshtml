@@ -1,0 +1,146 @@
+﻿@using SEMB_ERP.Models
+@*@model ViewModel*@
+@using System.Globalization;
+@using Microsoft.AspNetCore.Http;
+@using SEMB_ERP.Controllers;
+@inject IHttpContextAccessor Accessor
+
+@{
+    string sesa_id = ViewBag.sesa_id;
+    string name = ViewBag.name;
+    string plant = ViewBag.plant;
+    string todayDate = DateTime.Today.ToString("yyyy-MM-dd");
+    List<string> catList = ViewBag.catList;
+
+}
+
+<style>
+
+    .table-row {
+        cursor: pointer;
+    }
+
+    .modal {
+        overflow-y: auto;
+    }
+
+    .box_form_input {
+        background-color: #fcfcfc;
+        border-radius: 5px;
+        box-shadow: 1px 2px 8px 2px rgba(152,152,152,0.7);
+    }
+
+    /* .content {
+        font-family: Verdana
+    } */
+
+</style>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row pt-3">
+            <div class="col-md-12">
+                <div class="card card-info card-outline">
+                    <div class="card-header bg-info">
+                        <h5 class="text-center"><i class="fas fa-boxes"></i> Putaway</h5>
+                        @*<div class="card-tools">
+                        <a href="~/Template/TemplateUploadPallet.xlsx" class="btn btn-danger mr-1">
+                        <i class="fa fa-download"></i> Template
+                        </a>
+                        <button class="btn btn-success mr-1" name="btn_filter" data-bs-toggle="modal" data-bs-target="#ImportDataModel"><i class="fas fa-file-import"></i> Upload Pallet List</button>
+                        </div>*@
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="text-center"><label style="font-size:14pt"><i class="fas fa-qrcode"></i> Scan Box</label></div>
+                                <div class="form-group">
+                                    <input class="form-control" type="text" name="box_id" placeholder="Scan Box ID Here..." autocomplete="off" required />
+                                </div>
+                                <div class="form-group text-center">
+                                    <button type="submit" class="btn btn-block btn-success mt-2" name="btn_start">Proceed <i class="fa fa-arrow-right"></i></button>
+                                </div>
+                            </div>
+                            <div class="col-12 mt-4" id="list_sbin">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal_temp_order" class="modal fade">
+    <div class="modal-dialog" role="document" style="min-width:80%">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-file-import"></i> Review Order</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row" id="body_temp_order"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" data-bs-dismiss="modal"><i class="fas fa-times"></i> Cancel</button>
+                <button class="btn btn-success" name="btn_confirm_order"><i class="fas fa-save"></i> Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        var Table;
+        var loading = "<div class='text-center'><i class='fa fa-4x fa-spinner fa-spin'></i></div>";
+
+        $(document).ready(function () {
+            $("input[name=box_id]").focus();
+
+            $("input[name=box_id]").keyup(function (event) {
+                if (event.keyCode == 13) {
+                    $("button[name=btn_start]").click();
+                }
+            })
+
+            $("button[name=btn_start]").click(function () {
+                let box_id = $("input[name=box_id]").val();
+                if (box_id == "") {
+                    swal.fire("Error!", "Please scan box id !!", "error");
+                }
+                else {
+                    $("div#list_sbin").html(loading);
+                    showLoadingSpinner("Checking Box...");
+                    $.ajax({
+                        type: "GET",
+                        url: "@Url.Action("GetPartBin")",
+                        data: {
+                            box_id: box_id
+                        }
+                    }).done(function (res) {
+                        Swal.close();
+                        $("div#list_sbin").html(res);
+                    }).fail(function (err) {
+                        swal.fire("Error!", err, "error");
+                    })
+                }
+            })
+        })
+
+        function showLoadingSpinner(msg = 'Please wait...') {
+            Swal.fire({
+                title: 'Processing',
+                html: msg,
+                allowOutsideClick: false,
+                showConfirmButton: false, // Hide the initial OK button
+                onBeforeOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        }
+
+    </script>
+}

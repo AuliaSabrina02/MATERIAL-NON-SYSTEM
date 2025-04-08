@@ -28,7 +28,7 @@ namespace SEMB_ERP.Models
         public string status_desc { get; set; }
         public double? spq { get; set; }
         public int? id_gr { get; set; }
-        public string gr_no { get; set; }
+        public string? gr_no { get; set; }
         public int? total_box { get; set; }
         public string? remark { get; set; }
     }

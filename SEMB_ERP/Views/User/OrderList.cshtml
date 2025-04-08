@@ -114,8 +114,8 @@
                                 <button class="btn btn-success" name="btn_gr"><i class="fas fa-boxes"></i> GR</button>
                             </div> *@
                             <div class="col-12 table-responsive">
-                                <table class="table table-bordered table-striped align-center nowrap" id="table_order" style="font-size:10pt;width:100%">
-                                    <thead class="bg-secondary align-middle text-center">
+                                <table class="table table-bordered table-striped align-center nowrap" id="table_order" style="font-size:10pt;width:100%;">
+                                    <thead class="bg-info align-middle text-center">
                                         <tr>
                                             <th>Status</th>
                                             <th rowspan="2">Goods<br />Receipt</th>
@@ -205,7 +205,7 @@
                                 <label>Material Type<span class="text-danger">*</span></label>
                                 <select class="form-select" name="material_type" required>
                                     <option value="">--SELECT--</option>
-                                    <option value="RW">Raw Material (RW)</option>
+                                    <option value="RM">Raw Material (RM)</option>
                                     <option value="FG">Finish Goods (FG)</option>
                                     <option value="WIP">Work In Progress (WIP)</option>
                                 </select>
@@ -421,7 +421,11 @@
                                 return "";
                             }
                             else {
-                                return `<button class="btn btn-sm btn-danger"><i class="fas fa-file-alt"></i></button>`;
+                                return `<a href="../Documents/${data}" target="_blank">
+                                        <button class="btn btn-sm btn-danger">
+                                            <i class="fas fa-file-alt"></i>
+                                        </button>
+                                    </a>`;
                             }
                         }
                     },
@@ -643,7 +647,8 @@
                             let arr = msg.split(";");
                             if (arr[0] == "success") {
                                 swal.fire("Success!", arr[1], "success").then(function () {
-                                    location.reload();
+                                    $("div#modal_update_order").modal("hide");
+                                    $("#table_order").DataTable().ajax.reload(null, false);
                                 })
                             }
                             else {

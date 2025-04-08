@@ -555,6 +555,32 @@ namespace SEMB_ERP.Function
                 }
             }
         }
+        public List<PartModel> GetPartBin(string box_id)
+        {
+            List<PartModel> listBin = new List<PartModel>();
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand(@"SELECT sbin FROM mst_sbin", conn))
+                {
+                    //cmd.CommandType = CommandType.StoredProcedure;
+                    //cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                    using SqlDataReader reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            PartModel row = new PartModel();
+                            row.sbin = reader["sbin"].ToString();
+                            listBin.Add(row);
+                        }
+                    }
+                }
+
+                conn.Close();
+            }
+            return listBin;
+        }
 
 
     }

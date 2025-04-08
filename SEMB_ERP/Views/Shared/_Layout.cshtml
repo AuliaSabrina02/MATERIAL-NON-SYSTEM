@@ -49,7 +49,7 @@
     <link href="~/lib/adminlte/plugins/chart.js/Chart.min.css" rel="stylesheet" />
     <link href="~/lib/adminlte/plugins/overlayScrollbars/css/OverlayScrollbars.min.css" rel="stylesheet" />
 </head>
-<body class="sidebar-mini layout-fixed layout-navbar-fixed sidebar-collapse" style="padding: 0 !important; margin: 0 !important; ">
+<body class="sidebar-mini layout-fixed layout-navbar-fixed sidebar-collapse" style="padding: 0 !important; margin: 0 !important; font-family:Calibri !important">
     <div class="wrapper">
         <!-- Navbar-->
         <nav class="main-header navbar navbar-expand border-bottom navbar-dark bg-dark">
@@ -135,6 +135,14 @@
                                     <i class="nav-icon fas fa-table"></i>
                                     <p>
                                         Non Conformity List
+                                    </p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("Putaway", "User")" class="nav-link @Html.IsActive("User","Putaway")">
+                                    <i class="nav-icon fas fa-boxes"></i>
+                                    <p>
+                                        Putaway
                                     </p>
                                 </a>
                             </li>

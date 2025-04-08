@@ -1,0 +1,36 @@
+﻿@model List<PartModel>
+@{
+    int no = 0;
+}
+
+<table class="table table-bordered table-sm text-center">
+    <thead class="bg-light">
+        <tr>
+            <th>No.</th>
+            <th>SBIN</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(var part in Model)
+        {
+            no++;
+            <tr>
+                <td>@no</td>
+                <td>@part.sbin</td>
+                <td>
+                    <button class="btn btn-primary">Select Bin <i class="fas fa-arrow-right"></i></button>
+                </td>
+            </tr>
+        }
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="3">
+                <button class="btn btn-warning">Any Bin <i class="fas fa-arrow-right"></i></button>
+            </td>
+        </tr>
+    </tfoot>
+</table>
+<script>
+</script>
