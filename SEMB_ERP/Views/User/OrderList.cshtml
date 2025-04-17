@@ -373,10 +373,12 @@
                         "data": "id_order",
                         "className": "align-middle",
                         "render": function (data, type, row) {
-                            if (row["status_desc"].toLowerCase() == "submission") {
+                            if (row["status_desc"].toLowerCase() == "submission" && row["length_mm"] > 0 &&
+                                row["width_mm"] > 0 &&
+                                row["height_mm"] > 0) {
                                 let order_check = "";
                                 let is_checked = "";
-                                if (id_order_array.includes(data)) { 
+                                if (id_order_array.includes(data)) {
                                     order_check = "checked";
                                     is_checked = "1";
                                 }

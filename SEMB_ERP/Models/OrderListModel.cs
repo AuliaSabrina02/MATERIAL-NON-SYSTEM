@@ -19,10 +19,10 @@ namespace SEMB_ERP.Models
         public string? pic { get; set; }
         public string? pic_name { get; set; }
         public string? order_type { get; set; }
-        public double? length_mm { get; set; }
-        public double? width_mm { get; set; }
-        public double? height_mm { get; set; }
-        public double? unit_price { get; set; }
+        public decimal? length_mm { get; set; }
+        public decimal? width_mm { get; set; }
+        public decimal? height_mm { get; set; }
+        public decimal? unit_price { get; set; }
         public string? file_support { get; set; }
         public string? status_code { get; set; }
         public string status_desc { get; set; }

@@ -1,0 +1,357 @@
+﻿@using SEMB_ERP.Models
+@*@model ViewModel*@
+@using System.Globalization;
+@using Microsoft.AspNetCore.Http;
+@using SEMB_ERP.Controllers;
+@inject IHttpContextAccessor Accessor
+
+@{
+    string sesa_id = ViewBag.sesa_id;
+    string name = ViewBag.name;
+    string plant = ViewBag.plant;
+    string todayDate = DateTime.Today.ToString("yyyy-MM-dd");
+    List<string> catList = ViewBag.catList;
+
+}
+
+<style>
+
+    .table-row {
+        cursor: pointer;
+    }
+
+    .modal {
+        overflow-y: auto;
+    }
+
+    .box_form_input {
+        background-color: #fcfcfc;
+        border-radius: 5px;
+        box-shadow: 1px 2px 8px 2px rgba(152,152,152,0.7);
+    }
+
+    /* .content {
+            font-family: Verdana
+        } */
+
+</style>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row pt-3">
+            <div class="col-md-12">                
+                <!-- New Hidden Card -->
+                <div class="card card-info card-outline" id="hiddenCard">
+                    <div class="card-header bg-info">
+                        <h5 class="text-center"><i class="fas fa-box-open"></i>  @ViewBag.binId</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="col-12">
+                            <div class="text-center"><label style="font-size:14pt"><i class="fas fa-qrcode"></i> Scan Part</label></div>
+                            <div class="form-group">
+                                <input id="box_id_input" class="form-control" type="text" name="box_id_input" placeholder="Scan Box ID Here..." autocomplete="off" required />
+                            </div>
+                            @* <div class="form-group text-center">
+                                <button type="submit" class="btn btn-block btn-success mt-2" name="btn_start">Proceed <i class="fa fa-arrow-right"></i></button>
+                            </div> *@
+                            <div class="col-12 mt-4">
+                                <!-- Table for Part Details -->                                
+                                <table class="table table-bordered" id="list_part" style="font-size:10pt;width:100%">
+                                    <thead class="bg-secondary align-middle text-center">
+                                        <tr>
+                                            <th class="align-middle text-center">Part No</th>
+                                            <th class="align-middle text-center">Part Name</th>
+                                            <th class="align-middle text-center">Quantity</th>
+                                            <th class="align-middle text-center">Action</th>
+                                        </tr>                                       
+                                    </thead>
+                                    <tbody class="align-middle text-center">                                    
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>                   
+                    </div>
+                    <div class="card-footer">
+                        <button type="button" class="btn btn-secondary" id="cancel_bin">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="confirm_bin">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* <!-- BIN MODAL -->
+<div id="modal_select_bin" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title"><i class="fas fa-qrcode"></i> Scan Bin</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="form-group" style="padding-top: 15px;">
+                <input class="form-control" type="text" name="bin_id" placeholder="Scan Bin ID Here..." autocomplete="off" required />
+            </div>            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm_bin">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div> *@
+
+@section Scripts
+{
+    <script>
+        $(document).ready(function () {
+            var table = $('#list_part').DataTable({
+                "ajax": {
+                    "url": '@Url.Action("GetBinItem")', // URL to your ASP.NET Web API endpoint
+                    "dataSrc": function (json) {
+                        console.log("AJAX response:", json);
+                        return json.map(function (item) {
+                            return {
+                                PartNo: item.partNo,
+                                PartName: item.partName,
+                                Quantity: item.quantity,
+                                Action: "<button type='button' class='btn btn-danger delete-part' data-partname='" + item.partName + "'><i class='fas fa-trash'></i></button>"
+                            };
+                        });
+                    }
+                },
+                "columns": [
+                    { data: "PartNo", title: "Part No" },
+                    { data: "PartName", title: "Part Name" },
+                    { data: "Quantity", title: "Quantity" },
+                    { data: "Action", title: "Action" }
+                ],
+                "searching": true,
+                "paging": true,
+                "info": true,
+                "order": [[0, "asc"]]
+            });
+
+            $('#list_part tbody').on('click', '.delete-part', function () {
+                var partName = $(this).data('partname'); // Get the PartName from the button's data attribute
+
+                // SweetAlert2 confirmation dialog
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You are about to delete " + partName + ".",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'No, cancel!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '@Url.Action("DeleteBinItem")', // URL to your ASP.NET Web API endpoint for deletion
+                            type: 'POST',
+                            data: { partName: partName }, // Send the PartName to the server
+                            success: function (response) {
+                                // Handle success response
+                                if (response.trim() === "OK") {
+                                    Swal.fire(
+                                        'Deleted!',
+                                        'The part has been deleted.',
+                                        'success'
+                                    );
+                                } else if (response.trim() === "NOK") {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error!',
+                                        text: 'Error Deleting. Please try again.',
+                                        confirmButtonText: 'OK'
+                                    });
+                                } else {
+                                    // Handle unexpected responses
+                                    Swal.fire({
+                                        icon: 'warning',
+                                        title: 'Warning!',
+                                        text: 'Unexpected response received.',
+                                        confirmButtonText: 'OK'
+                                    });
+                                }
+                                table.ajax.reload(); // Reload the table data
+                                
+                            },
+                            error: function (xhr, status, error) {
+                                // Handle error response
+                                Swal.fire(
+                                    'Error!',
+                                    'There was an error deleting the part: ' + error,
+                                    'error'
+                                );
+                            }
+                        });
+                    }
+                });
+            });
+
+            $('#box_id_input').on('keypress', function (e) {
+                if (e.which === 13) { // 13 is the Enter key
+                    e.preventDefault(); // Prevent the default form submission
+                    var inputValue = $(this).val();
+                    if (inputValue) {
+                        var exists = false;
+                        table.rows().every(function () {
+                            var data = this.data();
+                            console.log('Row data:', data);
+                            console.log('Checking:', data['PartName'], 'against:', inputValue);
+                            if (String(data['PartName']).trim() === String(inputValue).trim()) { // Assuming Part No is in the first column
+                                exists = true;
+                                return false; // Break the loop
+                            }
+                        });
+                        console.log(exists)
+
+                        if (exists) {
+                            // Show alert if the value already exists
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Warning!',
+                                text: 'Data is already in the table.',
+                                confirmButtonText: 'OK'
+                            });
+                        } else {
+                            // Call your API to insert the new part
+                            $.ajax({
+                                url: '@Url.Action("InsertBinItem")', // URL to your API endpoint for inserting the part
+                                type: 'POST',
+                                data: { box_id: inputValue },
+                                success: function (response) {
+                                    // Optionally handle the response
+                                    console.log(response);
+                                    if (response.trim() === "OK") {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Success!',
+                                            text: 'Data has been added successfully.',
+                                            confirmButtonText: 'OK'
+                                        });
+                                    } else if (response.trim() === "NOK") {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Error!',
+                                            text: 'No data found. Please try again.',
+                                            confirmButtonText: 'OK'
+                                        });
+                                    } else {
+                                        // Handle unexpected responses
+                                        Swal.fire({
+                                            icon: 'warning',
+                                            title: 'Warning!',
+                                            text: 'Unexpected response received.',
+                                            confirmButtonText: 'OK'
+                                        });
+                                    }
+                                    // Refresh the DataTable
+                                    table.ajax.reload();
+                                },
+                                error: function (xhr, status, error) {
+                                    console.error('Error inserting part:', error);
+                                }
+                            });
+                        }
+                    }
+                }
+            });
+
+            $('#cancel_bin').on('click', function () {
+                window.location.href = '@Url.Action("Putaway")'; // Redirect to Putaway page
+            });
+
+            // Confirm button functionality
+            $('#confirm_bin').on('click', function () {
+                // Add your AJAX request here for confirmation
+                var binId = '@ViewBag.binId';
+                showLoadingSpinner("Checking Box...");
+                $.ajax({
+                    url: '@Url.Action("ConfirmBinItem")', // URL to your confirmation endpoint
+                    type: 'POST',
+                    data: { 
+                        binId: binId
+                    }, //use viewbag binId if temp table wanna be seperated by BIN 
+                    success: function (response) {
+                        // Handle success response
+                        if (response.trim() === "OK") {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Confirmed!',
+                                text: 'Your action has been confirmed.',
+                                confirmButtonText: 'OK'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // Redirect to PutAWAY page
+                                    window.location.href = '@Url.Action("Putaway")'; // Update with the correct action if needed
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: 'There was an error confirming your action.',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        Swal.fire(
+                            'Error!',
+                            'There was an error processing your request: ' + error,
+                            'error'
+                        );
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script>        
+        function showLoadingSpinner(msg = 'Please wait...') {
+            Swal.fire({
+                title: 'Processing',
+                html: '<i class="fa fa-spinner fa-spin" style="font-size: 50px"></i>',
+                allowOutsideClick: false,
+                showConfirmButton: false, // Hide the initial OK button
+                onBeforeOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        }
+
+
+        // new script for input to cross validate di DBBLP.dbo.packagedetail Part number sama atau tidak kalau sama masuk tempory table kalu tidak keluarin modal Wrong Part
+        // script Buttton confim untukUpdate status di tbl order dan cancel untuk balik ke PutAway
+    </script>
+
+    @* <script>
+        $(document).ready(function () {
+            // Hide the hiddenCard initially
+            $('#hiddenCard').hide();
+
+            // Show the hiddenCard when the Proceed button is clicked
+            $('#confirm_bin').click(function () {
+                // $('#hiddenCard').show();
+                // $('#modal_select_bin').modal('hide'); // Close the
+
+                var binId = $("input[name=bin_id]").val();
+
+                // Set the header of the hiddenCard with the binId
+                $('#hiddenCard .card-header h5').text(binId);
+
+                // Show the hiddenCard
+                $('#hiddenCard').show();
+
+                // Close the modal
+                $('#modal_select_bin').modal('hide');
+
+            });
+        });
+    </script> *@
+
+}
