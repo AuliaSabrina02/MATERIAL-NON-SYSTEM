@@ -218,11 +218,16 @@
                                 confirmButtonText: 'OK'
                             });
                         } else {
+                            var sesa_id = '@ViewBag.sesa_id'
+                            console.log(sesa_id)
                             // Call your API to insert the new part
                             $.ajax({
                                 url: '@Url.Action("InsertBinItem")', // URL to your API endpoint for inserting the part
                                 type: 'POST',
-                                data: { box_id: inputValue },
+                                data: { 
+                                    box_id: inputValue,
+                                    sesa_id: sesa_id
+                                },
                                 success: function (response) {
                                     // Optionally handle the response
                                     console.log(response);
@@ -262,19 +267,55 @@
             });
 
             $('#cancel_bin').on('click', function () {
-                window.location.href = '@Url.Action("Putaway")'; // Redirect to Putaway page
+                var sesa_id = "@ViewBag.sesa_id"
+                $.ajax({
+                    url: '@Url.Action("ClearBin")', // URL to your API endpoint for inserting the part
+                    type: 'POST',
+                    data: {                        
+                        sesa_id: sesa_id
+                    },
+                    success: function (response) {
+                        // Optionally handle the response
+                        console.log(response);
+                        if (response.trim() === "OK") {
+                            window.location.href = '@Url.Action("Putaway")'; // Redirect to Putaway page
+                        } else if (response.trim() === "NOK") {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: 'Please try again.',
+                                confirmButtonText: 'OK'
+                            });
+                        } else {
+                            // Handle unexpected responses
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Warning!',
+                                text: 'Unexpected response received.',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                        // Refresh the DataTable
+                        table.ajax.reload();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error inserting part:', error);
+                    }
+                });                
             });
 
             // Confirm button functionality
             $('#confirm_bin').on('click', function () {
                 // Add your AJAX request here for confirmation
                 var binId = '@ViewBag.binId';
+                var sesa_id = '@ViewBag.sesa_id';
                 showLoadingSpinner("Checking Box...");
                 $.ajax({
                     url: '@Url.Action("ConfirmBinItem")', // URL to your confirmation endpoint
                     type: 'POST',
                     data: { 
-                        binId: binId
+                        binId: binId,
+                        sesa_id: sesa_id
                     }, //use viewbag binId if temp table wanna be seperated by BIN 
                     success: function (response) {
                         // Handle success response

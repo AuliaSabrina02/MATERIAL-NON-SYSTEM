@@ -638,7 +638,7 @@ namespace SEMB_ERP.Function
             return parts;
         }
 
-        public string InsertBinItem(string box_id)
+        public string InsertBinItem(string box_id, string sesa_id)
         {
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
@@ -647,6 +647,7 @@ namespace SEMB_ERP.Function
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@input", box_id);
+                    cmd.Parameters.AddWithValue("@user", sesa_id);
                     SqlDataReader reader = cmd.ExecuteReader();
 
                     if (reader.Read())
@@ -720,7 +721,7 @@ namespace SEMB_ERP.Function
             }
         }
 
-        public string ConfirmBinItem(string binId)
+        public string ConfirmBinItem(string binId, string sesa_id)
         {
             using (SqlConnection conn = new SqlConnection(ConnectionStringBLP))
             {
@@ -729,7 +730,26 @@ namespace SEMB_ERP.Function
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@input", binId);
+                    cmd.Parameters.AddWithValue("@user", sesa_id);
                     cmd.ExecuteNonQuery();
+                    return "OK";
+                }
+            }
+        }
+
+        public string ClearBin(string sesa_id)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand(@"DELETE FROM tmp_bin_matrial WHERE DoneBy = @sesa_id", conn))
+                {
+                    // Use parameterized query to prevent SQL injection
+                    cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+
+                    // Execute the command
+                    int rowsAffected = cmd.ExecuteNonQuery();
+
                     return "OK";
                 }
             }

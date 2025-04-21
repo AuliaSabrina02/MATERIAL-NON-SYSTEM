@@ -660,10 +660,10 @@ namespace SEMB_ERP.Controllers
         }
 
         [HttpPost]
-        public IActionResult InsertBinItem(string box_id)
+        public IActionResult InsertBinItem(string box_id , string sesa_id)
         {
             var db = new DatabaseAccessLayer();
-            string insertResult = db.InsertBinItem(box_id);
+            string insertResult = db.InsertBinItem(box_id, sesa_id);
 
             // Return the result directly
             return Content(insertResult, "text/plain");
@@ -680,10 +680,10 @@ namespace SEMB_ERP.Controllers
         }
 
         [HttpPost]
-        public IActionResult ConfirmBinItem(string binId)
+        public IActionResult ConfirmBinItem(string binId, string sesa_id)
         {
             var db = new DatabaseAccessLayer();
-            string comfirmResult = db.ConfirmBinItem(binId);
+            string comfirmResult = db.ConfirmBinItem(binId, sesa_id);
 
             // Return the result directly
             return Content(comfirmResult, "text/plain");
@@ -699,6 +699,15 @@ namespace SEMB_ERP.Controllers
             return Content(validateResult, "text/plain");
         }
 
+        [HttpPost]
+        public IActionResult ClearBin(string sesa_id)
+        {
+            var db = new DatabaseAccessLayer();
+            string validateResult = db.ClearBin(sesa_id);
+
+            // Return the result directly
+            return Content(validateResult, "text/plain");
+        }
 
     }
 }
