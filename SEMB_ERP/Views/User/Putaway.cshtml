@@ -91,11 +91,61 @@
     </div>
 </div>
 
+<!-- BIN MODAL -->
+<div id="modal_select_bin" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title"><i class="fas fa-qrcode"></i> Scan Selected Bin</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            @* <div class="modal-body">
+                <p>You have selected SBIN: <span id="selected_sbin_display"></span></p>
+                <!-- You can add more content here, like a confirmation button -->
+            </div> *@
+            <div class="form-group" style="padding-top: 15px; padding-left: 5px; padding-right: 5px;">
+                <input id="bin_id_input" class="form-control" type="text" name="bin_ids" placeholder="Scan Bin ID Here..." autocomplete="off" required />
+            </div>
+            @* <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="confirm_selection">Confirm</button> *@
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm_bin">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Any Bin Modal -->
+<div id="modal_select_any_bin" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title"><i class="fas fa-qrcode"></i> Scan Any Bin</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>            
+            <div class="form-group" style="padding-top: 15px; padding-left: 5px; padding-right: 5px;">
+                <input id="any_bin_id_input" class="form-control" type="text" name="any_bin_ids" placeholder="Scan Bin ID Here..." autocomplete="off" required />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm_any_bin">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 @section Scripts
 {
     <script>
         var Table;
         var loading = "<div class='text-center'><i class='fa fa-4x fa-spinner fa-spin'></i></div>";
+        var selectedSbin;
 
         $(document).ready(function () {
             $("input[name=box_id]").focus();
@@ -142,5 +192,89 @@
             });
         }
 
+        $(document).on('click', '.select-bin', function () {
+            selectedSbin = $(this).data('sbin');
+            console.log("Selected SBIN: ", selectedSbin);
+            //$("#selected_sbin_display").text(selectedSbin); // Display the selected SBIN in the modal
+            $("#modal_select_bin").modal('show'); // Show the modal
+            $("input[name=bin_ids]").focus();
+
+            // Add an event listener for the keypress event
+            $("#bin_id_input").on("keypress", function (event) {
+                // Check if the pressed key is Enter (key code 13)
+                if (event.which === 13) {
+                    // Prevent the default action (if needed)
+                    event.preventDefault();
+                    // Trigger a click on the confirm button
+                    $("#confirm_bin").click();
+                }
+            });
+        });
+
+        $(document).ready(function () {
+            $("#confirm_bin").click(function () {
+                var binId = $("input[name='bin_ids']").val().trim(); // Get the value from the input field
+                console.log("Input Bin ID: " + binId);
+                console.log("Expected SBIN: " + selectedSbin);
+                if (binId === selectedSbin) {                    
+                    $("#modal_select_bin").modal('hide'); // Close the modal
+                    // Proceed to the next page or perform the desired action
+                    var url = '@Url.Action("BinMaterial")' + '?binId=' + encodeURIComponent(binId);  //maybe add another variable to pass erpId
+                    window.location.href = url; // Redirect to the next page
+                } else {
+                    swal.fire("Error!", "Invalid BIN. Please check and try again.", "error");
+                }
+            });
+        });
+
+        $(document).on('click', '.select-any-bin', function () {
+            $("#modal_select_any_bin").modal('show');
+
+            $("#any_bin_id_input").on("keypress", function (event) {
+                // Check if the pressed key is Enter (key code 13)
+                if (event.which === 13) {
+                    // Prevent the default action (if needed)
+                    event.preventDefault();
+                    // Trigger a click on the confirm button
+                    $("#confirm_any_bin").click();
+                }
+            });
+
+            $("#confirm_any_bin").click(function () {
+                var anybinId = $("input[name='any_bin_ids']").val().trim(); // Get the value from the input field
+                console.log("Input Bin ID: " + anybinId);
+                $.ajax({
+                    type: "POST",
+                    url: "@Url.Action("ValidateBin")",
+                    data: {
+                        anybinId: anybinId
+                    }
+                }).done(function (response) {
+                    if (response.trim() === "OK") {
+                        $("#modal_select_bin").modal('hide');
+                        var url = '@Url.Action("BinMaterial")' + '?binId=' + encodeURIComponent(anybinId); //maybe add another variable to pass erpId 
+                        window.location.href = url;
+                    } else if (response.trim() === "NOK") {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: 'No Bin found. Please try again.',
+                            confirmButtonText: 'OK'
+                        });
+                    } else {
+                        // Handle unexpected responses
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Warning!',
+                            text: 'Unexpected response received.',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                }).fail(function (err) {
+                    swal.fire("Error!", err, "error");
+                })                
+            });
+        });
+        
     </script>
 }

@@ -4,7 +4,7 @@
 }
 
 <table class="table table-bordered table-sm text-center">
-    <thead class="bg-light">
+    <thead class="bg-secondary">
         <tr>
             <th>No.</th>
             <th>SBIN</th>
@@ -19,7 +19,7 @@
                 <td>@no</td>
                 <td>@part.sbin</td>
                 <td>
-                    <button class="btn btn-primary">Select Bin <i class="fas fa-arrow-right"></i></button>
+                    <button class="btn btn-primary select-bin" data-sbin="@part.sbin">Select Bin <i class="fas fa-arrow-right"></i></button>
                 </td>
             </tr>
         }
@@ -27,10 +27,29 @@
     <tfoot>
         <tr>
             <td colspan="3">
-                <button class="btn btn-warning">Any Bin <i class="fas fa-arrow-right"></i></button>
+                <button class="btn btn-warning select-any-bin">Any Bin<i class="fas fa-arrow-right"></i></button>
             </td>
         </tr>
     </tfoot>
 </table>
-<script>
-</script>
+
+@* <script>
+    $(document).on('click', '.select-bin', function () {
+        var selectedSbin = $(this).data('sbin');
+        $("#selected_sbin_display").text(selectedSbin); // Display the selected SBIN in the modal
+        $("#modal_select_bin").modal('show'); // Show the modal
+    });
+
+    $("#confirm_selection").click(function () {
+        var binId = $("input[name='bin_id_input']").val().trim(); // Get the value from the input field
+        if (binId === selectedSbin) {
+            console.log("Confirmed Bin ID: " + binId);
+            $("#modal_select_bin").modal('hide'); // Close the modal
+            // Proceed to the next page or perform the desired action
+            var url = '/User /BinMaterial?binId=' + encodeURIComponent(binId);
+            window.location.href = url; // Redirect to the next page
+        } else {
+            swal.fire("Error!", "Invalid SBIN value. Please check and try again.", "error");
+        }
+    });
+</script> *@

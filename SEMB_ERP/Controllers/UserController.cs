@@ -614,5 +614,100 @@ namespace SEMB_ERP.Controllers
             //return Json(new { status = "OK" });
         }
 
+        [Authorize(Policy = "RequireRequestor")]
+        public IActionResult BinMaterial(string binId) //add string erpId
+        {
+            var referrer = Request.Headers["Referer"].ToString();
+            if (!referrer.Contains("/User/Putaway")) // Check if the referrer is the expected page
+            {
+                return RedirectToAction("Putaway"); // Redirect to a safe page
+            }
+
+            return this.CheckSession(() =>
+            {
+                var db = new DatabaseAccessLayer();
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                string plant = db.GetUserPlant(sesa_id);
+                List<string> catList = db.GET_CAT_NON_CONF();
+                //List<string> supplierList = db.GetSupplierList();
+                //ViewBag.supplierList = supplierList;
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.plant = plant;
+                ViewBag.catList = catList;
+                ViewBag.binId = binId;
+                //Viewbag.erpId = erpId;
+                return View();
+            });
+        }
+
+        [HttpGet]
+        public IActionResult GetBinItem(string box_id)
+        {
+            var db = new DatabaseAccessLayer();
+            List<PartModel> listBin = db.GetBinItem(box_id);
+
+            // Transform the list into a format suitable for DataTables
+            var result = listBin.Select(item => new
+            {
+                PartNo = item.partno,
+                PartName = item.partname,
+                Quantity = item.qty               
+            });
+
+            return Json(result);
+        }
+
+        [HttpPost]
+        public IActionResult InsertBinItem(string box_id , string sesa_id)
+        {
+            var db = new DatabaseAccessLayer();
+            string insertResult = db.InsertBinItem(box_id, sesa_id);
+
+            // Return the result directly
+            return Content(insertResult, "text/plain");
+        }
+
+        [HttpPost]
+        public IActionResult DeleteBinItem(string partName)
+        {
+            var db = new DatabaseAccessLayer();
+            string deleteResult = db.DeleteBinItem(partName);
+
+            // Return the result directly
+            return Content(deleteResult, "text/plain");
+        }
+
+        [HttpPost]
+        public IActionResult ConfirmBinItem(string binId, string sesa_id)
+        {
+            var db = new DatabaseAccessLayer();
+            string comfirmResult = db.ConfirmBinItem(binId, sesa_id);
+
+            // Return the result directly
+            return Content(comfirmResult, "text/plain");
+        }
+
+        [HttpPost]
+        public IActionResult ValidateBin(string anybinId)
+        {
+            var db = new DatabaseAccessLayer();
+            string validateResult = db.ValidateBin(anybinId);
+
+            // Return the result directly
+            return Content(validateResult, "text/plain");
+        }
+
+        [HttpPost]
+        public IActionResult ClearBin(string sesa_id)
+        {
+            var db = new DatabaseAccessLayer();
+            string validateResult = db.ClearBin(sesa_id);
+
+            // Return the result directly
+            return Content(validateResult, "text/plain");
+        }
+
     }
 }

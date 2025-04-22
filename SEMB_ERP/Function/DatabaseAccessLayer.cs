@@ -3,12 +3,15 @@ using System.Data.SqlClient;
 using System.Data;
 using Microsoft.AspNetCore.Mvc;
 using System.Drawing.Drawing2D;
+using System.Drawing;
+using System.IO;
 
 namespace SEMB_ERP.Function
 {
     public class DatabaseAccessLayer
     {
         public string ConnectionString = "Data Source=10.155.152.114;Initial Catalog=SEMB_ERP;Persist Security Info=True;User ID=dt;Password=Dt@123;MultipleActiveResultSets=true";
+        public string ConnectionStringBLP = "Data Source=10.155.129.223;Initial Catalog=DBBLP;Persist Security Info=True;User ID=semb;Password=Semb@123;MultipleActiveResultSets=true";
 
         public List<OrderTempListModel> GetTempOrder(string id_upload, string sesa_id)
         {
@@ -260,7 +263,7 @@ namespace SEMB_ERP.Function
             }
         }
         public string SubmitOrder(string id_upload, string material_type, string partno, string po_no, double qty, string uom, string revision, string project_name,
-            string storage_requirement, string supplier_name, string pic, string order_type, double unit_price, double length_mm, double width_mm, double height_mm, 
+            string storage_requirement, string supplier_name, string pic, string order_type, double unit_price, double length_mm, double width_mm, double height_mm,
             string remark, string file_support, string sesa_id)
         {
             using (SqlConnection conn = new SqlConnection(ConnectionString))
@@ -530,7 +533,7 @@ namespace SEMB_ERP.Function
             if (file_support == "")
             {
                 file_support = null;
-            } 
+            }
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
                 conn.Open();
@@ -555,33 +558,201 @@ namespace SEMB_ERP.Function
                 }
             }
         }
+        //public List<PartModel> GetPartBin(string box_id)
+        //{
+        //    List<PartModel> listBin = new List<PartModel>();
+        //    using (SqlConnection conn = new SqlConnection(ConnectionString))
+        //    {
+        //        conn.Open();
+        //        using (SqlCommand cmd = new SqlCommand(@"SELECT sbin FROM mst_sbin", conn)) // store pro untuk cross check di DBBLP.dbo.packagedetail
+        //        {
+        //            //cmd.CommandType = CommandType.StoredProcedure;
+        //            //cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+        //            using SqlDataReader reader = cmd.ExecuteReader();
+        //            if (reader.HasRows)
+        //            {
+        //                while (reader.Read())
+        //                {
+        //                    PartModel row = new PartModel();
+        //                    row.sbin = reader["sbin"].ToString();
+        //                    listBin.Add(row);
+        //                }
+        //            }
+        //        }
+
+        //        conn.Close();
+        //    }
+        //    return listBin;
+        //}
+
         public List<PartModel> GetPartBin(string box_id)
         {
             List<PartModel> listBin = new List<PartModel>();
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
                 conn.Open();
-                using (SqlCommand cmd = new SqlCommand(@"SELECT sbin FROM mst_sbin", conn))
+                using (SqlCommand cmd = new SqlCommand("GET_BIN_LIST", conn))
                 {
-                    //cmd.CommandType = CommandType.StoredProcedure;
-                    //cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@input", box_id);
                     using SqlDataReader reader = cmd.ExecuteReader();
                     if (reader.HasRows)
                     {
                         while (reader.Read())
                         {
-                            PartModel row = new PartModel();
-                            row.sbin = reader["sbin"].ToString();
-                            listBin.Add(row);
+                            if (reader["Storage_Bin"] != DBNull.Value)
+                            {
+                                PartModel row = new PartModel();
+                                row.sbin = reader["Storage_Bin"].ToString();
+                                listBin.Add(row);
+                            }
                         }
                     }
                 }
-
-                conn.Close();
             }
             return listBin;
         }
 
+        public List<PartModel> GetBinItem(string box_id)
+        {
+            List<PartModel> parts = new List<PartModel>();
 
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("SELECT * FROM tmp_bin_matrial", conn);
+                //cmd.Parameters.AddWithValue("@box_id", box_id);
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    parts.Add(new PartModel
+                    {
+                        partno = reader["PartNo"].ToString(),
+                        partname = reader["PartName"].ToString(),
+                        qty = reader["Qty"].ToString()
+                    });
+                }
+            }
+
+            return parts;
+        }
+
+        public string InsertBinItem(string box_id, string sesa_id)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand("INSERT_BIN_ITEM", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@input", box_id);
+                    cmd.Parameters.AddWithValue("@user", sesa_id);
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    if (reader.Read())
+                    {
+                        string status = reader["Status"].ToString();
+                        if (status == "OK")
+                        {
+                            return "OK";
+                        }
+                        else if (status == "NOK")
+                        {
+                            return "NOK";
+                        }
+                    }
+                    return "NOK";
+                }
+            }
+        }
+
+        public string DeleteBinItem(string partName)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand(@"DELETE FROM tmp_bin_matrial WHERE PartName = @partName", conn))
+                {
+                    // Use parameterized query to prevent SQL injection
+                    cmd.Parameters.AddWithValue("@partName", partName);
+
+                    // Execute the command
+                    int rowsAffected = cmd.ExecuteNonQuery();
+
+                    // Check if any rows were affected
+                    if (rowsAffected > 0)
+                    {
+                        return "OK";
+                    }
+                    else
+                    {
+                        return "NOK";
+                    }                    
+                }
+            }
+        }
+
+        public string ValidateBin(string anybinId)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand("VALIDATE_BIN", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@input", anybinId);
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    if (reader.Read())
+                    {
+                        string status = reader["Status"].ToString();
+                        if (status == "OK")
+                        {
+                            return "OK";
+                        }
+                        else if (status == "NOK")
+                        {
+                            return "NOK";
+                        }
+                    }
+                    return "NOK";
+                }
+            }
+        }
+
+        public string ConfirmBinItem(string binId, string sesa_id)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionStringBLP))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand("UPDATE_BIN", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@input", binId);
+                    cmd.Parameters.AddWithValue("@user", sesa_id);
+                    cmd.ExecuteNonQuery();
+                    return "OK";
+                }
+            }
+        }
+
+        public string ClearBin(string sesa_id)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand(@"DELETE FROM tmp_bin_matrial WHERE DoneBy = @sesa_id", conn))
+                {
+                    // Use parameterized query to prevent SQL injection
+                    cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+
+                    // Execute the command
+                    int rowsAffected = cmd.ExecuteNonQuery();
+
+                    return "OK";
+                }
+            }
+        }
     }
 }
