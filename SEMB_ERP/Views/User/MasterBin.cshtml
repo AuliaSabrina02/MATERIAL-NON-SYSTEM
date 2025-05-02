@@ -1,0 +1,403 @@
+﻿@using SEMB_ERP.Models
+@*@model ViewModel*@
+@using System.Globalization;
+@using Microsoft.AspNetCore.Http;
+@using SEMB_ERP.Controllers;
+@inject IHttpContextAccessor Accessor
+
+@{
+    string sesa_id = ViewBag.sesa_id;
+    string name = ViewBag.name;
+    string plant = ViewBag.plant;
+    string todayDate = DateTime.Today.ToString("yyyy-MM-dd");
+}
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row pt-3">
+            <div class="col-md-12">
+                <div class="card card-info card-outline">
+                    <div class="card-header">
+                        <h5 class="text-left"><i class="fas fa-list mr-2"></i>Master Bin</h5>
+                        @*<div class="card-tools">
+                        <a href="~/Template/TemplateUploadPallet.xlsx" class="btn btn-danger mr-1">
+                        <i class="fa fa-download"></i> Template
+                        </a>
+                        <button class="btn btn-success mr-1" name="btn_filter" data-bs-toggle="modal" data-bs-target="#ImportDataModel"><i class="fas fa-file-import"></i> Upload Pallet List</button>
+                        </div>*@
+                    </div>
+                    <div class="card-body">                        
+                        <div class="col-12 table-responsive">
+                            <table class="table table-bordered table-striped align-center nowrap" id="tbl_mst_bin" style="font-size:12pt;width:100%;">
+                                <thead class="bg-info align-middle text-center">
+                                    <tr>
+                                        <th width="5%"><input type="checkbox" id="checkAll" /> Check All</th>
+                                        <th width="5%">Id</th>
+                                        <th width="20%">Bin Name</th>
+                                        <th width="15%">Length (mm)</th>
+                                        <th width="15%">Width (mm)</th>
+                                        <th width="15%">Height (mm)</th>
+                                        <th width="25%">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="align-middle text-center">
+
+                                </tbody>
+                           </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal_add_bin" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <h5 class="modal-title" id="chart_title"><i class="fas fa-plus"></i> Add Bin</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="body_add_bin">
+                <form id="form_add_data_bin">
+                    <div class="row">
+                        <div class="col-6 pl-4 pr-4">                            
+                            <div class="form-group">
+                                <label>Bin Name<span class="text-danger">*</span></label>
+                                <input class="form-control" type="text" name="bin_name" id="bin_name" autocomplete="off" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Length (mm)<span class="text-danger">*</span></label>
+                                <input class="form-control" type="number" name="bin_length" id="bin_length" autocomplete="off" required />
+                            </div>
+                        </div>
+                        <div class="col-6 pl-4 pr-4">
+                            <div class="form-group">
+                                <label>Width (mm)<span class="text-danger">*</span></label>
+                                <input class="form-control" type="number" name="bin_width" id="bin_width" autocomplete="off" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Height (mm)<span class="text-danger">*</span></label>
+                                <input class="form-control" type="number" name="bin_height" id="bin_height" autocomplete="off" required />
+                            </div>                           
+                        </div>
+                        <div class="col-12">
+                            <div class="form-group text-center">
+                                <button type="submit" class="btn btn-success mt-2" name="btn_confirm_add">Add Bin <i class="fa fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal_update_bin" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <h5 class="modal-title" id="chart_title"><i class="fas fa-edit"></i> Update Bin</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="body_update_bin">
+                <form id="form_update_data_bin">
+                    <div class="row">
+                        <div class="col-6 pl-4 pr-4">
+                            <div class="form-group">
+                                <label>Bin Name<span class="text-danger">*</span></label>
+                                <input class="form-control" type="text" name="updt_bin_name" id="updt_bin_name" autocomplete="off" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Length (mm)<span class="text-danger">*</span></label>
+                                <input class="form-control" type="number" name="updt_bin_length" id="updt_bin_length" autocomplete="off" required />
+                            </div>
+                        </div>
+                        <div class="col-6 pl-4 pr-4">
+                            <div class="form-group">
+                                <label>Width (mm)<span class="text-danger">*</span></label>
+                                <input class="form-control" type="number" name="updt_bin_width" id="updt_bin_width" autocomplete="off" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Height (mm)<span class="text-danger">*</span></label>
+                                <input class="form-control" type="number" name="updt_bin_height" id="updt_bin_height" autocomplete="off" required />
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-group text-center">
+                                <button type="submit" class="btn btn-success mt-2" name="btn_update_bin">Update Bin <i class="fa fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            var table = $('#tbl_mst_bin').DataTable({
+                "ajax": {
+                    "url": '@Url.Action("GetMstBin")', // URL to your ASP.NET Web API endpoint
+                    "dataSrc": function (json) {
+                        console.log("AJAX response:", json);
+                        return json.map(function (item) {
+                            return {
+                                CheckBox:"<input type='checkbox' class='checkBox' data-binname='" + item.binName + "' />",
+                                BinId: item.binId,
+                                BinName: item.binName,
+                                Length: item.length.toFixed(2),
+                                Width: item.width.toFixed(2),
+                                Height: item.height.toFixed(2),
+                                Action: "<button type='button' class='btn btn-primary update-bin' data-binname='" + item.binName + "'><i class='fas fa-edit'></i></button> <button type='button' class='btn btn-danger delete-bin' data-binname='" + item.binName + "'><i class='fas fa-trash'></i></button>"
+                            };
+                        });
+                    }
+                },
+                "columns": [
+                    { data: "CheckBox", title: "Check All <br /> <input type='checkbox' id='checkAll'/>", orderable: false },
+                    { data: "BinId", title: "Id" },
+                    { data: "BinName", title: "Bin Name" },
+                    { data: "Length", title: "Length (mm)" },
+                    { data: "Width", title: "Width (mm)" },
+                    { data: "Height", title: "Height (mm)"},
+                    { data: "Action", title: "Action"}
+                ],
+                "searching": true,
+                "paging": true,
+                "info": true,
+                "ordering": false,
+                "order": [[0, "asc"]],
+                "dom": 'Bfrtip', // Define the position of the buttons
+                "buttons": [
+
+                    {
+                        text: '<i class="fas fa-plus"></i> Add Data',
+                        className: 'btn btn-primary btn-sm',
+                        action: function (e, dt, node, config) {
+                            $('#modal_add_bin').modal('show');
+                        }
+                    },
+                    {
+                        text: '<i class="fas fa-file-excel"></i> Export to Excel',
+                        className: 'btn btn-success btn-sm',
+                        action: function (e, dt, node, config) {
+                           var selectedData = [];
+                            // Add header row
+                            selectedData.push(["Id", "Bin Name", "Length (mm)", "Width (mm)", "Height (mm)"]);
+
+                            // Loop through each row in the DataTable
+                            dt.rows().every(function (rowIdx, tableLoop, rowLoop) {
+                                var data = this.data();
+                                // Push the desired columns into the selectedData array
+                                selectedData.push([data.BinId, data.BinName, data.Length, data.Width, data.Height]);
+                            });
+
+                            // Create a worksheet and workbook
+                            var ws = XLSX.utils.aoa_to_sheet(selectedData);
+                            var wb = XLSX.utils.book_new();
+                            XLSX.utils.book_append_sheet(wb, ws, "Bins");
+
+                            // Export the workbook
+                            XLSX.writeFile(wb, "Bins.xlsx");
+                        }
+                    },
+                    {
+                        text:'<i class="fas fa-trash"></i> Delete Selected Data',
+                        className: 'btn btn-danger btn-sm',
+                        action: function (e, dt, node, config) {
+                            var selectedBins = [];
+                                    $('#tbl_mst_bin tbody .checkBox:checked').each(function () {
+                                        var binName = $(this).data('binname'); // Accessing the data-binname attribute                                        
+                                        selectedBins.push(binName);
+                                    });
+                            console.log("Delete bin: " + selectedBins);
+                            var binNamesString = selectedBins.join(',');
+                            deleteSelectedBins(binNamesString)
+                        }
+                    }
+                ]
+            });
+
+            $('#tbl_mst_bin tbody').on('click', '.delete-bin', function () {
+            var binName = $(this).data('binname');
+            console.log("Delete bin: " + binName);
+            deleteSelectedBins(binName)
+            });
+
+            $('#tbl_mst_bin tbody').on('click', '.update-bin', function () {
+            var rowData = table.row($(this).closest('tr')).data(); // Use closest to find the row
+
+            // Populate the modal input fields with the row data
+            $('#updt_bin_name').val(rowData.BinName); // Set the value of the Bin Name input
+            $('#updt_bin_length').val(rowData.Length); // Set the value of the Length input
+            $('#updt_bin_width').val(rowData.Width); // Set the value of the Width input
+            $('#updt_bin_height').val(rowData.Height); // Set the value of the Height input
+
+            $('#modal_update_bin').modal('show');
+            });
+
+            $("form#form_add_data_bin").submit(function (e) {
+                e.preventDefault(); // Prevent the default form submission
+
+                let formData = $(this).serialize();
+
+                // AJAX request
+                $.ajax({
+                    url: '@Url.Action("AddMstBin")',// Update with your actual controller path
+                    type: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        if (response.trim() === "OK") {
+                            Swal.fire(
+                                'Added!',
+                                'Bin has been added.',
+                                'success'
+                            ).then(() => {
+                                 $('#modal_add_bin').modal('hide');
+                                $('#form_add_data_bin')[0].reset();
+                            });
+                           
+                        } else {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Warning!',
+                                text: 'Unexpected response received.',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+
+                        table.ajax.reload();
+                        // // Handle success response
+                        // alert('Bin added successfully!');
+                        // // Optionally, you can close the modal or reset the form
+                        // $('#modal_add_bin').modal('hide');
+                        // $('#form_add_data_bin')[0].reset();
+                    },
+                    error: function(xhr, status, error) {
+                        // Handle error response
+                        alert('An error occurred: ' + error);
+                    }
+                });
+            });
+
+            $("form#form_update_data_bin").submit(function (e) {
+                e.preventDefault(); // Prevent the default form submission
+
+                let formData = $(this).serialize();
+
+                // AJAX request
+                $.ajax({
+                    url: '@Url.Action("UpdtMstBin")',// Update with your actual controller path
+                    type: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        if (response.trim() === "OK") {
+                            Swal.fire(
+                                'Updated!',
+                                'Bin has been updated.',
+                                'success'
+                            ).then(() => {
+                                 $('#modal_update_bin').modal('hide');
+                                $('#form_update_data_bin')[0].reset();
+                            });
+
+                        } else {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Warning!',
+                                text: 'Unexpected response received.',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+
+                        table.ajax.reload();
+                        // // Handle success response
+                        // alert('Bin added successfully!');
+                        // // Optionally, you can close the modal or reset the form
+                        // $('#modal_add_bin').modal('hide');
+                        // $('#form_add_data_bin')[0].reset();
+                    },
+                    error: function(xhr, status, error) {
+                        // Handle error response
+                        alert('An error occurred: ' + error);
+                    }
+                });
+            });
+
+            function deleteSelectedBins(binNamesString) {
+                if (binNamesString === "") {
+                    alert("No bins selected for deletion.");
+                    return;
+                }
+
+                console.log("log " + binNamesString)
+                var binNamesString = binNamesString
+
+                Swal.fire({
+                        title: 'Are you sure?',
+                        text: "You are about to delete " + binNamesString    + ".",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Yes, delete it!',
+                        cancelButtonText: 'No, cancel!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '@Url.Action("DeleteMstBins")',
+                            type: 'POST',
+                            data: {
+                                binNamesString: binNamesString
+                            },
+                            success: function(response) {
+                                if (response.trim() === "OK") {
+                                    Swal.fire(
+                                        'Deleted!',
+                                        'Bin has been Deleted.',
+                                        'success'
+                                    );
+                                } else {
+                                    Swal.fire({
+                                        icon: 'warning',
+                                        title: 'Warning!',
+                                        text: 'Unexpected response received.',
+                                        confirmButtonText: 'OK'
+                                    });
+                                }
+                                table.ajax.reload();
+                            },
+                            error: function(xhr, status, error) {
+                                alert("An error occurred while deleting bins: " + error);
+                            }
+                        });
+                    }
+                });
+            }
+        });
+
+
+            // Event listener for the "Check All" checkbox
+        $('#tbl_mst_bin').on('change', '#checkAll', function () {
+            var isChecked = $(this).is(':checked');
+            $('#tbl_mst_bin tbody .checkBox').prop('checked', isChecked);
+        });
+
+        // Event listener for individual checkboxes
+        $('#tbl_mst_bin tbody').on('change', '.checkBox', function () {
+            // Check if all individual checkboxes are checked
+            var allChecked = $('#tbl_mst_bin tbody .checkBox:checked').length === $('#tbl_mst_bin tbody .checkBox').length;
+            $('#checkAll').prop('checked', allChecked);
+        });
+
+        
+
+       
+    </script>
+}

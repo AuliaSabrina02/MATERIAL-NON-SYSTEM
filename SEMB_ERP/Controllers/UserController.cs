@@ -709,5 +709,80 @@ namespace SEMB_ERP.Controllers
             return Content(validateResult, "text/plain");
         }
 
+        [Authorize(Policy = "RequireRequestor")]
+        public IActionResult MasterBin()
+        {
+            return this.CheckSession(() =>
+            {
+                var db = new DatabaseAccessLayer();
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                string plant = db.GetUserPlant(sesa_id);
+                List<string> catList = db.GET_CAT_NON_CONF();
+                //List<string> supplierList = db.GetSupplierList();
+                //ViewBag.supplierList = supplierList;
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.plant = plant;
+                ViewBag.catList = catList;
+                return View();
+            });
+        }
+
+        [HttpGet]
+        public IActionResult GetMstBin()
+        {
+            var db = new DatabaseAccessLayer();
+            List<BinModel> listBin = db.GetMstBin();
+
+            // Transform the list into a format suitable for DataTables
+            var result = listBin.Select(item => new
+            {
+                BinId = item.BinId,
+                BinName = item.BinName,
+                Length = item.Length,
+                Width = item.Width,
+                Height = item.Height
+            });
+
+            return Json(result);
+        }
+
+        [HttpPost]
+        public IActionResult DeleteMstBins(string binNamesString)
+        {
+            if (string.IsNullOrEmpty(binNamesString))
+            {
+                return BadRequest("No bin names provided.");
+            }
+
+            // Split the string into an array
+            var binNamesList = binNamesString.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+
+            var db = new DatabaseAccessLayer();
+            string deleteResult = db.DeleteMstBins(binNamesList);
+
+            // Return the result directly
+            return Content(deleteResult, "text/plain");
+        }
+
+        [HttpPost]
+        public IActionResult AddMstBin(string bin_name, string bin_length, string bin_width, string bin_height)
+        {            
+            var db = new DatabaseAccessLayer();
+            string addResult = db.AddMstBin(bin_name, bin_length, bin_width, bin_height);
+
+            // Return the result directly
+            return Content(addResult, "text/plain");
+        }
+
+        public IActionResult UpdtMstBin(string updt_bin_name, string updt_bin_length, string updt_bin_width, string updt_bin_height)
+        {
+            var db = new DatabaseAccessLayer();
+            string addResult = db.UpdtMstBin(updt_bin_name, updt_bin_length, updt_bin_width, updt_bin_height);
+            //string addResult = "OK";
+            // Return the result directly
+            return Content(addResult, "text/plain");
+        }
     }
 }

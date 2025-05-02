@@ -754,5 +754,105 @@ namespace SEMB_ERP.Function
                 }
             }
         }
+
+        public List<BinModel> GetMstBin()
+        {
+            List<BinModel> parts = new List<BinModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("SELECT * FROM mst_sbin", conn);
+                //cmd.Parameters.AddWithValue("@box_id", box_id);
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    parts.Add(new BinModel
+                    {
+                        BinId = reader["id_sbin"].ToString(),
+                        BinName = reader["sbin"].ToString(),
+                        Length = Convert.ToDecimal(reader["length_mm"]),
+                        Width = Convert.ToDecimal(reader["width_mm"]),
+                        Height = Convert.ToDecimal(reader["height_mm"])
+                    });
+                }
+            }
+
+            return parts;
+        }
+
+        public string DeleteMstBins(List<string> binNames)
+        {
+            using (var connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+
+                var parameterList = string.Join(",", binNames.Select((s, i) => $"@binName{i}"));
+                var sql = $"DELETE FROM mst_sbin WHERE sbin IN ({parameterList})";
+
+                using (var command = new SqlCommand(sql, connection))
+                {
+                    for (int i = 0; i < binNames.Count; i++)
+                    {
+                        command.Parameters.AddWithValue($"@binName{i}", binNames[i]);
+                    }
+
+                    int rowsAffected = command.ExecuteNonQuery();
+
+                    return rowsAffected > 0 ? "OK" : "No rows affected.";
+                }
+            }
+        }
+
+        public string AddMstBin(string bin_name,  string bin_length, string bin_width, string bin_height)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand(@"INSERT INTO mst_sbin (sbin, length_mm, width_mm, height_mm) VALUES (@bin_name, @bin_length, @bin_width, @bin_height)", conn))
+                {
+                    cmd.Parameters.AddWithValue("@bin_name", bin_name);
+                    cmd.Parameters.AddWithValue("@bin_length", bin_length);
+                    cmd.Parameters.AddWithValue("@bin_width", bin_width);
+                    cmd.Parameters.AddWithValue("@bin_height", bin_height);
+
+                    try
+                    {
+                        int rowsAffected = cmd.ExecuteNonQuery();
+                        return rowsAffected > 0 ? "OK" : "No rows affected.";
+                    }
+                    catch (Exception ex)
+                    {
+                        return "Error: " + ex.Message;
+                    }
+                }
+            }
+        }
+
+        public string UpdtMstBin(string bin_name, string bin_length, string bin_width, string bin_height)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand(@"UPDATE mst_sbin SET length_mm = @bin_length, width_mm = @bin_width, height_mm = @bin_height WHERE sbin = @bin_name", conn))
+                {
+                    cmd.Parameters.AddWithValue("@bin_name", bin_name);
+                    cmd.Parameters.AddWithValue("@bin_length", bin_length);
+                    cmd.Parameters.AddWithValue("@bin_width", bin_width);
+                    cmd.Parameters.AddWithValue("@bin_height", bin_height);
+
+                    try
+                    {
+                        int rowsAffected = cmd.ExecuteNonQuery();
+                        return rowsAffected > 0 ? "OK" : "No rows affected.";
+                    }
+                    catch (Exception ex)
+                    {
+                        return "Error: " + ex.Message;
+                    }
+                }
+            }
+        }
     }
 }
