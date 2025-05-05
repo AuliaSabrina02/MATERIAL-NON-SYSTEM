@@ -80,7 +80,7 @@
     }
 
     .form-check-input.bigger-checkbox {
-        margin-left: 15px;
+        margin-left: 0.2px;
         transform: scale(2); /* Adjust the scale as needed */
     }
 
@@ -397,6 +397,10 @@
         var sesa_id = "@user.sesa_id".toUpperCase();
 
         $(document).ready(function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            })
             get_total_req();
 
             var table = $("#table_order").DataTable({
@@ -423,9 +427,9 @@
                     },
                     {
                         "data": "id_order",
-                        "className": "align-middle",
+                        "className": "text-center align-middle",
                         "render": function (data, type, row) {
-                            if (row["status_desc"].toLowerCase() == "submission" && row["length_mm"] > 0 &&
+                            if (row["status_code"] == 1 && row["length_mm"] > 0 &&
                                 row["width_mm"] > 0 &&
                                 row["height_mm"] > 0) {
                                 let order_check = "";
@@ -438,6 +442,9 @@
                                 return `<input type="checkbox" class="form-input form-check-input bigger-checkbox all_row" name='id_order[]' onclick="select_id(${data})" id="id_order-${data}" value="${data}" ${order_check} />
                                         <label class="form-check-label" for="id_order-${data}"></label>
                                         <div class="check_sort" id="sort-${data}" hidden>${is_checked}</div>`;
+                            }
+                            else if (row["status_code"] == 1) {
+                                return `<i class="text-danger fas fa-exclamation-circle" style="font-size:14pt" data-bs-toggle="tooltip" data-bs-placement="right" title="Please fill in dimension!!"></i>`;
                             }
                             else{
                                 return "";
@@ -490,13 +497,16 @@
                         "data": "id_order",
                         "className": "align-middle text-center",
                         "render": function (data, type, row) {
-                            let btn_edit = `<button class="btn btn-sm btn-warning ml-1" onclick="update_order('${data}', '${row['material_type']}','${row['partno']}',
-                                            '${row['po_no']}','${row['qty']}','${row['uom']}','${row['revision']}','${row['project_name']}','${row['storage_requirement']}'
-                                            ,'${row['supplier_name']}','${row['pic']}','${row['order_type']}','${row['unit_price']}','${row['length_mm']}'
-                                            ,'${row['width_mm']}','${row['height_mm']}','${row['remark']}','${row['file_support']}','${row['pic_name']}')"><i class="fas fa-edit"></i> Edit</button>`;
+                            let btn_edit = "";
                             let btn_order_picking = "";
-                            if(row['status_desc'].toLowerCase()=="putaway"){
-                                btn_order_picking = `<button class="btn btn-sm btn-success ml-1" onclick="add_order(${row['id_order']},${row['qty']})"><i class="fas fa-plus"></i> Req. Picking</button>`;
+                            if(row['status_code']==1){
+                                btn_edit = `<button class="btn btn-sm btn-warning ml-1" onclick="update_order('${data}', '${row['material_type']}','${row['partno']}',
+                                                    '${row['po_no']}','${row['qty']}','${row['uom']}','${row['revision']}','${row['project_name']}','${row['storage_requirement']}'
+                                                    ,'${row['supplier_name']}','${row['pic']}','${row['order_type']}','${row['unit_price']}','${row['length_mm']}'
+                                                    ,'${row['width_mm']}','${row['height_mm']}','${row['remark']}','${row['file_support']}','${row['pic_name']}')"><i class="fas fa-edit"></i> Edit</button>`;
+                            }
+                            if (row['status_code'].toLowerCase() == 3 || row['status_code'].toLowerCase() == 4) {
+                                btn_order_picking = `<button class="btn btn-sm btn-success" onclick="add_order(${row['id_order']},${row['qty']})"><i class="fas fa-plus"></i> Req. Picking</button>`;
                             }
                             return btn_edit + btn_order_picking;
                         }
@@ -528,6 +538,12 @@
                         $(rowNode).find('td:eq(0)').addClass(bg_color); // Change to desired color
 
                     });
+                    // Initialize tooltips
+                    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                        return new bootstrap.Tooltip(tooltipTriggerEl);
+                    });
+
                 }
             });
 

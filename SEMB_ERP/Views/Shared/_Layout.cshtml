@@ -138,17 +138,19 @@
                                     </p>
                                 </a>
                             </li>
-                            <li class="nav-item has-treeview">
-                                <a href="#" class="nav-link">
+                            string checkMenuMasterData = Html.IsMenuopen("User", "MasterBin");
+                            string checkActiveMasterData = Html.IsActive("User", "MasterBin");
+                            <li class="nav-item has-treeview @checkMenuMasterData">
+                                <a href="#" class="nav-link @checkActiveMasterData">
                                     <i class="nav-icon fas fa-database"></i>
                                     <p>
                                         Master Data
                                         <i class="right fas fa-angle-left"></i>
                                     </p>
                                 </a>
-                                <ul class="nav nav-treeview ml-3">
+                                <ul class="nav nav-treeview ml-1">
                                     <li class="nav-item">
-                                        <a href="@Url.Action("MasterBin", "User")" class="nav-link @Html.IsActive("User ","MasterBin")">
+                                        <a href="@Url.Action("MasterBin", "User")" class="nav-link @Html.IsActive("User","MasterBin")">
                                             <i class="nav-icon fas fa-box-open"></i>
                                             <p>Master Bin</p>
                                         </a>
