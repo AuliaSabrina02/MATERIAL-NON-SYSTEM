@@ -138,6 +138,23 @@
                                     </p>
                                 </a>
                             </li>
+                            <li class="nav-item has-treeview">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-database"></i>
+                                    <p>
+                                        Master Data
+                                        <i class="right fas fa-angle-left"></i>
+                                    </p>
+                                </a>
+                                <ul class="nav nav-treeview ml-3">
+                                    <li class="nav-item">
+                                        <a href="@Url.Action("MasterBin", "User")" class="nav-link @Html.IsActive("User ","MasterBin")">
+                                            <i class="nav-icon fas fa-box-open"></i>
+                                            <p>Master Bin</p>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
                             <li class="nav-item">
                                 <a href="@Url.Action("Putaway", "User")" class="nav-link @Html.IsActive("User","Putaway")">
                                     <i class="nav-icon fas fa-boxes"></i>
@@ -219,6 +236,8 @@
     <script src="~/lib/datepicker/bootstrap-datepicker.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
     @*<script src="~/lib/select2-4.1.0/select2.min.js"></script>*@
+
+    <script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
 
     <script src="~/lib/adminlte/plugins/sweetalert2/sweetalert2.min.js"></script>
     <script src="~/lib/bootstrap-select/dist/js/bootstrap-select.js"></script>

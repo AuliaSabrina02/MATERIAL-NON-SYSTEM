@@ -60,7 +60,7 @@
                                     <thead class="bg-secondary align-middle text-center">
                                         <tr>
                                             <th class="align-middle text-center">Part No</th>
-                                            <th class="align-middle text-center">Part Name</th>
+                                            <th class="align-middle text-center">Box Id</th>
                                             <th class="align-middle text-center">Quantity</th>
                                             <th class="align-middle text-center">Action</th>
                                         </tr>                                       
@@ -123,7 +123,7 @@
                 },
                 "columns": [
                     { data: "PartNo", title: "Part No" },
-                    { data: "PartName", title: "Part Name" },
+                    { data: "PartName", title: "Box Id" },
                     { data: "Quantity", title: "Quantity" },
                     { data: "Action", title: "Action" }
                 ],
@@ -237,6 +237,8 @@
                                             title: 'Success!',
                                             text: 'Data has been added successfully.',
                                             confirmButtonText: 'OK'
+                                        }).then(() => {
+                                            $('#box_id_input').val(''); // Clear the input field
                                         });
                                     } else if (response.trim() === "NOK") {
                                         Swal.fire({
@@ -244,6 +246,8 @@
                                             title: 'Error!',
                                             text: 'No data found. Please try again.',
                                             confirmButtonText: 'OK'
+                                        }).then(() => {
+                                            $('#box_id_input').val(''); // Clear the input field
                                         });
                                     } else {
                                         // Handle unexpected responses
@@ -252,7 +256,10 @@
                                             title: 'Warning!',
                                             text: 'Unexpected response received.',
                                             confirmButtonText: 'OK'
+                                        }).then(() => {
+                                            $('#box_id_input').val(''); // Clear the input field
                                         });
+
                                     }
                                     // Refresh the DataTable
                                     table.ajax.reload();
