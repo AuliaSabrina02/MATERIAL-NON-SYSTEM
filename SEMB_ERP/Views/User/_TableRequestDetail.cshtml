@@ -1,0 +1,50 @@
+﻿@model List<RequestListModel>
+@{
+    var reqInfo = ViewBag.reqInfo;
+    int no = 0;
+    int total_shortage = 0;
+}
+<div class="row m-4">
+    <div class="col-12">
+        <table class="table table-borderless table-sm">
+            <tr>
+                <td>Request No</td>
+                <td>
+                    <input class="form-control" value="@reqInfo.request_no" readonly />
+                </td>
+            </tr>
+            <tr>
+                <td>Remark</td>
+                <td>
+                    <textarea class="form-control" readonly>@reqInfo.remark</textarea>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="col-12">
+        <table class="table table-bordered table-striped table-sm text-center">
+            <thead class="bg-secondary">
+                <tr>
+                    <th>No.</th>
+                    <th>Part</th>
+                    <th>Qty</th>
+                    <th>UOM</th>
+                    <th>Material Type</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var temp in Model)
+                {
+                    no++;
+                    <tr>
+                        <td>@no</td>
+                        <td>@temp.partno</td>
+                        <td>@temp.qty</td>
+                        <td>@temp.uom</td>
+                        <td>@temp.material_type</td
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

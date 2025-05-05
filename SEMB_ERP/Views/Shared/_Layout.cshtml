@@ -52,7 +52,7 @@
 <body class="sidebar-mini layout-fixed layout-navbar-fixed sidebar-collapse" style="padding: 0 !important; margin: 0 !important; font-family:Calibri !important">
     <div class="wrapper">
         <!-- Navbar-->
-        <nav class="main-header navbar navbar-expand border-bottom navbar-dark bg-dark">
+        <nav class="main-header navbar navbar-expand border-bottom navbar-dark bg-success">
             <ul class="navbar-nav justify-content-center">
                 <li class="nav-item">
                     <a class="nav-link" data-widget="pushmenu" href="#">
@@ -85,7 +85,7 @@
 
         <!-- End Navbar-->
         <!-- Sidebar -->
-        <aside class="main-sidebar sidebar-dark-light elevation-5">
+        <aside class="main-sidebar sidebar-light-dark elevation-5">
             <!-- Brand Logo -->
             <a class="brand-link bg-success">
                 <img src="~/assets/logos.png" alt="Schneider Logo" class="brand-image img-circle elevation-3"
@@ -143,6 +143,38 @@
                                     <i class="nav-icon fas fa-boxes"></i>
                                     <p>
                                         Putaway
+                                    </p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("RequestList", "User")" class="nav-link @Html.IsActive("User","RequestList")">
+                                    <i class="nav-icon fas fa-list"></i>
+                                    <p>
+                                        Request List
+                                    </p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("BlockBin", "User")" class="nav-link @Html.IsActive("User","BlockBin")">
+                                    <i class="nav-icon fas fa-lock"></i>
+                                    <p>
+                                        Block Bin
+                                    </p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("VarianceHistory", "User")" class="nav-link @Html.IsActive("User","VarianceHistory")">
+                                    <i class="nav-icon fas fa-history"></i>
+                                    <p>
+                                        Variance History
+                                    </p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("Picking", "User")" class="nav-link @Html.IsActive("User","Picking") @Html.IsActive("User","PickingMaterial") @Html.IsActive("User","ScanBin") @Html.IsActive("User","ScanBox")">
+                                    <i class="nav-icon fas fa-pallet"></i>
+                                    <p>
+                                        Picking
                                     </p>
                                 </a>
                             </li>

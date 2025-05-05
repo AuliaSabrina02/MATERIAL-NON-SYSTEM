@@ -1,0 +1,244 @@
+﻿@* @using System.Data; *@
+@model List<UserDetailModel>
+@using Microsoft.AspNetCore.Mvc.Rendering;
+@using Microsoft.AspNetCore.Http;
+@using SEMB_ERP.Function;
+@{
+    var user = Model.First();
+    string sesa_id = ViewBag.sesa_id;
+    string name = ViewBag.name;
+    List<string> userRoles = ViewBag.userRoles;
+}
+
+<style>
+    /* CSS untuk membuat modal berada di tengah layar */
+    #loadingSpinner {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5); /* Transparan hitam */
+    }
+
+    #loadingSpinner img {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .box_form_input {
+        background-color: #fcfcfc;
+        border-radius: 5px;
+        box-shadow: 1px 2px 8px 2px rgba(152,152,152,0.7);
+    }
+
+    .modal{
+        overflow: auto !important
+    }
+
+    .smaller-input {
+        height: 25px; /* Adjust height as necessary */
+        padding: 5px; /* Adjust padding as necessary */
+        font-size: 10px; /* Optional: Adjust font size */
+        line-height: 1; /* Optional: Reset line height */
+    }
+
+    /* Customize the font size for DataTables elements */
+    .dataTables_info, .dataTables_paginate, .dataTables_filter {
+        font-size: 10pt; /* Adjust the value to your desired font size */
+    }
+
+    .dataTables_filter {
+        display: none; /* Hides just the input field */
+    }
+
+    table#table_req tr > th {
+        padding: 5px;
+    }
+
+    table#table_req tr > td {
+        padding: 5px;
+    }
+
+    .btn-group-xs > .btn, .btn-xs {
+        padding: .25rem .4rem;
+        font-size: .875rem;
+        line-height: .5;
+        border-radius: .2rem;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .form-check-input.bigger-checkbox {
+        margin-left: 15px;
+        transform: scale(2); /* Adjust the scale as needed */
+    }
+
+</style>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 mt-3">
+                <div class="card card-success card-outline">
+@*                     <div class="card-header">
+                        <h3 class="text-center half-underline">
+                            <i class="fas fa-list"></i>
+                            Asset List
+                        </h3>
+                    </div> *@
+                    <div class="card-header">
+                        <h5>
+                            <i class="fas fa-lock"></i>
+                            Block Bin List
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @* <div class="col-12 d-flex justify-content-end mb-2">
+                                <a href="@Url.Action("DOWNLOAD_ASSET_LIST", "Requestor")" id="btn_download_data" class="btn btn-dark">
+                                    <i class="fas fa-download"></i> Download Asset List
+                                </a>
+                            </div> *@
+                            @* <div class="col-12 text-right">
+                                <button class="btn btn-success" name="btn_gr"><i class="fas fa-boxes"></i> GR</button>
+                            </div> *@
+                            <div class="col-12 table-responsive">
+                                <table class="table table-bordered table-striped align-center nowrap" id="table_var" style="font-size:12pt;width:100%;">
+                                    <thead class="bg-danger align-middle text-center">
+                                        <tr>
+                                            <th>No</th>
+                                            <th>Partno</th>
+                                            <th>Sbin</th>
+                                            <th>Variance Date</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Element spinner -->
+            <div id="loadingSpinner" style="display: none;">
+                <img src="~/images/icon/loading.gif" alt="Loading..." />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal_req_detail" class="modal fade">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-list"></i> Request Detail</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div id="body_req_detail"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script>
+        var table;
+        var loading = "<div class='text-center'><i class='fa fa-4x fa-spinner fa-spin'></i></div>";
+        var sesa_id = "@user.sesa_id".toUpperCase();
+
+        $(document).ready(function () {
+
+            var table = $("#table_var").DataTable({
+                // "searching": false,
+                // "scrollX": true,
+                // "fixedColumns": {
+                //     rightColumns: 1
+                // },
+                "orderCellsTop": true,
+                "processing": true,
+                "serverSide": true,
+                "filter": true,
+                "ajax": {
+                    "url": "@Url.Action("GetBlockBin")",
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                "columns": [
+                    { "data": "no", "className": "text-center align-middle" },
+                    { "data": "partno", "className": "text-center align-middle" },
+                    { "data": "sbin", "className": "text-center align-middle" },
+                    { "data": "variance_date", "className": "text-center align-middle" },
+                    {
+                        "data": "no",
+                        "className": "text-center align-middle",
+                        "render": function (data, type, row) {
+                            return `<button class="btn btn-sm btn-success" onclick="open_block('${row["partno"]}','${row["sbin"]}')"><i class="fas fa-unlock"></i> OPEN</button>`;
+                        }
+                    }
+                ]
+            });
+        })
+
+        function open_block(partno, sbin) {
+            Swal.fire({
+                title: 'Confirmation!!',
+                html: `Are you sure want to open block ? <br>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Material</th>
+                                <th>Sbin</th>
+                            </tr>
+                            <tr>
+                                <td>${partno}</td>
+                                <td>${sbin}</td>
+                            </tr>
+                        </table>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Yes!',
+                cancelButtonText: 'No!',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve, reject) {
+                        $.ajax({
+                            type: "POST",
+                            url: "@Url.Action("OpenBlockBin")",
+                            data: {
+                                partno: partno,
+                                sbin: sbin
+                            }
+                        }).done(function (res) {
+                            let arr = res.split(";");
+                            if (arr[0] == "OK") {
+                                swal.fire("OK!", "This bin status has changed to Open!!!", "success").then(function () {
+                                    $("#table_var").DataTable().ajax.reload(null, false);
+                                })
+                            }
+                            else {
+                                swal.fire("Error!", res, "error");
+                            }
+                        }).fail(function (err) {
+                            swal.fire("Page Error!", err, "error");
+                        })
+                    })
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            })
+        }
+
+    </script>
+}

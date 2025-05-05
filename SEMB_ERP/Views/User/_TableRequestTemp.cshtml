@@ -1,0 +1,93 @@
+﻿@model List<RequestTempModel>
+@{
+    int no = 0;
+    int total_shortage = 0;
+}
+<div class="row m-4">
+    <div class="col-12">
+        <table class="table table-bordered table-striped table-sm text-center">
+            <thead class="bg-secondary">
+                <tr>
+                    <th>No.</th>
+                    <th>Part</th>
+                    <th>Req Qty</th>
+                    <th>Available Qty</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var temp in Model)
+                {
+                    if (temp.status_stock == "Shortage")
+                    {
+                        total_shortage++;
+                    }
+                    var bg_status = temp.status_stock == "OK" ? "bg-success" : "bg-danger";
+                    no++;
+                    <tr>
+                        <td>@no</td>
+                        <td>@temp.partno</td>
+                        <td>@temp.qty</td>
+                        <td>@temp.available_qty</td>
+                        <td class="@bg_status">@temp.status_stock</td>
+                        <td>
+                            <button class="btn btn-danger" onclick="delete_temp_req(@temp.id_temp)"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="col-12">
+        <div class="form-group">
+            <label>Remark :</label>
+            <textarea class="form-control" rowspan="3" name="picking_remark"></textarea>
+        </div>
+    </div>
+    <div class="col-12 text-center">
+        <button class="btn btn-success" name="btn_submit_picking" @((no<=0 || total_shortage>0) ? "disabled" : "" )><i class="fas fa-arrow-right"></i> SUBMIT REQUEST PICKING</button>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        $("button[name=btn_submit_picking]").click(function () {
+            let remark = $("textarea[name=picking_remark]").val();
+            Swal.fire({
+                title: 'Confirmation !',
+                text: "Are you sure want to request picking ?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Yes!',
+                cancelButtonText: 'No!',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve, reject) {
+                        $.ajax({
+                            type: "POST",
+                            url: "@Url.Action("SubmitReqPicking")",
+                            data: {
+                                remark: remark
+                            }
+                        }).done(function (res) {
+                            let arr = res.split(";");
+                            if (arr[0] == "OK") {
+                                swal.fire("Success", "Request Picking Number Created " + arr[1], "success").then(function(){
+                                    location.reload();
+                                })
+                            }
+                            else {
+                                swal.fire("Failed!", res, "error");
+                            }
+                        }).fail(function (err) {
+                            swal.fire("Error!", err, "error");
+                        })
+                    })
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            })
+        })
+    })
+</script>

@@ -1,0 +1,503 @@
+﻿@* @using System.Data; *@
+@model List<TempBoxModel>
+@using Microsoft.AspNetCore.Mvc.Rendering;
+@using Microsoft.AspNetCore.Http;
+@using SEMB_ERP.Function;
+@{
+    string sesa_id = ViewBag.sesa_id;
+    string name = ViewBag.name;
+    int id_request = ViewBag.id_request;
+    int id_det = ViewBag.id_det;
+    var reqInfo = ViewBag.reqInfo;
+    List<string> userRoles = ViewBag.userRoles;
+
+    List<string> printList = ViewBag.printList;
+    List<PickingModel> pickList = ViewBag.pickList;
+    var pick = pickList.First();
+    decimal remain_qty = Convert.ToDecimal(pick.req_qty) - Convert.ToDecimal(pick.temp_qty);
+
+    int no = 0;
+}
+
+<style>
+    /* CSS untuk membuat modal berada di tengah layar */
+    #loadingSpinner {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5); /* Transparan hitam */
+    }
+
+    #loadingSpinner img {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .box_form_input {
+        background-color: #fcfcfc;
+        border-radius: 5px;
+        box-shadow: 1px 2px 8px 2px rgba(152,152,152,0.7);
+    }
+
+    .modal{
+        overflow: auto !important
+    }
+
+    .smaller-input {
+        height: 25px; /* Adjust height as necessary */
+        padding: 5px; /* Adjust padding as necessary */
+        font-size: 10px; /* Optional: Adjust font size */
+        line-height: 1; /* Optional: Reset line height */
+    }
+
+    /* Customize the font size for DataTables elements */
+    .dataTables_info, .dataTables_paginate, .dataTables_filter {
+        font-size: 10pt; /* Adjust the value to your desired font size */
+    }
+
+    .dataTables_filter {
+        display: none; /* Hides just the input field */
+    }
+
+    table#table_req tr > th {
+        padding: 5px;
+    }
+
+    table#table_req tr > td {
+        padding: 5px;
+    }
+
+    .btn-group-xs > .btn, .btn-xs {
+        padding: .25rem .4rem;
+        font-size: .875rem;
+        line-height: .5;
+        border-radius: .2rem;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .form-check-input.bigger-checkbox {
+        margin-left: 15px;
+        transform: scale(2); /* Adjust the scale as needed */
+    }
+
+</style>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 mt-3">
+                <div class="card card-success">
+@*                     <div class="card-header">
+                        <h3 class="text-center half-underline">
+                            <i class="fas fa-list"></i>
+                            Asset List
+                        </h3>
+                    </div> *@
+                    <div class="card-header">
+                        <h5>
+                            <i class="fas fa-list"></i>
+                            Picking - Scan Box
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 text-center mt-2 mb-2">
+                                <h6 class="font-weight-bold">Req.No : <span class="badge bg-secondary" style="font-size:12pt">@reqInfo.request_no</span></h6>
+                                <h6 class="font-weight-bold">Part : <span class="badge bg-secondary" style="font-size:12pt">@pick.partno</span></h6>
+                            </div>
+                            <div class="col-12 table-responsive">
+                                <div class="m-b-3">
+                                    <input type="hidden" name="sbin" value="@pick.sbin">
+                                    <input type="hidden" name="partno" value="@pick.partno">
+                                    <input type="hidden" name="id_request" value="@id_request">
+                                    <input type="hidden" name="id_det" value="@id_det">
+                                    <input type="hidden" name="remain_qty" value="@remain_qty">
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" name="scan_box" class="form-control text-center" placeholder="Scan Box" autofocus="on" autocomplete="off">
+                                </div>
+                                <table class="table table-bordered table-sm text-center">
+                                    <tr class="bg-info">
+                                        <th>Request Qty</th>
+                                        <th>Picked Qty</th>
+                                    </tr>
+                                    <tr>
+                                        <td>@pick.req_qty</td>
+                                        <td>@pick.temp_qty</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-12 table-responsive">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th>No.</th>
+                                        <th>Box ID</th>
+                                        <th>Qty</th>
+                                    </tr>
+                                    @foreach(var temp in Model)
+                                    {
+                                        no++;
+                                        <tr>
+                                            <td>@no</td>
+                                            <td>@temp.box_id</td>
+                                            <td>@temp.qty</td>
+                                        </tr>
+                                    }
+                                </table>
+                                <div class="text-center">
+                                    @if (no > 0)
+                                    {
+                                        <button class="btn btn-sm btn-success" name="btn_finish"><i class="fas fa-flag"></i> Finish</button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-danger" name="btn_variance"><i class="fas fa-exclamation-circle"></i> Variance</button>
+                                        
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Element spinner -->
+            <div id="loadingSpinner" style="display: none;">
+                <img src="~/images/icon/loading.gif" alt="Loading..." />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal_box_kitting" class="modal fade">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-box"></i> Box Kitting</h5>
+                @* <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button> *@
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Box ID :</label>
+                            <input type="text" class="form-control form-control-sm" name="box_ori" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Box Qty :</label>
+                            <input type="number" class="form-control form-control-sm" name="box_qty" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Pick/Kitting Qty :</label>
+                            <input type="number" class="form-control form-control-sm" name="box_kitting_qty" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Printer :</label>
+                            <select class="form-control form-control-sm" name="printer">
+                                <option value="" selected>--SELECT PRINTER--</option>
+                                @foreach(var print in printList)
+                                {
+                                    <option value="@print">@print</option>
+                                }
+                            </select>
+                        </div>
+                       @*  <div class="form-group">
+                            <label>New/Kitting Box ID :</label>
+                            <input type="text" class="form-control form-control-sm" name="box_kitting" readonly />
+                        </div> *@
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <div class="float-left">
+                    <button type="button" class="btn btn-danger" name="btn_close_kitting"><i class="fas fa-times"></i> Close</button>
+                </div>
+                <div class="float-right">
+                    <button type="button" class="btn btn-success" name="btn_kitting"><i class="fas fa-box"></i> Kitting</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script>
+        var table;
+        var loading = "<div class='text-center'><i class='fa fa-4x fa-spinner fa-spin'></i></div>";
+        var sesa_id = "@sesa_id".toUpperCase();
+
+        $(document).ready(function () {
+            // let id_request = $("input[name=id_request]").val();
+            // let id_det = $("input[name=id_det]").val();
+            // swal.fire("Success!", "Picking Complete!", "success").then(function () {
+            //     window.location = "@Url.Action("ScanBin")?id_request=" + id_request + "&id_det=" + id_det;
+            // })
+
+            $("input[name=scan_box]").focus();
+
+            $("input[name=scan_box]").keyup(function (event) {
+                if (event.keyCode == 13) {
+                    let scan_box = $(this).val();
+                    let partno = $("input[name=partno]").val();
+                    let sbin = $("input[name=sbin]").val();
+                    let id_request = $("input[name=id_request]").val();
+                    let id_det = $("input[name=id_det]").val();
+                    let remain_qty = $("input[name=remain_qty]").val();
+                    if(remain_qty<=0){
+                        swal.fire("Failed!", "Already pick all qty!!", "error");
+                    }
+                    else {
+                        $.ajax({
+                            type: "POST",
+                            url: "@Url.Action("CheckBox")",
+                            data: {
+                                id_request: id_request,
+                                id_det: id_det,
+                                box_id: scan_box,
+                                partno: partno,
+                                sbin: sbin,
+                                remain_qty: remain_qty
+                            }
+                        }).done(function (res) {
+                            let arr = res.split(";");
+                            if (arr[0] == "OK") {
+                                if (arr[1] == "Kitting") {
+                                    $("input[name=box_ori]").val(scan_box);
+                                    $("input[name=box_qty]").val(arr[2]);
+                                    $("input[name=box_kitting_qty]").val(remain_qty);
+                                    $("div#modal_box_kitting").modal("show");
+                                }
+                                else {
+                                    location.reload();
+                                }
+                            }
+                            else if (arr[0] == "ERROR") {
+                                $("input[name=scan_box]").val("");
+                                swal.fire("Failed!", arr[1], "warning");
+                            }
+                            else {
+                                $("input[name=scan_box]").val("");
+                                swal.fire("Error!", res, "error");
+                            }
+                        }).fail(function (err) {
+                            swal.fire("Page Error!", err, "error");
+                        })
+                    }
+                }
+            })
+
+            $("button[name=btn_kitting]").click(function(){
+                let print = $("select[name=printer]").val();
+                let box_ori = $("input[name=box_ori]").val();
+                let box_qty = $("input[name=box_qty]").val();
+                let box_kitting_qty = $("input[name=box_kitting_qty]").val();
+                let partno = $("input[name=partno]").val();
+                let sbin = $("input[name=sbin]").val();
+                let id_request = $("input[name=id_request]").val();
+                let id_det = $("input[name=id_det]").val();
+                let remain_qty = $("input[name=remain_qty]").val();
+                if (print == "") {
+                    swal.fire("Failed!", "Please select printer!!", "error");
+                    return;
+                }
+                else if (parseFloat(box_kitting_qty) > parseFloat(box_qty)) {
+                    swal.fire("Failed!", "Invalid kitting qty!!", "error");
+                }
+                else{
+                    Swal.fire({
+                        title: 'Confirmation!!',
+                        text: "Are you sure want to kitting this box ?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#28a745',
+                        cancelButtonColor: '#dc3545',
+                        confirmButtonText: 'Yes!',
+                        cancelButtonText: 'No!',
+                        showLoaderOnConfirm: true,
+                        preConfirm: function () {
+                            return new Promise(function (resolve, reject) {
+                                $.ajax({
+                                    url: "@Url.Action("BoxKitting")",
+                                    type: 'POST',
+                                    data: {
+                                        box_id: box_ori,
+                                        kitting_qty: box_kitting_qty,
+                                        id_request: id_request,
+                                        id_det: id_det,
+                                        partno: partno,
+                                        sbin: sbin,
+                                        remain_qty: remain_qty
+                                    }
+                                }).done(function (msg) {
+                                    let arr = msg.split(";");
+                                    if (arr[0] == "OK") {
+                                        // OK;BOX_ORI;BOX_KIT
+                                        // $("button[name=btn_kitting]").attr("disabled", "disabled");
+                                        // $("button[name=btn_print]").show();
+                                        // $("input[name=box_kitting]").val(arr[1]);
+                                        print_label(print, box_ori + ";" + arr[2]);
+                                    }
+                                    else {
+                                        swal.fire("Failed!", msg, "error");
+                                    }
+                                })
+                            })
+                        },
+                        allowOutsideClick: () => !Swal.isLoading()
+                    })
+                }
+            })
+
+            $("button[name=btn_close_kitting]").click(function () {
+                Swal.fire({
+                    title: 'Confirmation!!',
+                    text: "Are you sure want to close ?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#dc3545',
+                    confirmButtonText: 'Yes!',
+                    cancelButtonText: 'No!',
+                    showLoaderOnConfirm: true,
+                    preConfirm: function () {
+                        return new Promise(function (resolve, reject) {
+                            location.reload()
+                        })
+                    },
+                    allowOutsideClick: () => !Swal.isLoading()
+                })
+            })
+
+            $("button[name=btn_finish]").click(function () {
+                let id_request = $("input[name=id_request]").val();
+                let id_det = $("input[name=id_det]").val();
+                let sbin = $("input[name=sbin]").val();
+                let remain_qty = $("input[name=remain_qty]").val();
+                // let conf_msg = "Are you sure want to complete ?";
+                // if(parseFloat(remain_qty)>0){
+                //     conf_msg = "Still have "
+                // }
+                Swal.fire({
+                    title: 'Confirmation!!',
+                    text: "Are you sure want to finiah picking ?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#dc3545',
+                    confirmButtonText: 'Yes!',
+                    cancelButtonText: 'No!',
+                    showLoaderOnConfirm: true,
+                    preConfirm: function () {
+                        return new Promise(function (resolve, reject) {
+                            $.ajax({
+                                type: "POST",
+                                url: "@Url.Action("FinishPicking")",
+                                data: {
+                                    id_request: id_request,
+                                    id_det: id_det,
+                                    sbin: sbin
+                                }
+                            }).done(function(res){
+                                let arr = res.split(";");
+                                if(arr[0]=="OK"){
+                                    if (arr[1] == "DONE") {
+                                        swal.fire("Success!", "Picking complete!<br><small>Material close <i class='fas fa-check'></i></small>", "success").then(function () {
+                                            window.location = "@Url.Action("PickingMaterial")?id_request=" + id_request;
+                                        })
+                                    }
+                                    else{
+                                        swal.fire("Success!", "Picking complete!<br><small>Material is still open!</small>", "success").then(function () {
+                                            window.location = "@Url.Action("ScanBin")?id_request=" + id_request + "&id_det=" + id_det;
+                                        })
+                                    }
+                                }
+                                else{
+                                    swal.fire("Error!", res, "error");
+                                }
+                            }).fail(function(err){
+                                swal.fire("Page Error!", err, "error");
+                            })
+                        })
+                    },
+                    allowOutsideClick: () => !Swal.isLoading()
+                })
+            })
+
+            $("button[name=btn_variance]").click(function () {
+                let id_request = $("input[name=id_request]").val();
+                let id_det = $("input[name=id_det]").val();
+                let sbin = $("input[name=sbin]").val();
+                let remain_qty = $("input[name=remain_qty]").val();
+                Swal.fire({
+                    title: 'Confirmation!!',
+                    html: "Are you sure want this bin is <span class='text-danger font-weight-bold'>Variance</span> ?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#dc3545',
+                    confirmButtonText: 'Yes!',
+                    cancelButtonText: 'No!',
+                    showLoaderOnConfirm: true,
+                    preConfirm: function () {
+                        return new Promise(function (resolve, reject) {
+                            $.ajax({
+                                type: "POST",
+                                url: "@Url.Action("VariancePicking")",
+                                data: {
+                                    id_request: id_request,
+                                    id_det: id_det,
+                                    sbin: sbin
+                                }
+                            }).done(function (res) {
+                                let arr = res.split(";");
+                                if (arr[0] == "OK") {
+                                    swal.fire("OK!", "This bin status has changed to Variance!!!", "warning").then(function () {
+                                        window.location = "@Url.Action("ScanBin")?id_request=" + id_request + "&id_det=" + id_det;
+                                    })
+                                }
+                                else {
+                                    swal.fire("Error!", res, "error");
+                                }
+                            }).fail(function (err) {
+                                swal.fire("Page Error!", err, "error");
+                            })
+                        })
+                    },
+                    allowOutsideClick: () => !Swal.isLoading()
+                })
+            })
+        })
+
+        function print_label(print, box_id) {
+            $.ajax({
+                type: "GET",
+                url: "https://sembdigitization.se.com/wh_trans/print_label",
+                data: {
+                    print: print,
+                    box_id: box_id
+                }
+            }).done(function (res) {
+                swal.fire("Done!", "Kitting Success!", "success").then(function () {
+                    location.reload();
+                })
+            }).fail(function(err){
+                swal.fire("Page Error!", err, "error");
+            })
+        }
+
+    </script>
+}

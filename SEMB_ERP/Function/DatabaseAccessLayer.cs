@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Drawing.Drawing2D;
 using System.Drawing;
 using System.IO;
+using Newtonsoft.Json;
 
 namespace SEMB_ERP.Function
 {
@@ -164,6 +165,33 @@ namespace SEMB_ERP.Function
             {
                 conn.Open();
                 using (SqlCommand cmd = new SqlCommand("SELECT status_desc FROM mst_status ORDER BY status_code", conn))
+                {
+                    //cmd.CommandType = CommandType.StoredProcedure;
+                    //cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                    using SqlDataReader reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            //UserDetailModel row = new UserDetailModel();
+                            //row.role = reader["role_name"].ToString();
+                            //dataList.Add(row);
+                            dataStatus.Add(reader["status_desc"].ToString() ?? "");
+                        }
+                    }
+                }
+
+                conn.Close();
+            }
+            return dataStatus;
+        }
+        public List<string> GetStatusRequest()
+        {
+            List<string> dataStatus = new List<string>();
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand("SELECT status_desc FROM mst_status_request ORDER BY status_code", conn))
                 {
                     //cmd.CommandType = CommandType.StoredProcedure;
                     //cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
@@ -358,7 +386,7 @@ namespace SEMB_ERP.Function
                             row.material_type = reader["material_type"].ToString();
                             row.partno = reader["partno"].ToString();
                             row.po_no = reader["po_no"].ToString();
-                            row.qty = Convert.ToDouble(reader["qty"]);
+                            row.qty = Convert.ToDecimal(reader["qty"]);
                             row.uom = reader["uom"].ToString();
                             row.revision = reader["revision"].ToString();
                             row.supplier_name = reader["supplier_name"].ToString();
@@ -432,7 +460,7 @@ namespace SEMB_ERP.Function
                             row.material_type = reader["material_type"].ToString();
                             row.partno = reader["partno"].ToString();
                             row.po_no = reader["po_no"].ToString();
-                            row.qty = Convert.ToDouble(reader["qty"]);
+                            row.qty = Convert.ToDecimal(reader["qty"]);
                             row.uom = reader["uom"].ToString();
                             row.revision = reader["revision"].ToString();
                             row.supplier_name = reader["supplier_name"].ToString();
@@ -752,6 +780,641 @@ namespace SEMB_ERP.Function
 
                     return "OK";
                 }
+            }
+        }
+        public int GetTotalTempReq(string sesa_id)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand("SELECT ISNULL(COUNT(*),0) as total_req FROM temp_request WHERE added_by=@sesa_id", conn))
+                {
+                    //cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+
+                    int total_req = (int)cmd.ExecuteScalar();
+
+                    return total_req;
+                    //cmd.ExecuteScalar();
+                }
+            }
+        }
+        public string AddReqPicking(int id_order, decimal qty, string sesa_id)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand("ADD_REQ_PICKING", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@id_order", id_order);
+                    cmd.Parameters.AddWithValue("@qty", qty);
+                    cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                    cmd.ExecuteNonQuery();
+                    //cmd.ExecuteScalar();
+                    return "success";
+                }
+            }
+        }
+        public List<RequestTempModel> GetTempReqList(string sesa_id)
+        {
+            List<RequestTempModel> tempList = new List<RequestTempModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("GET_TEMP_REQ_LIST", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    tempList.Add(new RequestTempModel
+                    {
+                        id_temp = Convert.ToInt32(reader["id_temp"]),
+                        id_order = Convert.ToInt32(reader["id_order"]),
+                        partno = reader["partno"].ToString(),
+                        qty = Convert.ToDecimal(reader["qty"]),
+                        stock_qty = Convert.ToDecimal(reader["stock_qty"]),
+                        picked_qty = Convert.ToDecimal(reader["picked_qty"]),
+                        available_qty = Convert.ToDecimal(reader["available_qty"]),
+                        status_stock = reader["status_stock"].ToString()
+                    });
+                }
+            }
+
+            return tempList;
+        }
+        public string DeleteTempReq(int id_temp)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand(@"DELETE FROM temp_request WHERE id_temp = @id_temp", conn))
+                {
+                    // Use parameterized query to prevent SQL injection
+                    cmd.Parameters.AddWithValue("@id_temp", id_temp);
+
+                    // Execute the command
+                    int rowsAffected = cmd.ExecuteNonQuery();
+
+                    return "OK";
+                }
+            }
+        }
+        public string SubmitReqPicking(string remark, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("SUBMIT_REQ_PICKING", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@remark", remark);
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        object result = cmd.ExecuteScalar();
+
+                        if (result != null)
+                        {
+                            return result.ToString() ?? ""; // Return the value as a string
+                        }
+                        else
+                        {
+                            return "ERROR;No result returned from stored procedure."; // Handle no result
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                // Handle SQL Server-specific exceptions
+                // Log the error for debugging purposes
+                Console.WriteLine($"SQL Error: {ex.Message}");
+                // Return an error message or throw a custom exception
+                return $"SQL Error: {ex.Message}"; // Or throw new Exception($"Database error: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                // Log the error
+                Console.WriteLine($"General Error: {ex.Message}");
+                // Return an error message or throw a custom exception
+                return $"General Error: {ex.Message}"; // Or throw new Exception($"An error occurred: {ex.Message}");
+            }
+        }
+        public List<RequestListModel> GetReqDetail(int id_request)
+        {
+            List<RequestListModel> tempList = new List<RequestListModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("GET_REQ_DETAIL", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@id_request", id_request);
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    tempList.Add(new RequestListModel
+                    {
+                        id_det = Convert.ToInt32(reader["id_det"]),
+                        id_order = Convert.ToInt32(reader["id_order"]),
+                        partno = reader["partno"].ToString(),
+                        qty = Convert.ToDecimal(reader["qty"]),
+                        uom = reader["uom"].ToString(),
+                        material_type = reader["material_type"].ToString()
+                    });
+                }
+            }
+
+            return tempList;
+        }
+
+        public string GetRequestInfo(int id_request)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand("SELECT request_no, remark FROM tbl_request WHERE id_request=@id_request", conn))
+                {
+                    cmd.Parameters.AddWithValue("@id_request", id_request);
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            var result = new
+                            {
+                                request_no = reader["request_no"]?.ToString(),
+                                remark = reader["remark"]?.ToString()
+                            };
+                            return JsonConvert.SerializeObject(result);
+                        }
+                    }
+                }
+            }
+            return JsonConvert.SerializeObject(new { 
+                request_no = (string)null, 
+                remark = (string)null 
+            });
+        }
+        public List<RequestListModel> GetReqList()
+        {
+            List<RequestListModel> reqList = new List<RequestListModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("SELECT * FROM v_request WHERE status_request IN (1,2,3) ORDER BY record_date", conn);
+                //cmd.CommandType = CommandType.StoredProcedure;
+                //cmd.Parameters.AddWithValue("@id_request", id_request);
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    reqList.Add(new RequestListModel
+                    {
+                        id_request = Convert.ToInt32(reader["id_request"]),
+                        request_no = reader["request_no"].ToString(),
+                        status_desc = reader["status_desc"].ToString(),
+                        requested_by_name = reader["requested_by_name"].ToString(),
+                        remark = reader["remark"].ToString(),
+                        record_date = Convert.ToDateTime(reader["record_date"])
+                    });
+                }
+            }
+
+            return reqList;
+        }
+        public string DeleteTempPicking(string sesa_id)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand(@"DELETE FROM temp_picking WHERE sesa_id = @sesa_id", conn))
+                {
+                    // Use parameterized query to prevent SQL injection
+                    cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+
+                    // Execute the command
+                    int rowsAffected = cmd.ExecuteNonQuery();
+
+                    return "OK";
+                }
+            }
+        }
+        public string OpenBlockBin(string partno, string sbin, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("UPDATE tbl_picking_variance SET open_bin=1, open_date=getdate(), open_by=@sesa_id WHERE open_bin=0 AND partno=@partno AND sbin=@sbin", conn))
+                    {
+                        //cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        cmd.Parameters.AddWithValue("@partno", partno);
+                        cmd.Parameters.AddWithValue("@sbin", sbin);
+                        cmd.ExecuteScalar();
+                        return "OK";
+                        //object result = cmd.ExecuteScalar();
+
+                        //if (result != null)
+                        //{
+                        //    return result.ToString() ?? "";
+                        //}
+                        //else
+                        //{
+                        //    return "ERROR;No result returned from stored procedure.";
+                        //}
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine($"SQL Error: {ex.Message}");
+                return $"SQL Error: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General Error: {ex.Message}");
+                return $"General Error: {ex.Message}";
+            }
+        }
+        public string StartPicking(int id_request, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("START_PICKING", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@id_request", id_request);
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        object result = cmd.ExecuteScalar();
+
+                        if (result != null)
+                        {
+                            return result.ToString() ?? "";
+                        }
+                        else
+                        {
+                            return "ERROR;No result returned from stored procedure.";
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine($"SQL Error: {ex.Message}");
+                return $"SQL Error: {ex.Message}"; 
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General Error: {ex.Message}");
+                return $"General Error: {ex.Message}";
+            }
+        }
+        public List<RequestListModel> GetReqMaterial(int id_request, string sesa_id)
+        {
+            List<RequestListModel> reqList = new List<RequestListModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("GET_PICKING_MATERIAL", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@id_request", id_request);
+                cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    reqList.Add(new RequestListModel
+                    {
+                        id_det = Convert.ToInt32(reader["id_det"]),
+                        partno = reader["partno"].ToString(),
+                        qty = Convert.ToDecimal(reader["qty"]),
+                        picked_qty = Convert.ToDecimal(reader["picked_qty"]),
+                        status_pick = reader["status_pick"].ToString()
+                    });
+                }
+            }
+
+            return reqList;
+        }
+        public string StartPickingMaterial(int id_det, int id_request, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("START_PICKING_MATERIAL", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@id_det", id_det);
+                        cmd.Parameters.AddWithValue("@id_request", id_request);
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        object result = cmd.ExecuteScalar();
+
+                        if (result != null)
+                        {
+                            return result.ToString() ?? "";
+                        }
+                        else
+                        {
+                            return "ERROR;No result returned from stored procedure.";
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine($"SQL Error: {ex.Message}");
+                return $"SQL Error: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General Error: {ex.Message}");
+                return $"General Error: {ex.Message}";
+            }
+        }
+        public string GetBinPicking(int id_request, int id_det, string sesa_id)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand("GET_BIN_PICKING", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@id_request", id_request);
+                    cmd.Parameters.AddWithValue("@id_det", id_det);
+                    cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            var result = new
+                            {
+                                partno = reader["partno"]?.ToString(),
+                                sbin = reader["sbin"]?.ToString()
+                            };
+                            return JsonConvert.SerializeObject(result);
+                        }
+                    }
+                }
+            }
+            return JsonConvert.SerializeObject(new
+            {
+                partno = (string)null,
+                sbin = (string)null
+            });
+        }
+        public List<PickingModel> GetPickingTempQty(int id_request, int id_det, string sbin, string sesa_id)
+        {
+            List<PickingModel> pickList = new List<PickingModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("GET_PICKING_TEMP_QTY", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@id_request", id_request);
+                cmd.Parameters.AddWithValue("@id_det", id_det);
+                cmd.Parameters.AddWithValue("@sbin", sbin);
+                cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    pickList.Add(new PickingModel
+                    {
+                        partno = reader["partno"].ToString(),
+                        sbin = reader["sbin"].ToString(),
+                        req_qty = Convert.ToDecimal(reader["req_qty"]),
+                        temp_qty = Convert.ToDecimal(reader["temp_qty"])
+                    });
+                }
+            }
+
+            return pickList;
+        }
+        public List<TempBoxModel> GetTempBox(int id_request, int id_det, string sbin, string sesa_id)
+        {
+            List<TempBoxModel> tempList = new List<TempBoxModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("SELECT * FROM temp_box WHERE id_request=@id_request AND id_det=@id_det AND sbin=@sbin AND picked_by=@sesa_id ORDER BY record_date", conn);
+                //cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@id_request", id_request);
+                cmd.Parameters.AddWithValue("@id_det", id_det);
+                cmd.Parameters.AddWithValue("@sbin", sbin);
+                cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    tempList.Add(new TempBoxModel
+                    {
+                        id_temp_box = Convert.ToInt32(reader["id_temp_box"]),
+                        box_id = Convert.ToString(reader["box_id"]),
+                        qty = Convert.ToDecimal(reader["qty"])
+                    });
+                }
+            }
+
+            return tempList;
+        }
+        public string CheckBox(int id_request, int id_det, string partno, string sbin, string box_id, decimal remain_qty, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("CHECK_BOX", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@id_request", id_request);
+                        cmd.Parameters.AddWithValue("@id_det", id_det);
+                        cmd.Parameters.AddWithValue("@partno", partno);
+                        cmd.Parameters.AddWithValue("@sbin", sbin);
+                        cmd.Parameters.AddWithValue("@box_id", box_id);
+                        cmd.Parameters.AddWithValue("@remain_qty", remain_qty);
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        object result = cmd.ExecuteScalar();
+
+                        if (result != null)
+                        {
+                            return result.ToString() ?? "";
+                        }
+                        else
+                        {
+                            return "ERROR;No result returned from database.";
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine($"SQL Error: {ex.Message}");
+                return $"SQL Error: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General Error: {ex.Message}");
+                return $"General Error: {ex.Message}";
+            }
+        }
+        public string DeleteTempBox(string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("DELETE FROM temp_box WHERE picked_by=@sesa_id", conn))
+                    {
+                        //cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        cmd.ExecuteScalar();
+                        return "OK";
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine($"SQL Error: {ex.Message}");
+                return $"SQL Error: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General Error: {ex.Message}");
+                return $"General Error: {ex.Message}";
+            }
+        }
+        public string BoxKitting(string box_id, decimal kit_qty, string sesa_id, string name)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionStringBLP))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("KITTING_BOX_NON_SYSTEM", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@box_id", box_id);
+                        cmd.Parameters.AddWithValue("@kit_qty", kit_qty);
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        cmd.Parameters.AddWithValue("@name", name);
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                return "OK;"+reader["box_ids"].ToString() ?? "";
+                            }
+                            else
+                            {
+                                return "ERROR;No Response";
+                            }
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine($"SQL Error: {ex.Message}");
+                return $"SQL Error: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General Error: {ex.Message}");
+                return $"General Error: {ex.Message}";
+            }
+        }
+        public string FinishPicking(int id_request, int id_det, string sbin, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("FINISH_PICKING", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@id_request", id_request);
+                        cmd.Parameters.AddWithValue("@id_det", id_det);
+                        cmd.Parameters.AddWithValue("@sbin", sbin);
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        object result = cmd.ExecuteScalar();
+
+                        if (result != null)
+                        {
+                            return result.ToString() ?? "";
+                        }
+                        else
+                        {
+                            return "ERROR;No result returned from database.";
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine($"SQL Error: {ex.Message}");
+                return $"SQL Error: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General Error: {ex.Message}");
+                return $"General Error: {ex.Message}";
+            }
+        }
+        public string VariancePicking(int id_request, int id_det, string sbin, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("VARIANCE_PICKING", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@id_request", id_request);
+                        cmd.Parameters.AddWithValue("@id_det", id_det);
+                        cmd.Parameters.AddWithValue("@sbin", sbin);
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        object result = cmd.ExecuteScalar();
+
+                        if (result != null)
+                        {
+                            return result.ToString() ?? "";
+                        }
+                        else
+                        {
+                            return "ERROR;No result returned from database.";
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine($"SQL Error: {ex.Message}");
+                return $"SQL Error: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General Error: {ex.Message}");
+                return $"General Error: {ex.Message}";
             }
         }
     }

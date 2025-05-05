@@ -8,7 +8,7 @@ namespace SEMB_ERP.Models
         public string? material_type { get; set; }
         public string? partno { get; set; }
         public string? po_no { get; set; }
-        public double? qty { get; set; }
+        public decimal? qty { get; set; }
         public string? uom { get; set; }
         public string? supplier_name { get; set; }
         public string? pic { get; set; }

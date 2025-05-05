@@ -1,0 +1,224 @@
+﻿@* @using System.Data; *@
+@model List<RequestListModel>
+@using Microsoft.AspNetCore.Mvc.Rendering;
+@using Microsoft.AspNetCore.Http;
+@using SEMB_ERP.Function;
+@{
+    string sesa_id = ViewBag.sesa_id;
+    string name = ViewBag.name;
+    int id_request = ViewBag.id_request;
+    var reqInfo = ViewBag.reqInfo;
+    List<string> userRoles = ViewBag.userRoles;
+
+    int no = 0;
+    int open_material = 0;
+}
+
+<style>
+    /* CSS untuk membuat modal berada di tengah layar */
+    #loadingSpinner {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5); /* Transparan hitam */
+    }
+
+    #loadingSpinner img {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .box_form_input {
+        background-color: #fcfcfc;
+        border-radius: 5px;
+        box-shadow: 1px 2px 8px 2px rgba(152,152,152,0.7);
+    }
+
+    .modal{
+        overflow: auto !important
+    }
+
+    .smaller-input {
+        height: 25px; /* Adjust height as necessary */
+        padding: 5px; /* Adjust padding as necessary */
+        font-size: 10px; /* Optional: Adjust font size */
+        line-height: 1; /* Optional: Reset line height */
+    }
+
+    /* Customize the font size for DataTables elements */
+    .dataTables_info, .dataTables_paginate, .dataTables_filter {
+        font-size: 10pt; /* Adjust the value to your desired font size */
+    }
+
+    .dataTables_filter {
+        display: none; /* Hides just the input field */
+    }
+
+    table#table_req tr > th {
+        padding: 5px;
+    }
+
+    table#table_req tr > td {
+        padding: 5px;
+    }
+
+    .btn-group-xs > .btn, .btn-xs {
+        padding: .25rem .4rem;
+        font-size: .875rem;
+        line-height: .5;
+        border-radius: .2rem;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .form-check-input.bigger-checkbox {
+        margin-left: 15px;
+        transform: scale(2); /* Adjust the scale as needed */
+    }
+
+</style>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 mt-3">
+                <div class="card card-success card-outline">
+@*                     <div class="card-header">
+                        <h3 class="text-center half-underline">
+                            <i class="fas fa-list"></i>
+                            Asset List
+                        </h3>
+                    </div> *@
+                    <div class="card-header">
+                        <h5>
+                            <i class="fas fa-list"></i>
+                            Picking - Material List
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @* <div class="col-12 d-flex justify-content-end mb-2">
+                                <a href="@Url.Action("DOWNLOAD_ASSET_LIST", "Requestor")" id="btn_download_data" class="btn btn-dark">
+                                    <i class="fas fa-download"></i> Download Asset List
+                                </a>
+                            </div> *@
+                            @* <div class="col-12 text-right">
+                                <button class="btn btn-success" name="btn_gr"><i class="fas fa-boxes"></i> GR</button>
+                            </div> *@
+                            <div class="col-12 text-center mt-2 mb-2">
+                                <h6 class="font-weight-bold">Req.No : @reqInfo.request_no</h6>
+                            </div>
+                            <div class="col-12 table-responsive">
+                                <table class="table table-bordered table-striped align-center nowrap" id="table_req" style="font-size:12pt;width:100%;">
+                                    <thead class="bg-info align-middle text-center">
+                                        <tr>
+                                            <th>No.</th>
+                                            <th>Material</th>
+                                            <th>Request Qty</th>
+                                            <th>Picked Qty</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var req in Model)
+                                        {
+                                            no++;
+                                            <tr>
+                                                <td>@no</td>
+                                                <td>@req.partno</td>
+                                                <td>@req.qty</td>
+                                                <td>@req.picked_qty</td>
+                                                <td class="text-center">
+                                                    @if (req.status_pick == "OPEN")
+                                                    {
+                                                        open_material++;
+                                                        <button class="btn btn-sm btn-success" onclick="start_picking_material(`@id_request`,`@req.id_det`)"><i class="fas fa-arrow-right"></i> Picking</button>
+                                                    }
+                                                    else if (req.status_pick == "DONE" || req.status_pick == "CLOSE")
+                                                    {
+                                                        <i class="text-success fas fa-check"></i>
+                                                    }
+                                                    else if (req.status_pick == "VARIANCE")
+                                                    {
+                                                        open_material++;
+                                                        <i class="text-danger">@req.status_pick</i>
+                                                    }
+                                                    else
+                                                    {
+                                                        open_material++;
+                                                        <span>-</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                                <div class="text-center">
+                                    <a class="btn btn-sm btn-danger" href="@Url.Action("Picking")"><i class="fas fa-arrow-left"></i> Back</a>
+                                    @if (open_material==0)
+                                    {
+                                        <button class="ml-1 btn btn-sm btn-success" name="btn_complete"><i class="fas fa-check"></i> Complete</button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Element spinner -->
+            <div id="loadingSpinner" style="display: none;">
+                <img src="~/images/icon/loading.gif" alt="Loading..." />
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+
+    <script>
+        var table;
+        var loading = "<div class='text-center'><i class='fa fa-4x fa-spinner fa-spin'></i></div>";
+        var sesa_id = "@sesa_id".toUpperCase();
+
+        $(document).ready(function () {
+            // var table = $("#table_req").DataTable();
+        })
+
+        function start_picking_material(id_request, id_det) {
+            window.location = "@Url.Action("ScanBin")?id_request=" + id_request + "&id_det=" + id_det;
+            // $.ajax({
+            //     type: "POST",
+            //     url: "@Url.Action("StartPickingMaterial")",
+            //     data: {
+            //         id_request: id_request,
+            //         id_det: id_det
+            //     }
+            // }).done(function (res) {
+            //     let arr = res.split(";");
+            //     if (arr[0] == "OK") {
+            //         window.location = "@Url.Action("ScanBin")?id_request="+id_request+"&id_det="+id_det;
+            //     }
+            //     else {
+            //         swal.fire("Failed!", res, "warning");
+            //     }
+            // }).fail(function(err){
+            //     swal.fire("Error!", err, "error");
+            // })
+        }
+
+
+
+    </script>
+}

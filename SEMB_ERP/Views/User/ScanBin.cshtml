@@ -1,0 +1,175 @@
+﻿@* @using System.Data; *@
+@model List<PickingModel>
+@using Microsoft.AspNetCore.Mvc.Rendering;
+@using Microsoft.AspNetCore.Http;
+@using SEMB_ERP.Function;
+@{
+    string sesa_id = ViewBag.sesa_id;
+    string name = ViewBag.name;
+    int id_request = ViewBag.id_request;
+    int id_det = ViewBag.id_det;
+    var pickInfo = ViewBag.pickInfo;
+    var reqInfo = ViewBag.reqInfo;
+    List<string> userRoles = ViewBag.userRoles;
+
+    int no = 0;
+}
+
+<style>
+    /* CSS untuk membuat modal berada di tengah layar */
+    #loadingSpinner {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5); /* Transparan hitam */
+    }
+
+    #loadingSpinner img {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .box_form_input {
+        background-color: #fcfcfc;
+        border-radius: 5px;
+        box-shadow: 1px 2px 8px 2px rgba(152,152,152,0.7);
+    }
+
+    .modal{
+        overflow: auto !important
+    }
+
+    .smaller-input {
+        height: 25px; /* Adjust height as necessary */
+        padding: 5px; /* Adjust padding as necessary */
+        font-size: 10px; /* Optional: Adjust font size */
+        line-height: 1; /* Optional: Reset line height */
+    }
+
+
+    .btn-group-xs > .btn, .btn-xs {
+        padding: .25rem .4rem;
+        font-size: .875rem;
+        line-height: .5;
+        border-radius: .2rem;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .form-check-input.bigger-checkbox {
+        margin-left: 15px;
+        transform: scale(2); /* Adjust the scale as needed */
+    }
+
+</style>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 mt-3">
+                <div class="card card-success">
+@*                     <div class="card-header">
+                        <h3 class="text-center half-underline">
+                            <i class="fas fa-list"></i>
+                            Asset List
+                        </h3>
+                    </div> *@
+                    <div class="card-header">
+                        <h5>
+                            <i class="fas fa-list"></i>
+                            Picking - Scan Bin
+                        </h5>
+
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 text-center mt-2 mb-2">
+                                <h6 class="font-weight-bold">Req.No : <span class="badge bg-secondary" style="font-size:12pt">@reqInfo.request_no</span></h6>
+                                <h6 class="font-weight-bold">Part : <span class="badge bg-secondary" style="font-size:12pt">@pickInfo.partno</span></h6>
+                            </div>
+                            <div class="col-12 table-responsive">
+                                <div class="m-b-3">
+                                    <table class="table table-sm text-center"> 
+                                        <tr>
+                                            <td>Suggested Bin</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="bg-success">@pickInfo.sbin</td>
+                                        </tr>
+                                    </table>
+                                    <input type="hidden" name="suggest_bin" value="@pickInfo.sbin">
+                                    <input type="hidden" name="id_request" value="@id_request">
+                                    <input type="hidden" name="id_det" value="@id_det">
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" name="scan_bin" class="form-control text-center" placeholder="Scan Bin" autofocus="on" autocomplete="off">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-center">
+
+                        <a class="btn btn-sm btn-warning" href="@Url.Action("PickingMaterial")?id_request=@id_request"><i class="fa fa-arrow-left"></i> Back</a>
+                    </div>
+                </div>
+            </div>
+            <!-- Element spinner -->
+            <div id="loadingSpinner" style="display: none;">
+                <img src="~/images/icon/loading.gif" alt="Loading..." />
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+
+    <script>
+        var table;
+        var loading = "<div class='text-center'><i class='fa fa-4x fa-spinner fa-spin'></i></div>";
+        var sesa_id = "@sesa_id".toUpperCase();
+
+        $(document).ready(function () {
+            let check_sbin = "@pickInfo.sbin";
+            if(check_sbin=="" || check_sbin=="null"){
+                swal.fire("Info!", "No remain bin!", "warning").then(function () {
+                    window.location = "@Url.Action("PickingMaterial")?id_request=@id_request";
+                })
+            }
+
+            $("input[name=scan_bin]").focus();
+
+            $("input[name=scan_bin]").keyup(function (event) {
+                if (event.keyCode == 13) {
+                    let scan_bin = $(this).val();
+                    let suggest_bin = $("input[name=suggest_bin]").val();
+                    if(scan_bin!=suggest_bin){
+                        swal.fire("Error!", "Wrong Bin!!<br><i>Scanned Location : "+scan_bin+"</i>", "error");
+                    }
+                    else {
+                        $.ajax({
+                            type: "POST",
+                            url: "@Url.Action("DeleteTempBox")"
+                        }).done(function (res) {
+                            window.location = "@Url.Action("ScanBox")?id_request=@id_request&id_det=@id_det&sbin=" + scan_bin;
+                        }).fail(function(err){
+                            swal.fire("Page Error!", err, "error");
+                        })
+                    }
+                }
+            })
+        })
+
+    </script>
+}

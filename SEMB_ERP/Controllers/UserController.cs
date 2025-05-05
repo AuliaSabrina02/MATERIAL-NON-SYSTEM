@@ -8,6 +8,8 @@ using System.Security.Claims;
 using System.Linq.Dynamic.Core;
 using Microsoft.AspNetCore.Http;
 using System.Diagnostics;
+using Org.BouncyCastle.Asn1.Ocsp;
+using Newtonsoft.Json;
 
 namespace SEMB_ERP.Controllers
 {
@@ -344,7 +346,7 @@ namespace SEMB_ERP.Controllers
             }
         }
         [HttpPost]
-        public async Task<IActionResult> SubmitGR(string id_order_spq_string)
+        public IActionResult SubmitGR(string id_order_spq_string)
         {
             string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (sesa_id == "")
@@ -708,6 +710,468 @@ namespace SEMB_ERP.Controllers
             // Return the result directly
             return Content(validateResult, "text/plain");
         }
+        [HttpGet]
+        public IActionResult GetTotalTempReq()
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            int total_req = db.GetTotalTempReq(sesa_id);
 
+            // Return the result directly
+            return Content(total_req.ToString(), "text/plain");
+        }
+        [HttpPost]
+        public IActionResult AddReqPicking(int picking_id_order, decimal picking_req_qty)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (sesa_id == "")
+            {
+                return Content("Session Timeout, Please relogin!!", "text/plain");
+            }
+            else
+            {
+                var db = new DatabaseAccessLayer();
+                string submit = db.AddReqPicking(picking_id_order, picking_req_qty, sesa_id);
+                return Content(submit, "text/plain");
+            }
+        }
+        public IActionResult GetTempReqList()
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (sesa_id == "")
+            {
+                return Content("Session Timeout, Please relogin!!", "text/plain");
+            }
+            else
+            {
+                var db = new DatabaseAccessLayer();
+                List<RequestTempModel> dataList = db.GetTempReqList(sesa_id);
+                //return Content("Upload Success!!", "text/plain");
+
+                return PartialView("_TableRequestTemp", dataList);
+            }
+        }
+        [HttpPost]
+        public IActionResult DeleteTempReq(int id_temp)
+        {
+            var db = new DatabaseAccessLayer();
+            string deleteResult = db.DeleteTempReq(id_temp);
+
+            // Return the result directly
+            return Content(deleteResult, "text/plain");
+        }
+        [HttpPost]
+        public IActionResult SubmitReqPicking(string remark)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var db = new DatabaseAccessLayer();
+            string submit = db.SubmitReqPicking(remark ?? "", sesa_id);
+            return Content(submit, "text/plain");
+        }
+        [Authorize(Policy = "RequireRequestor")]
+        public IActionResult RequestList()
+        {
+            return this.CheckSession(() =>
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> userRoles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                //sesa_id = "SESA126011";
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                List<string> listStatus = db.GetStatusRequest();
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.listStatus = listStatus;
+                ViewBag.userRoles = userRoles;
+                return View(userDetail);
+            });
+        }
+        public IActionResult GetRequestList()
+        {
+            try
+            {
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = Request.Form["start"].FirstOrDefault();
+                var length = Request.Form["length"].FirstOrDefault();
+                //var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][name]"].FirstOrDefault();
+                var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][data]"].FirstOrDefault();
+                var sortColumnDirection = Request.Form["order[0][dir]"].FirstOrDefault();
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                var column0Value = Request.Form["columns[0][search][value]"];
+                var column1Value = Request.Form["columns[1][search][value]"];
+                var column2Value = Request.Form["columns[2][search][value]"];
+                int pageSize = length != null ? Convert.ToInt32(length) : 0;
+                int skip = start != null ? Convert.ToInt32(start) : 0;
+                int recordsTotal = 0;
+                var mstData = (from RequestList in _context.v_request
+                               select
+                                   new
+                                   {
+                                       RequestList.id_request,
+                                       RequestList.request_no,
+                                       RequestList.status_desc,
+                                       RequestList.requested_by_name,
+                                       RequestList.record_date
+                                   });
+
+                //var mstData = (from temp in _context.mst_material_plant select temp);
+                if (!(string.IsNullOrEmpty(sortColumn) && string.IsNullOrEmpty(sortColumnDirection)))
+                {
+                    mstData = mstData.OrderBy(sortColumn + " " + sortColumnDirection);
+                }
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    mstData = mstData.Where(m => m.request_no.Contains(searchValue)
+                                                || m.status_desc.Contains(searchValue));
+                }
+                //for (int i = 0; i < 4; i++)
+                //{
+                //    var searchColVal = Request.Form["columns[" + i.ToString() + "][search][value]"];
+                //    var fieldName = Request.Form["columns[" + i.ToString() + "][data]"].FirstOrDefault();
+                //    if (!string.IsNullOrEmpty(searchColVal))
+                //    {
+                //        if (fieldName == "request_no")
+                //        {
+                //            mstData = mstData.Where(m => m.request_no.Contains(searchColVal));
+                //        }
+                //        else if (fieldName == "status_desc")
+                //        {
+                //            mstData = mstData.Where(m => m.status_desc.Contains(searchColVal));
+                //        }
+                //        else if (fieldName == "requested_by_name")
+                //        {
+                //            mstData = mstData.Where(m => m.requested_by_name.Contains(searchColVal));
+                //        }
+                //        else if (fieldName == "record_date")
+                //        {
+                //            mstData = mstData.Where(m => m.record_date.Contains(searchColVal));
+                //        }
+                //    }
+                //}
+                recordsTotal = mstData.Count();
+                var data = mstData.Skip(skip).Take(pageSize).ToList();
+                var jsonData = new { draw = draw, recordsFiltered = recordsTotal, recordsTotal = recordsTotal, data = data };
+                return Ok(jsonData);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+        public IActionResult GetReqDetail(int id_request)
+        {
+            var db = new DatabaseAccessLayer();
+            var reqInfo = JsonConvert.DeserializeObject<RequestListModel>(db.GetRequestInfo(id_request));
+            List<RequestListModel> dataList = db.GetReqDetail(id_request);
+            ViewBag.reqInfo = reqInfo;
+            //return Content("Upload Success!!", "text/plain");
+
+            return PartialView("_TableRequestDetail", dataList);
+        }
+        [Authorize(Policy = "RequireRequestor")]
+        public IActionResult BlockBin()
+        {
+            return this.CheckSession(() =>
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> userRoles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                //sesa_id = "SESA126011";
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.userRoles = userRoles;
+                return View(userDetail);
+            });
+        }
+        public IActionResult GetBlockBin()
+        {
+            try
+            {
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = Request.Form["start"].FirstOrDefault();
+                var length = Request.Form["length"].FirstOrDefault();
+                //var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][name]"].FirstOrDefault();
+                var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][data]"].FirstOrDefault();
+                var sortColumnDirection = Request.Form["order[0][dir]"].FirstOrDefault();
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                var column0Value = Request.Form["columns[0][search][value]"];
+                var column1Value = Request.Form["columns[1][search][value]"];
+                var column2Value = Request.Form["columns[2][search][value]"];
+                int pageSize = length != null ? Convert.ToInt32(length) : 0;
+                int skip = start != null ? Convert.ToInt32(start) : 0;
+                int recordsTotal = 0;
+                var mstData = (from BlockBin in _context.v_block_bin
+                               select
+                                   new
+                                   {
+                                       BlockBin.no,
+                                       BlockBin.partno,
+                                       BlockBin.sbin,
+                                       BlockBin.variance_date
+                                   });
+
+                //var mstData = (from temp in _context.mst_material_plant select temp);
+                if (!(string.IsNullOrEmpty(sortColumn) && string.IsNullOrEmpty(sortColumnDirection)))
+                {
+                    mstData = mstData.OrderBy(sortColumn + " " + sortColumnDirection);
+                }
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    mstData = mstData.Where(m => m.partno.Contains(searchValue)
+                                                || m.sbin.Contains(searchValue));
+                }
+                recordsTotal = mstData.Count();
+                var data = mstData.Skip(skip).Take(pageSize).ToList();
+                var jsonData = new { draw = draw, recordsFiltered = recordsTotal, recordsTotal = recordsTotal, data = data };
+                return Ok(jsonData);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+        [Authorize(Policy = "RequireRequestor")]
+        public IActionResult VarianceHistory()
+        {
+            return this.CheckSession(() =>
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> userRoles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                //sesa_id = "SESA126011";
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.userRoles = userRoles;
+                return View(userDetail);
+            });
+        }
+        public IActionResult GetVarianceHistory()
+        {
+            try
+            {
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = Request.Form["start"].FirstOrDefault();
+                var length = Request.Form["length"].FirstOrDefault();
+                //var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][name]"].FirstOrDefault();
+                var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][data]"].FirstOrDefault();
+                var sortColumnDirection = Request.Form["order[0][dir]"].FirstOrDefault();
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                var column0Value = Request.Form["columns[0][search][value]"];
+                var column1Value = Request.Form["columns[1][search][value]"];
+                var column2Value = Request.Form["columns[2][search][value]"];
+                int pageSize = length != null ? Convert.ToInt32(length) : 0;
+                int skip = start != null ? Convert.ToInt32(start) : 0;
+                int recordsTotal = 0;
+                var mstData = (from Variance in _context.v_picking_variance
+                               select
+                                   new
+                                   {
+                                       Variance.id_var,
+                                       Variance.request_no,
+                                       Variance.partno,
+                                       Variance.sbin,
+                                       Variance.qty,
+                                       Variance.name,
+                                       Variance.record_date
+                                   });
+
+                //var mstData = (from temp in _context.mst_material_plant select temp);
+                if (!(string.IsNullOrEmpty(sortColumn) && string.IsNullOrEmpty(sortColumnDirection)))
+                {
+                    mstData = mstData.OrderBy(sortColumn + " " + sortColumnDirection);
+                }
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    mstData = mstData.Where(m => m.partno.Contains(searchValue)
+                                                || m.sbin.Contains(searchValue)
+                                                || m.request_no.Contains(searchValue)
+                                                || m.name.Contains(searchValue));
+                }
+                recordsTotal = mstData.Count();
+                var data = mstData.Skip(skip).Take(pageSize).ToList();
+                var jsonData = new { draw = draw, recordsFiltered = recordsTotal, recordsTotal = recordsTotal, data = data };
+                return Ok(jsonData);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+        [HttpPost]
+        public IActionResult OpenBlockBin(string partno, string sbin)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            string open = db.OpenBlockBin(partno, sbin, sesa_id);
+            return Content(open, "text/plain");
+        }
+        [Authorize(Policy = "RequireRequestor")]
+        public IActionResult Picking()
+        {
+            return this.CheckSession(() =>
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                List<string> userRoles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                //sesa_id = "SESA126011";
+                var db = new DatabaseAccessLayer();
+                List<RequestListModel> reqList = db.GetReqList();
+                db.DeleteTempPicking(sesa_id);
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.userRoles = userRoles;
+                return View(reqList);
+            });
+        }
+        [HttpPost]
+        public IActionResult StartPicking(int id_request)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            string submit = db.StartPicking(id_request, sesa_id);
+            return Content(submit, "text/plain");
+        }
+        [Authorize(Policy = "RequireRequestor")]
+        public IActionResult PickingMaterial(int id_request)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            string name = User.FindFirst("semb_erp_name")?.Value;
+            List<string> userRoles = User.Claims
+                                        .Where(c => c.Type == "semb_erp_role")
+                                        .Select(c => c.Value)
+                                        .ToList();
+            //sesa_id = "SESA126011";
+            var db = new DatabaseAccessLayer();
+            var reqInfo = JsonConvert.DeserializeObject<RequestListModel>(db.GetRequestInfo(id_request));
+            List<RequestListModel> reqList = db.GetReqMaterial(id_request, sesa_id);
+            ViewBag.id_request = id_request;
+            ViewBag.reqInfo = reqInfo;
+            ViewBag.name = name;
+            ViewBag.sesa_id = sesa_id;
+            ViewBag.userRoles = userRoles;
+            return View(reqList);
+        }
+        [Authorize(Policy = "RequireRequestor")]
+        public IActionResult ScanBin(int id_request, int id_det)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            string name = User.FindFirst("semb_erp_name")?.Value;
+            List<string> userRoles = User.Claims
+                                        .Where(c => c.Type == "semb_erp_role")
+                                        .Select(c => c.Value)
+                                        .ToList();
+            var db = new DatabaseAccessLayer();
+            var pickInfo = JsonConvert.DeserializeObject<PickingModel>(db.GetBinPicking(id_request, id_det,sesa_id));
+            var reqInfo = JsonConvert.DeserializeObject<RequestListModel>(db.GetRequestInfo(id_request));
+            ViewBag.id_request = id_request;
+            ViewBag.id_det = id_det;
+            ViewBag.pickInfo = pickInfo;
+            ViewBag.reqInfo = reqInfo;
+            ViewBag.name = name;
+            ViewBag.sesa_id = sesa_id;
+            ViewBag.userRoles = userRoles;
+            return View();
+        }
+        [HttpPost]
+        public IActionResult DeleteTempBox()
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            string delTemp = db.DeleteTempBox(sesa_id);
+            return Content(delTemp, "text/plain");
+        }
+        [Authorize(Policy = "RequireRequestor")]
+        public IActionResult ScanBox(int id_request, int id_det, string sbin)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            string name = User.FindFirst("semb_erp_name")?.Value;
+            List<string> userRoles = User.Claims
+                                        .Where(c => c.Type == "semb_erp_role")
+                                        .Select(c => c.Value)
+                                        .ToList();
+            var db = new DatabaseAccessLayer();
+            List<string> printList = db.GetPrinter();
+            List<PickingModel> pickList = db.GetPickingTempQty(id_request, id_det, sbin, sesa_id);
+            List<TempBoxModel> tempList = db.GetTempBox(id_request, id_det, sbin, sesa_id);
+            var reqInfo = JsonConvert.DeserializeObject<RequestListModel>(db.GetRequestInfo(id_request));
+            ViewBag.id_request = id_request;
+            ViewBag.id_det = id_det;
+            ViewBag.sbin = sbin;
+            ViewBag.printList = printList;
+            ViewBag.pickList = pickList;
+            ViewBag.reqInfo = reqInfo;
+            ViewBag.name = name;
+            ViewBag.sesa_id = sesa_id;
+            ViewBag.userRoles = userRoles;
+            return View(tempList);
+        }
+        [HttpPost]
+        public IActionResult CheckBox(int id_request, int id_det, string partno, string sbin, string box_id, decimal remain_qty)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            string checkBox = db.CheckBox(id_request, id_det, partno, sbin, box_id, remain_qty, sesa_id);
+            return Content(checkBox, "text/plain");
+        }
+        [HttpPost]
+        public IActionResult BoxKitting(string box_id, decimal kitting_qty, int id_request, int id_det, string partno, string sbin, decimal remain_qty)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            string name = User.FindFirst("semb_erp_name")?.Value;
+            var db = new DatabaseAccessLayer();
+            string kit = db.BoxKitting(box_id, kitting_qty, sesa_id, name);
+            string[] res = kit.Split(';');
+            if (res[0] == "OK")
+            {
+                string checkBox = db.CheckBox(id_request, id_det, partno, sbin, res[2], remain_qty, sesa_id); //INSERT TO TEMP
+                string[] res2 = checkBox.Split(';');
+                if (res2[0] == "OK")
+                {
+                    return Content(kit, "text/plain");
+                }
+                else
+                {
+                    return Content(checkBox, "text/plain");
+                }
+            }
+            else
+            {
+                return Content(kit, "text/plain");
+            }
+        }
+        [HttpPost]
+        public IActionResult FinishPicking(int id_request, int id_det, string sbin)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            string fin = db.FinishPicking(id_request, id_det, sbin, sesa_id);
+            return Content(fin, "text/plain");
+        }
+        [HttpPost]
+        public IActionResult VariancePicking(int id_request, int id_det, string sbin)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            string variance = db.VariancePicking(id_request, id_det, sbin, sesa_id);
+            return Content(variance, "text/plain");
+        }
     }
 }
