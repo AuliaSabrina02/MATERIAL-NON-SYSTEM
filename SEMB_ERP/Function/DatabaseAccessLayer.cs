@@ -716,7 +716,7 @@ namespace SEMB_ERP.Function
                     else
                     {
                         return "NOK";
-                    }                    
+                    }
                 }
             }
         }
@@ -956,9 +956,10 @@ namespace SEMB_ERP.Function
                     }
                 }
             }
-            return JsonConvert.SerializeObject(new { 
-                request_no = (string)null, 
-                remark = (string)null 
+            return JsonConvert.SerializeObject(new
+            {
+                request_no = (string)null,
+                remark = (string)null
             });
         }
         public List<RequestListModel> GetReqList()
@@ -1073,7 +1074,7 @@ namespace SEMB_ERP.Function
             catch (SqlException ex)
             {
                 Console.WriteLine($"SQL Error: {ex.Message}");
-                return $"SQL Error: {ex.Message}"; 
+                return $"SQL Error: {ex.Message}";
             }
             catch (Exception ex)
             {
@@ -1320,7 +1321,7 @@ namespace SEMB_ERP.Function
                         {
                             if (reader.Read())
                             {
-                                return "OK;"+reader["box_ids"].ToString() ?? "";
+                                return "OK;" + reader["box_ids"].ToString() ?? "";
                             }
                             else
                             {
@@ -1417,7 +1418,7 @@ namespace SEMB_ERP.Function
                 return $"General Error: {ex.Message}";
             }
         }
-        
+
         public List<BinModel> GetMstBin()
         {
             List<BinModel> parts = new List<BinModel>();
@@ -1467,7 +1468,7 @@ namespace SEMB_ERP.Function
             }
         }
 
-        public string AddMstBin(string bin_name,  string bin_length, string bin_width, string bin_height)
+        public string AddMstBin(string bin_name, string bin_length, string bin_width, string bin_height)
         {
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
@@ -1512,6 +1513,62 @@ namespace SEMB_ERP.Function
                     catch (Exception ex)
                     {
                         return "Error: " + ex.Message;
+                    }
+                }
+            }
+        }
+
+        public List<BoxModel> GetBoxList(string orderId)
+        {
+            List<BoxModel> boxs = new List<BoxModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("GET_BOX_LIST", conn);
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@input", orderId);
+                    using SqlDataReader reader = cmd.ExecuteReader();
+
+                    while (reader.Read())
+                    {
+                        boxs.Add(new BoxModel
+                        {
+                            BoxId = reader["PKG_ID2"].ToString(),
+                            PartNo = reader["Part_NO"].ToString(),
+                            Qty = reader["Qty"].ToString(),
+                            Sbin = reader["Storage_Bin"].ToString(),
+                            Unit = reader["Unit"].ToString(),
+                            Pstats = reader["PickingStatus"].ToString()
+                        });
+                    }
+                }                        
+            }
+            return boxs;
+        }
+
+        public string DeleteOrderList(string orderId)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand(@"DELETE FROM tbl_order WHERE id_order = @orderId", conn))
+                {
+                    // Use parameterized query to prevent SQL injection
+                    cmd.Parameters.AddWithValue("@orderId", orderId);
+
+                    // Execute the command
+                    int rowsAffected = cmd.ExecuteNonQuery();
+
+                    // Check if any rows were affected
+                    if (rowsAffected > 0)
+                    {
+                        return "OK";
+                    }
+                    else
+                    {
+                        return "NOK";
                     }
                 }
             }

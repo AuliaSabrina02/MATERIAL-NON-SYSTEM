@@ -1246,5 +1246,34 @@ namespace SEMB_ERP.Controllers
             // Return the result directly
             return Content(addResult, "text/plain");
         }
+
+        public IActionResult GetBoxList(string orderId)
+        {
+            var db = new DatabaseAccessLayer();
+            List<BoxModel> listBin = db.GetBoxList(orderId);
+
+            // Transform the list into a format suitable for DataTables
+            var result = listBin.Select(item => new
+            {
+                BoxId = item.BoxId,
+                PartNo= item.PartNo,
+                Qty = item.Qty,
+                Sbin = item.Sbin,
+                Unit = item.Unit,
+                Pstats = item.Pstats,
+            });
+
+            return Json(result);
+        }
+
+        [HttpPost]
+        public IActionResult DeleteOrderList(string orderId)
+        {
+            var db = new DatabaseAccessLayer();
+            string deleteResult = db.DeleteOrderList(orderId);
+
+            // Return the result directly
+            return Content(deleteResult, "text/plain");
+        }
     }
 }
