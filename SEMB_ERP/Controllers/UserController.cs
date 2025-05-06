@@ -1246,5 +1246,155 @@ namespace SEMB_ERP.Controllers
             // Return the result directly
             return Content(addResult, "text/plain");
         }
+        [Authorize(Policy = "RequireRequestor")]
+        public IActionResult RequestDetail()
+        {
+            return this.CheckSession(() =>
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> userRoles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                //sesa_id = "SESA126011";
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.userRoles = userRoles;
+                return View(userDetail);
+            });
+        }
+        public IActionResult GetRequestDetail()
+        {
+            try
+            {
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = Request.Form["start"].FirstOrDefault();
+                var length = Request.Form["length"].FirstOrDefault();
+                //var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][name]"].FirstOrDefault();
+                var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][data]"].FirstOrDefault();
+                var sortColumnDirection = Request.Form["order[0][dir]"].FirstOrDefault();
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                var column0Value = Request.Form["columns[0][search][value]"];
+                var column1Value = Request.Form["columns[1][search][value]"];
+                var column2Value = Request.Form["columns[2][search][value]"];
+                int pageSize = length != null ? Convert.ToInt32(length) : 0;
+                int skip = start != null ? Convert.ToInt32(start) : 0;
+                int recordsTotal = 0;
+                var mstData = (from RequestDetail in _context.v_request_detail
+                               select
+                                   new
+                                   {
+                                       RequestDetail.id_det,
+                                       RequestDetail.id_request,
+                                       RequestDetail.id_order,
+                                       RequestDetail.request_no,
+                                       RequestDetail.partno,
+                                       RequestDetail.qty,
+                                       RequestDetail.picked_qty,
+                                       RequestDetail.uom,
+                                       RequestDetail.status_picking
+                                   });
+
+                //var mstData = (from temp in _context.mst_material_plant select temp);
+                if (!(string.IsNullOrEmpty(sortColumn) && string.IsNullOrEmpty(sortColumnDirection)))
+                {
+                    mstData = mstData.OrderBy(sortColumn + " " + sortColumnDirection);
+                }
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    mstData = mstData.Where(m => m.request_no.Contains(searchValue)
+                                                || m.partno.Contains(searchValue)
+                                                || m.status_picking.Contains(searchValue));
+                }
+                recordsTotal = mstData.Count();
+                var data = mstData.Skip(skip).Take(pageSize).ToList();
+                var jsonData = new { draw = draw, recordsFiltered = recordsTotal, recordsTotal = recordsTotal, data = data };
+                return Ok(jsonData);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+        [HttpPost]
+        public IActionResult OpenVariance(int id_det)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            string upd = db.OpenVariance(id_det, sesa_id);
+
+            return Content(upd, "text/plain");
+        }
+        [Authorize(Policy = "RequireRequestor")]
+        public IActionResult Consolidation()
+        {
+            return this.CheckSession(() =>
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                List<string> userRoles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                //sesa_id = "SESA126011";
+                var db = new DatabaseAccessLayer();
+                db.DeleteTempConsol(sesa_id);
+                List<RequestListModel> reqList = db.GetConsolList();
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.userRoles = userRoles;
+                return View(reqList);
+            });
+        }
+        [HttpPost]
+        public IActionResult StartConsol(int id_request)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            string submit = db.StartConsol(id_request, sesa_id);
+            return Content(submit, "text/plain");
+        }
+        [Authorize(Policy = "RequireRequestor")]
+        public IActionResult ConsolScanBox(int id_request)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            string name = User.FindFirst("semb_erp_name")?.Value;
+            List<string> userRoles = User.Claims
+                                        .Where(c => c.Type == "semb_erp_role")
+                                        .Select(c => c.Value)
+                                        .ToList();
+            var db = new DatabaseAccessLayer();
+            List<string> printList = db.GetPrinter();
+            List<TempBoxModel> tempList = db.GetTempConsolBox(id_request, sesa_id);
+            List<PalletModel> palletList = db.GetPalletID(id_request);
+            var reqInfo = JsonConvert.DeserializeObject<RequestListModel>(db.GetRequestInfo(id_request));
+            ViewBag.id_request = id_request;
+            ViewBag.printList = printList;
+            ViewBag.reqInfo = reqInfo;
+            ViewBag.palletList = palletList;
+            ViewBag.name = name;
+            ViewBag.sesa_id = sesa_id;
+            ViewBag.userRoles = userRoles;
+            return View(tempList);
+        }
+        [HttpPost]
+        public IActionResult CheckBoxConsol(int id_request, string box_id)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            string checkBox = db.CheckBoxConsol(id_request, box_id, sesa_id);
+            return Content(checkBox, "text/plain");
+        }
+        [HttpPost]
+        public IActionResult CreatePallet(int id_request, int id_pallet)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            string submit = db.CreatePallet(id_request, id_pallet, sesa_id);
+            return Content(submit, "text/plain");
+        }
     }
 }

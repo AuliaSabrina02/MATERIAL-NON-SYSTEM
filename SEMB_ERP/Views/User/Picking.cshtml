@@ -125,16 +125,25 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach (var req in Model)
+                                        @if (Model.Any())
+                                        {
+                                            foreach (var req in Model)
+                                            {
+                                                <tr>
+                                                    <td>@req.request_no</td>
+                                                    <td>@req.status_desc</td>
+                                                    <td>@req.requested_by_name</td>
+                                                    <td>@req.record_date?.ToString("yyyy-MM-ddTHH:mm:ss.fff")</td>
+                                                    <td class="text-center">
+                                                        <button class="btn btn-sm btn-success" onclick="start_picking(`@req.id_request`)"><i class="fas fa-arrow-right"></i> Picking</button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                        else
                                         {
                                             <tr>
-                                                <td>@req.request_no</td>
-                                                <td>@req.status_desc</td>
-                                                <td>@req.requested_by_name</td>
-                                                <td>@req.record_date?.ToString("yyyy-MM-ddTHH:mm:ss.fff")</td>
-                                                <td class="text-center">
-                                                    <button class="btn btn-sm btn-success" onclick="start_picking(`@req.id_request`)"><i class="fas fa-arrow-right"></i> Picking</button>
-                                                </td>
+                                                <td colspan="5" class="text-center">No Data</td>
                                             </tr>
                                         }
                                     </tbody>

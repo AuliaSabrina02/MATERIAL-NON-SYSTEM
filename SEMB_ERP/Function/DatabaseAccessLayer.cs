@@ -1516,5 +1516,248 @@ namespace SEMB_ERP.Function
                 }
             }
         }
+        public string OpenVariance(int id_det, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("UPDATE_OPEN_VARIANCE", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@id_det", id_det);
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        cmd.ExecuteScalar();
+                        return "OK";
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine($"SQL Error: {ex.Message}");
+                return $"SQL Error: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General Error: {ex.Message}");
+                return $"General Error: {ex.Message}";
+            }
+        }
+        public string DeleteTempConsol(string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("DELETE FROM temp_consol WHERE sesa_id=@sesa_id", conn))
+                    {
+                        //cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        cmd.ExecuteScalar();
+                        return "OK";
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine($"SQL Error: {ex.Message}");
+                return $"SQL Error: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General Error: {ex.Message}");
+                return $"General Error: {ex.Message}";
+            }
+        }
+        public List<RequestListModel> GetConsolList()
+        {
+            List<RequestListModel> reqList = new List<RequestListModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("SELECT * FROM v_request WHERE status_request IN (4) ORDER BY record_date", conn);
+                //cmd.CommandType = CommandType.StoredProcedure;
+                //cmd.Parameters.AddWithValue("@id_request", id_request);
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    reqList.Add(new RequestListModel
+                    {
+                        id_request = Convert.ToInt32(reader["id_request"]),
+                        request_no = reader["request_no"].ToString(),
+                        status_desc = reader["status_desc"].ToString(),
+                        requested_by_name = reader["requested_by_name"].ToString(),
+                        remark = reader["remark"].ToString(),
+                        record_date = Convert.ToDateTime(reader["record_date"])
+                    });
+                }
+            }
+
+            return reqList;
+        }
+        public string StartConsol(int id_request, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("START_CONSOL", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@id_request", id_request);
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        object result = cmd.ExecuteScalar();
+
+                        if (result != null)
+                        {
+                            return result.ToString() ?? "";
+                        }
+                        else
+                        {
+                            return "ERROR;No result returned from stored procedure.";
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine($"SQL Error: {ex.Message}");
+                return $"SQL Error: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General Error: {ex.Message}");
+                return $"General Error: {ex.Message}";
+            }
+        }
+        public List<TempBoxModel> GetTempConsolBox(int id_request, string sesa_id)
+        {
+            List<TempBoxModel> tempList = new List<TempBoxModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("GET_TEMP_CONSOL_BOX", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@id_request", id_request);
+                cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    tempList.Add(new TempBoxModel
+                    {
+                        id_temp_box = Convert.ToInt32(reader["id_temp_box"]),
+                        box_id = Convert.ToString(reader["box_id"]),
+                        box_id_consol = Convert.ToString(reader["box_id_consol"])
+                    });
+                }
+            }
+
+            return tempList;
+        }
+        public string CheckBoxConsol(int id_request, string box_id, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("CHECK_BOX_CONSOL", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@id_request", id_request);
+                        cmd.Parameters.AddWithValue("@box_id", box_id);
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        object result = cmd.ExecuteScalar();
+
+                        if (result != null)
+                        {
+                            return result.ToString() ?? "";
+                        }
+                        else
+                        {
+                            return "ERROR;No result returned from database.";
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine($"SQL Error: {ex.Message}");
+                return $"SQL Error: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General Error: {ex.Message}");
+                return $"General Error: {ex.Message}";
+            }
+        }
+        public List<PalletModel> GetPalletID(int id_request)
+        {
+            List<PalletModel> palletList = new List<PalletModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("SELECT id_pallet, pallet_no FROM tbl_pallet_header WHERE id_request=@id_request ORDER BY id_pallet", conn);
+                //cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@id_request", id_request);
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    palletList.Add(new PalletModel
+                    {
+                        id_pallet = Convert.ToInt32(reader["id_pallet"]),
+                        pallet_no = Convert.ToString(reader["pallet_no"])
+                    });
+                }
+            }
+
+            return palletList;
+        }
+        public string CreatePallet(int id_request, int id_pallet, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("CREATE_PALLET", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@id_request", id_request);
+                        cmd.Parameters.AddWithValue("@id_pallet", id_pallet);
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        object result = cmd.ExecuteScalar();
+
+                        if (result != null)
+                        {
+                            return result.ToString() ?? "";
+                        }
+                        else
+                        {
+                            return "ERROR;No result returned from database.";
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine($"SQL Error: {ex.Message}");
+                return $"SQL Error: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General Error: {ex.Message}");
+                return $"General Error: {ex.Message}";
+            }
+        }
     }
 }

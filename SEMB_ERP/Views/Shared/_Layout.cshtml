@@ -169,7 +169,15 @@
                                 <a href="@Url.Action("RequestList", "User")" class="nav-link @Html.IsActive("User","RequestList")">
                                     <i class="nav-icon fas fa-list"></i>
                                     <p>
-                                        Request List
+                                        Picking List
+                                    </p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("RequestDetail", "User")" class="nav-link @Html.IsActive("User","RequestDetail")">
+                                    <i class="nav-icon fas fa-list"></i>
+                                    <p>
+                                        Picking Detail
                                     </p>
                                 </a>
                             </li>
@@ -193,7 +201,15 @@
                                 <a href="@Url.Action("Picking", "User")" class="nav-link @Html.IsActive("User","Picking") @Html.IsActive("User","PickingMaterial") @Html.IsActive("User","ScanBin") @Html.IsActive("User","ScanBox")">
                                     <i class="nav-icon fas fa-pallet"></i>
                                     <p>
-                                        Picking
+                                        Start Picking
+                                    </p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("Consolidation", "User")" class="nav-link @Html.IsActive("User","Consolidation")">
+                                    <i class="nav-icon fas fa-pallet"></i>
+                                    <p>
+                                        Consolidation
                                     </p>
                                 </a>
                             </li>

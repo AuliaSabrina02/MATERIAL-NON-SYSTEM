@@ -100,7 +100,7 @@
                     <div class="card-header">
                         <h5>
                             <i class="fas fa-list"></i>
-                            Picking List
+                            Picking Detail
                         </h5>
                     </div>
                     <div class="card-body">
@@ -115,19 +115,16 @@
                             </div> *@
                             <div class="col-12 table-responsive">
                                 <table class="table table-bordered table-striped align-center nowrap" id="table_req" style="font-size:12pt;width:100%;">
-                                    <thead class="bg-warning align-middle text-center">
+                                    <thead class="bg-secondary align-middle text-center">
                                         <tr>
                                             <th>Req. No</th>
-                                            <th>Status</th>
-                                            <th>Requested By</th>
-                                            <th>Request Date</th>
+                                            <th>Partno</th>
+                                            <th>Qty</th>
+                                            <th>Picked Qty</th>
+                                            <th>UOM</th>
+                                            <th>Status Picking</th>
+                                            <th>Action</th>
                                         </tr>
-                                        @* <tr>
-                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="0" /></td>
-                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="1" /></td>
-                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="2" /></td>
-                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="3" /></td>
-                                        </tr> *@
                                     </thead>
                                 </table>
                             </div>
@@ -177,76 +174,87 @@
                 "serverSide": true,
                 "filter": true,
                 "ajax": {
-                    "url": "@Url.Action("GetRequestList")",
+                    "url": "@Url.Action("GetRequestDetail")",
                     "type": "POST",
                     "datatype": "json"
                 },
                 "columns": [
-                    { "data": "request_no", 
-                        "className": "align-middle",
+                    { "data": "request_no", "className": "align-middle" },
+                    { "data": "partno", "className": "align-middle" },
+                    { "data": "qty", "className": "align-middle" },
+                    { "data": "picked_qty", "className": "align-middle" },
+                    { "data": "uom", "className": "align-middle" },
+                    { "data": "status_picking", "className": "align-middle" },
+                    {
+                        "data": "id_det",
+                        "className": "text-center align-middle",
                         "render": function (data, type, row) {
-                            return `<button class="btn btn-sm btn-secondary" onclick="open_detail(${row["id_request"]})">${data}</button>`;
+                            if (row["status_picking"] == "VARIANCE") {
+                                return `<button class="btn btn-sm btn-warning" onclick="open_variance(${data})"><i class="fas fa-edit"></i> Open</button>`;
+                            }
+                            return "N/A";
                         }
-                    },
-                    { "data": "status_desc", "className": "align-middle" },
-                    { "data": "requested_by_name", "className": "align-middle" },
-                    { "data": "record_date", "className": "align-middle" }
+                    }
                 ],
                 "drawCallback": function (settings) {
                     // Set the background color for the second column (index 1)
                     this.api().rows().every(function () {
                         var rowNode = this.node();
-                        let status_desc = $(rowNode).find('td:eq(1)').html();
-                        status_desc = status_desc.toLowerCase();
+                        let status_picking = $(rowNode).find('td:eq(5)').html();
+                        status_picking = status_picking.toLowerCase();
                         let bg_color = "";
-                        if(status_desc=="request"){
-                            bg_color = "bg-light";
-                        }
-                        else if(status_desc=="start picking"){
+                        if(status_picking=="open"){
                             bg_color = "bg-warning";
                         }
-                        else if (status_desc=="picking") {
-                            bg_color = "bg-warning";
-                        } 
-                        else if (status_desc=="done picking") {
-                            bg_color = "bg-info";
-                        } 
-                        else if (status_desc=="closed") {
-                            bg_color = "bg-secondary";
+                        else if(status_picking=="done"){
+                            bg_color = "bg-success";
+                        }
+                        else if (status_picking=="variance") {
+                            bg_color = "bg-danger";
                         }
                         // $(rowNode).find('td').css("background-color", "#edfcf1")
-                        $(rowNode).find('td:eq(1)').addClass(bg_color); // Change to desired color
+                        $(rowNode).find('td:eq(5)').addClass(bg_color); // Change to desired color
 
                     });
                 }
             });
-
-
-            $('input.filter_table, select.filter_table', this).on('keyup change', function () {
-                let trgt = $(this).attr('target');
-                // alert(trgt);
-                if (table.column(trgt).search() !== this.value) {
-                    table
-                        .column(trgt)
-                        .search(this.value)
-                        .draw();
-                }
-            });
         })
 
-        function open_detail(id_request) {
-            $("div#body_req_detail").html(loading);
-            $("div#modal_req_detail").modal("show");
-            $.ajax({
-                type: "GET",
-                url: "@Url.Action("GetReqDetail")",
-                data: {
-                    id_request: id_request
-                }
-            }).done(function (res) {
-                $("div#body_req_detail").html(res);
-            }).fail(function(err){
-                swal.fire("Error!", err, "error");
+        function open_variance(id_det) {
+            Swal.fire({
+                title: 'Confirmation!!',
+                html: "Are you sure want open this variance ?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Yes!',
+                cancelButtonText: 'No!',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve, reject) {
+                        $.ajax({
+                            type: "POST",
+                            url: "@Url.Action("OpenVariance")",
+                            data: {
+                                id_det: id_det
+                            }
+                        }).done(function (res) {
+                            let arr = res.split(";");
+                            if (arr[0] == "OK") {
+                                swal.fire("OK!", "This part status has changed to Open!!!", "success").then(function () {
+                                    $("#table_req").DataTable().ajax.reload(null, false);
+                                })
+                            }
+                            else {
+                                swal.fire("Error!", res, "error");
+                            }
+                        }).fail(function (err) {
+                            swal.fire("Page Error!", err, "error");
+                        })
+                    })
+                },
+                allowOutsideClick: () => !Swal.isLoading()
             })
         }
 

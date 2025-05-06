@@ -1,13 +1,11 @@
 ﻿@* @using System.Data; *@
-@model List<UserDetailModel>
+@model List<RequestListModel>
 @using Microsoft.AspNetCore.Mvc.Rendering;
 @using Microsoft.AspNetCore.Http;
 @using SEMB_ERP.Function;
 @{
-    var user = Model.First();
     string sesa_id = ViewBag.sesa_id;
     string name = ViewBag.name;
-    List<string> listStatus = ViewBag.listStatus;
     List<string> userRoles = ViewBag.userRoles;
 }
 
@@ -60,10 +58,12 @@
 
     table#table_req tr > th {
         padding: 5px;
+        vertical-align: middle;
     }
 
     table#table_req tr > td {
         padding: 5px;
+        vertical-align: middle;
     }
 
     .btn-group-xs > .btn, .btn-xs {
@@ -100,7 +100,7 @@
                     <div class="card-header">
                         <h5>
                             <i class="fas fa-list"></i>
-                            Picking List
+                            Consolidation
                         </h5>
                     </div>
                     <div class="card-body">
@@ -115,20 +115,38 @@
                             </div> *@
                             <div class="col-12 table-responsive">
                                 <table class="table table-bordered table-striped align-center nowrap" id="table_req" style="font-size:12pt;width:100%;">
-                                    <thead class="bg-warning align-middle text-center">
+                                    <thead class="bg-success align-middle text-center">
                                         <tr>
                                             <th>Req. No</th>
                                             <th>Status</th>
                                             <th>Requested By</th>
                                             <th>Request Date</th>
+                                            <th>Action</th>
                                         </tr>
-                                        @* <tr>
-                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="0" /></td>
-                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="1" /></td>
-                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="2" /></td>
-                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="3" /></td>
-                                        </tr> *@
                                     </thead>
+                                    <tbody>
+                                        @if (Model.Any())
+                                        {
+                                            foreach (var req in Model)
+                                            {
+                                                <tr>
+                                                    <td>@req.request_no</td>
+                                                    <td>@req.status_desc</td>
+                                                    <td>@req.requested_by_name</td>
+                                                    <td>@req.record_date?.ToString("yyyy-MM-ddTHH:mm:ss.fff")</td>
+                                                    <td class="text-center">
+                                                        <button class="btn btn-sm btn-warning" onclick="start_consol(`@req.id_request`)"><i class="fas fa-arrow-right"></i> Consol</button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr>
+                                                <td colspan="5" class="text-center">No Data</td>
+                                            </tr>
+                                        }
+                                    </tbody>
                                 </table>
                             </div>
                         </div>
@@ -162,89 +180,30 @@
     <script>
         var table;
         var loading = "<div class='text-center'><i class='fa fa-4x fa-spinner fa-spin'></i></div>";
-        var sesa_id = "@user.sesa_id".toUpperCase();
+        var sesa_id = "@sesa_id".toUpperCase();
 
         $(document).ready(function () {
-
-            var table = $("#table_req").DataTable({
-                // "searching": false,
-                // "scrollX": true,
-                // "fixedColumns": {
-                //     rightColumns: 1
-                // },
-                "orderCellsTop": true,
-                "processing": true,
-                "serverSide": true,
-                "filter": true,
-                "ajax": {
-                    "url": "@Url.Action("GetRequestList")",
-                    "type": "POST",
-                    "datatype": "json"
-                },
-                "columns": [
-                    { "data": "request_no", 
-                        "className": "align-middle",
-                        "render": function (data, type, row) {
-                            return `<button class="btn btn-sm btn-secondary" onclick="open_detail(${row["id_request"]})">${data}</button>`;
-                        }
-                    },
-                    { "data": "status_desc", "className": "align-middle" },
-                    { "data": "requested_by_name", "className": "align-middle" },
-                    { "data": "record_date", "className": "align-middle" }
-                ],
-                "drawCallback": function (settings) {
-                    // Set the background color for the second column (index 1)
-                    this.api().rows().every(function () {
-                        var rowNode = this.node();
-                        let status_desc = $(rowNode).find('td:eq(1)').html();
-                        status_desc = status_desc.toLowerCase();
-                        let bg_color = "";
-                        if(status_desc=="request"){
-                            bg_color = "bg-light";
-                        }
-                        else if(status_desc=="start picking"){
-                            bg_color = "bg-warning";
-                        }
-                        else if (status_desc=="picking") {
-                            bg_color = "bg-warning";
-                        } 
-                        else if (status_desc=="done picking") {
-                            bg_color = "bg-info";
-                        } 
-                        else if (status_desc=="closed") {
-                            bg_color = "bg-secondary";
-                        }
-                        // $(rowNode).find('td').css("background-color", "#edfcf1")
-                        $(rowNode).find('td:eq(1)').addClass(bg_color); // Change to desired color
-
-                    });
-                }
-            });
-
-
-            $('input.filter_table, select.filter_table', this).on('keyup change', function () {
-                let trgt = $(this).attr('target');
-                // alert(trgt);
-                if (table.column(trgt).search() !== this.value) {
-                    table
-                        .column(trgt)
-                        .search(this.value)
-                        .draw();
-                }
-            });
+            // var table = $("#table_req").DataTable();
         })
 
-        function open_detail(id_request) {
-            $("div#body_req_detail").html(loading);
-            $("div#modal_req_detail").modal("show");
+        function start_consol(id_request) {
             $.ajax({
-                type: "GET",
-                url: "@Url.Action("GetReqDetail")",
+                type: "POST",
+                url: "@Url.Action("StartConsol")",
                 data: {
                     id_request: id_request
                 }
             }).done(function (res) {
-                $("div#body_req_detail").html(res);
+                let arr = res.split(";");
+                if (arr[0] == "OK") {
+                    window.location = "@Url.Action("ConsolScanBox")?id_request="+id_request;
+                }
+                else if (arr[0] == "ERROR") {
+                    swal.fire("Failed!", arr[1], "warning");
+                }
+                else {
+                    swal.fire("Failed!", res, "warning");
+                }
             }).fail(function(err){
                 swal.fire("Error!", err, "error");
             })
