@@ -387,6 +387,36 @@
     </div>
 </div>
 
+<div id="modal_box_info" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title"><i class="fas fa-clipboard"></i> Box</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>            
+            <div class="form-group" style="padding-top: 15px; padding-left: 5px; padding-right: 5px;">
+                <table class="table table-bordered table-striped align-center nowrap" id="tbl_box_list" style="font-size:12pt;width:100%;">
+                    <thead class="bg-info align-middle text-center">
+                        <tr>
+                            <th width="25%">Box ID</th>
+                            <th width="25%">Part No</th>
+                            <th width="5%">Qty</th>
+                            <th width="20%">Storage Bin</th>
+                            <th width="20%">unit</th>
+                            <th width="5%">Picking Status</th>
+                    </thead>
+                    <tbody class="align-middle text-center">
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
 
 @section Scripts {
 
@@ -447,7 +477,7 @@
                                 return `<i class="text-danger fas fa-exclamation-circle" style="font-size:14pt" data-bs-toggle="tooltip" data-bs-placement="right" title="Please fill in dimension!!"></i>`;
                             }
                             else{
-                                return "";
+                                return `<button class="btn btn-sm btn-warning " onclick="box_list(${data})"><i class="fas fa-clipboard"></i></button>`;
                             }
                         }
                     },
@@ -498,17 +528,20 @@
                         "className": "align-middle text-center",
                         "render": function (data, type, row) {
                             let btn_edit = "";
+                            let btn_delete = "";
                             let btn_order_picking = "";
                             if(row['status_code']==1){
-                                btn_edit = `<button class="btn btn-sm btn-warning ml-1" onclick="update_order('${data}', '${row['material_type']}','${row['partno']}',
+                                btn_edit = `<button class="btn btn-sm btn-warning ml-1 btn-block" onclick="update_order('${data}', '${row['material_type']}','${row['partno']}',
                                                     '${row['po_no']}','${row['qty']}','${row['uom']}','${row['revision']}','${row['project_name']}','${row['storage_requirement']}'
                                                     ,'${row['supplier_name']}','${row['pic']}','${row['order_type']}','${row['unit_price']}','${row['length_mm']}'
                                                     ,'${row['width_mm']}','${row['height_mm']}','${row['remark']}','${row['file_support']}','${row['pic_name']}')"><i class="fas fa-edit"></i> Edit</button>`;
+
+                                btn_delete = `<div class="mt-1"><button class="btn btn-sm btn-danger ml-1 btn-block" onclick="delete_order('${data}','${row['partno']}')"><i class="fas fa-trash"></i> Delete</button></div>`;
                             }
                             if (row['status_code'].toLowerCase() == 3 || row['status_code'].toLowerCase() == 4) {
                                 btn_order_picking = `<button class="btn btn-sm btn-success" onclick="add_order(${row['id_order']},${row['qty']})"><i class="fas fa-plus"></i> Req. Picking</button>`;
                             }
-                            return btn_edit + btn_order_picking;
+                            return btn_edit + btn_delete + btn_order_picking;
                         }
                     }
                 ],
@@ -842,6 +875,102 @@
                 },
                 allowOutsideClick: () => !Swal.isLoading()
             })
+        }
+
+        function box_list(orderId){
+            $("#modal_box_info").data("orderId", orderId);
+            $("#modal_box_info").modal('show');
+        }
+
+        $('#modal_box_info').on('shown.bs.modal', function () {
+            var orderId = $(this).data("orderId");
+            console.log(orderId)
+
+            if ($.fn.DataTable.isDataTable('#tbl_box_list')) {
+                $('#tbl_box_list').DataTable().clear().destroy();
+            }
+
+            $('#tbl_box_list').DataTable({
+
+                "ajax": {
+                    "url": '@Url.Action("GetBoxList")',
+                    "data": {
+                        orderId: orderId
+                    },
+                    "dataSrc": function (json) {
+                        console.log("AJAX response:", json);
+                        return json.map(function (item) {
+                            return {
+                                BoxId: item.boxId,
+                                PartNo: item.partNo,
+                                Qty: item.qty,
+                                Sbin: item.sbin,
+                                Unit: item.unit,
+                                Pstats: item.pstats,
+                            };
+                        });
+                    }
+                },
+                "columns": [
+                    { data: "BoxId", title: "Box Id" },
+                    { data: "PartNo", title: "Part No"},
+                    { data: "Qty", title: "Qty" },
+                    { data: "Sbin", title: "Storage Bin" },
+                    { data: "Unit", title: "Unit" },
+                    { data: "Pstats", title: "Picking Status"},
+                ],
+                "searching": true,
+                "paging": true,
+                "info": true,
+                "ordering": false,
+                "order": [[0, "asc"]],
+
+            });
+            
+        });
+
+        function delete_order(orderId, partNo){            
+            orderId = String(orderId);
+            console.log(orderId)
+            console.log(partNo)
+            Swal.fire({
+                        title: 'Are you sure?',
+                        text: "You are about to delete " + partNo + ".",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Yes, delete it!',
+                        cancelButtonText: 'No, cancel!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '@Url.Action("DeleteOrderList")',
+                        type: 'POST',                        
+                        data: { orderId: orderId },
+                        success: function(response) {
+                            if (response.trim() === "OK") {
+                                Swal.fire(
+                                    'Deleted!',
+                                    'Order has been Deleted.',
+                                    'success'
+                                );
+                            } else {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Warning!',
+                                    text: 'Unexpected response received.',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                            $("#table_order").DataTable().ajax.reload(null, false);
+                        },
+                        error: function(xhr, status, error) {
+                            alert("An error occurred while deleting Order: " + error);
+                        }
+                    });
+                }
+            });
         }
 
 
