@@ -49,6 +49,15 @@
         line-height: 1; /* Optional: Reset line height */
     }
 
+    /* Customize the font size for DataTables elements */
+    .dataTables_info, .dataTables_paginate, .dataTables_filter {
+        font-size: 10pt; /* Adjust the value to your desired font size */
+    }
+
+    .dataTables_filter {
+        display: none; /* Hides just the input field */
+    }
+
     table#table_req tr > th {
         padding: 5px;
     }
@@ -75,93 +84,64 @@
         transform: scale(2); /* Adjust the scale as needed */
     }
 
-    #tbl_mst_bin {
-        border-collapse: collapse; /* Ensures borders are collapsed */
-        width: 100%; /* Ensures the table takes full width */
-        table-layout: fixed; /* Enforce fixed table layout */
-    }
-
-    #tbl_mst_bin th, #tbl_mst_bin td {
-        padding: 8px; /* Adds padding for better spacing */
-        text-align: center; /* Center align text */
-        width: 250px; /* Set a fixed width for all columns */
-        overflow: hidden; /* Prevent overflow */
-        white-space: nowrap; /* Prevent text wrapping */
-        text-overflow: ellipsis; /* Show ellipsis for overflow text */
-    }
-
-    #tbl_mst_bin th {
-            background-color: #4bac4f;
-    }
-
-    div.dataTables_scrollHead th {
-        background-color: #4bac4f;
-        text-align: center;
-        height: 50px;
-    }
-
-    #tbl_mst_bin td {
-            background-color: #c1f188;
-    }
 </style>
-
-
 
 <div class="content">
     <div class="container-fluid">
         <div class="row">
             <div class="col-lg-12 mt-3">
                 <div class="card card-success card-outline">
+@*                     <div class="card-header">
+                        <h3 class="text-center half-underline">
+                            <i class="fas fa-list"></i>
+                            Asset List
+                        </h3>
+                    </div> *@
                     <div class="card-header">
                         <h5>
                             <i class="fas fa-list"></i>
                             Request List - Picking
                         </h5>
                     </div>
-                    <div class="card-body" style="padding: 0;">
-                        <div class="row align-items-stretch d-flex g-0 " style="background-color: #c1f188; margin: 0;">
-                            <div class="col-1 d-flex flex-column justify-content-center align-items-center position-relative">
-                                <div class="legend text-start small position-absolute mt-2" style="top: 0; background: white; padding: 5px; z-index: 10;">
-                                    <div><span style="display:inline-block; width:20px; height:12px; background-color:#ffffff; border:1px solid #ccc; margin-right:5px;"></span> Request</div>
-                                    <div><span style="display:inline-block; width:20px; height:12px; background-color:#ffc000; border:1px solid #ccc; margin-right:5px;"></span> Start Picking</div>
-                                    <div><span style="display:inline-block; width:20px; height:12px; background-color:#ffc000; border:1px solid #ccc; margin-right:5px;"></span> Picking</div>
-                                    <div><span style="display:inline-block; width:20px; height:12px; background-color:#ffc000; border:1px solid #ccc; margin-right:5px;"></span> Done Picking</div>
-                                    <div><span style="display:inline-block; width:20px; height:12px; background-color:#86606e; border:1px solid #ccc; margin-right:5px;"></span> Consolidation</div>
-                                    <div><span style="display:inline-block; width:20px; height:12px; background-color:#ffffff; border:1px solid #ccc; margin-right:5px;"></span> transfering</div>
-                                    <div><span style="display:inline-block; width:20px; height:12px; background-color:#33cccc; border:1px solid #ccc; margin-right:5px;"></span> Plant Received</div>
-                                    <div><span style="display:inline-block; width:20px; height:12px; background-color:#305496; border:1px solid #ccc; margin-right:5px;"></span> Supplied</div>
-
-
-                                </div>
-                                <div class="d-flex flex-column align-items-center">                                    
-                                    <button id="prev" class="nav-button btn btn-link p-0 border-0 w-100 mb-2">
-                                        <i class="fas fa-arrow-left fa-2x"></i>
-                                    </button>                                    
-                                </div>
-                            </div>
-                            <div class="col-10">
-                                <div class="table-responsive">
-                                    <table id="tbl_mst_bin" class="display" style="width:100%">
-                                        <thead>
-                                            <tr id="table-headers-list"></tr>
-                                        </thead>
-                                        <tbody id="table-body-list"></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <div class="col-1 d-flex flex-column justify-content-center align-items-center position-relative">
-                                <button id="next" class="nav-button btn btn-link p-0 border-0 w-100">
-                                    <i class="fas fa-arrow-right fa-2x"></i>
-                                </button>
+                    <div class="card-body">
+                        <div class="row">
+                            @* <div class="col-12 d-flex justify-content-end mb-2">
+                                <a href="@Url.Action("DOWNLOAD_ASSET_LIST", "Requestor")" id="btn_download_data" class="btn btn-dark">
+                                    <i class="fas fa-download"></i> Download Asset List
+                                </a>
+                            </div> *@
+                            @* <div class="col-12 text-right">
+                                <button class="btn btn-success" name="btn_gr"><i class="fas fa-boxes"></i> GR</button>
+                            </div> *@
+                            <div class="col-12 table-responsive">
+                                <table class="table table-bordered table-striped align-center nowrap" id="table_req" style="font-size:12pt;width:100%;">
+                                    <thead class="bg-warning align-middle text-center">
+                                        <tr>
+                                            <th>Req. No</th>
+                                            <th>Status</th>
+                                            <th>Requested By</th>
+                                            <th>Request Date</th>
+                                        </tr>
+                                        @* <tr>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="0" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="1" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="2" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="3" /></td>
+                                        </tr> *@
+                                    </thead>
+                                </table>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+            <!-- Element spinner -->
+            <div id="loadingSpinner" style="display: none;">
+                <img src="~/images/icon/loading.gif" alt="Loading..." />
+            </div>
         </div>
     </div>
 </div>
-
 
 <div id="modal_req_detail" class="modal fade">
     <div class="modal-dialog modal-lg" role="document">
@@ -179,9 +159,83 @@
 
 @section Scripts {
 
-    <!--TEST-->
     <script>
+        var table;
+        var loading = "<div class='text-center'><i class='fa fa-4x fa-spinner fa-spin'></i></div>";
+        var sesa_id = "@user.sesa_id".toUpperCase();
+
+        $(document).ready(function () {
+
+            var table = $("#table_req").DataTable({
+                // "searching": false,
+                // "scrollX": true,
+                // "fixedColumns": {
+                //     rightColumns: 1
+                // },
+                "orderCellsTop": true,
+                "processing": true,
+                "serverSide": true,
+                "filter": true,
+                "ajax": {
+                    "url": "@Url.Action("GetRequestList")",
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                "columns": [
+                    { "data": "request_no", 
+                        "className": "align-middle",
+                        "render": function (data, type, row) {
+                            return `<button class="btn btn-sm btn-secondary" onclick="open_detail(${row["id_request"]})">${data}</button>`;
+                        }
+                    },
+                    { "data": "status_desc", "className": "align-middle" },
+                    { "data": "requested_by_name", "className": "align-middle" },
+                    { "data": "record_date", "className": "align-middle" }
+                ],
+                "drawCallback": function (settings) {
+                    // Set the background color for the second column (index 1)
+                    this.api().rows().every(function () {
+                        var rowNode = this.node();
+                        let status_desc = $(rowNode).find('td:eq(1)').html();
+                        status_desc = status_desc.toLowerCase();
+                        let bg_color = "";
+                        if(status_desc=="request"){
+                            bg_color = "bg-light";
+                        }
+                        else if(status_desc=="start picking"){
+                            bg_color = "bg-warning";
+                        }
+                        else if (status_desc=="picking") {
+                            bg_color = "bg-warning";
+                        } 
+                        else if (status_desc=="done picking") {
+                            bg_color = "bg-info";
+                        } 
+                        else if (status_desc=="closed") {
+                            bg_color = "bg-secondary";
+                        }
+                        // $(rowNode).find('td').css("background-color", "#edfcf1")
+                        $(rowNode).find('td:eq(1)').addClass(bg_color); // Change to desired color
+
+                    });
+                }
+            });
+
+
+            $('input.filter_table, select.filter_table', this).on('keyup change', function () {
+                let trgt = $(this).attr('target');
+                // alert(trgt);
+                if (table.column(trgt).search() !== this.value) {
+                    table
+                        .column(trgt)
+                        .search(this.value)
+                        .draw();
+                }
+            });
+        })
+
         function open_detail(id_request) {
+            $("div#body_req_detail").html(loading);
             $("div#modal_req_detail").modal("show");
             $.ajax({
                 type: "GET",
@@ -196,199 +250,5 @@
             })
         }
 
-        $(document).ready(function () {
-            // Function to fetch headers
-            function fetchHeaders() {
-                return $.ajax({
-                    url: '@Url.Action("GetDeptList")', // URL to your API endpoint for headers
-                    method: 'GET',
-                    dataType: 'json'
-                });
-            }
-    
-            // Function to fetch data
-            function fetchData() {
-                return $.ajax({
-                    url: '@Url.Action("GetReqLists")', // URL to your API endpoint for data
-                    method: 'GET',
-                    dataType: 'json'
-                });
-            }
-
-            
-    
-            // Fetch headers and data
-            $.when(fetchHeaders(), fetchData()).done(function (headerResponse, dataResponse) {
-                const headers = headerResponse[0]; // Assuming the response is an array of bin names
-                const data = dataResponse[0]; // Assuming the response is the data array
-
-                //console.log("Headers:", headers);
-                //console.log(headers)
-                //console.log(data)
-                // Create a map to hold unique bin names and their details
-                const departmentMap = {};
-
-                data.forEach(item => {
-                    //console.log("Item:", item);
-                    if (!departmentMap[item.department]) {
-                        departmentMap[item.department] = [];
-                    }
-                    departmentMap[item.department].push({
-                        id_request: item.id_request,
-                        request_no: item.request_no,
-                        requested_by_name: item.requested_by_name,
-                        record_date: item.record_date,
-                        remark: item.remark,
-                        status_desc: item.status_desc,
-                        status_code: item.status_code
-                    });
-                });
-                
-                //console.log("dept: "+ departmentMap)
-                //console.log("Updated Department Map:", JSON.stringify(departmentMap, null, 2));
-                // Create headers dynamically
-                headers.forEach(header => {
-                    $('#table-headers-list').append(`<th>${header.depts}</th>`);
-                });
-
-                const departmentNames = headers.map(header => header.depts);
-                //console.log("Department Names:", departmentNames);
-
-                const maxRows = Math.max(...Object.values(departmentMap).map(arr => arr.length));
-                //console.log("max row: " + maxRows);
-
-                // Step 1: Determine which columns have no data at all
-                const emptyColumns = new Set();
-
-                departmentNames.forEach((departmentName, colIndex) => {
-                    const requests = departmentMap[departmentName] || [];
-                    const hasData = requests.some(request => request && request.request_no); // Adjust as needed
-                    if (!hasData) {
-                        emptyColumns.add(colIndex);
-                    }
-                });
-
-                // Step 2: Build the table
-                const noDataShown = new Set(); // Track which columns have already shown "No data available"
-
-                for (let i = 0; i < maxRows; i++) {
-                    const row = $('<tr></tr>');
-
-                    departmentNames.forEach((departmentName, colIndex) => {
-                        const requests = departmentMap[departmentName] || [];
-                        const details = requests[i] || null;
-
-                        if (details) {
-                            let bgColor;
-                            // Corrected the conditions to use || instead of |
-                            if (details.status_code === '1' || details.status_code === '6') {
-                                bgColor = '#ffffff';
-                            } else if (details.status_code === '2' || details.status_code === '3' || details.status_code === '4') {
-                                bgColor = '#ffc000';
-                            } else if (details.status_code === '5') {
-                                bgColor = '#86606e';
-                            } else if (details.status_code === '7') {
-                                bgColor = '#33cccc';
-                            } else if (details.status_code === '8') {
-                                bgColor = '#305496';
-                            } else {
-                                bgColor = 'gray'; // Default color for unknown status
-                            }
-
-                            row.append(`
-                                <td>
-                                    <div class= "card" style= "padding: 10px; background-color: white; border-radius: 5px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);">
-                                        <table style="width: 100%; height: 100%; text-align: center; border: 1px solid black; ">
-                                            <tr>
-                                            <td style="background-color: white; border: 1px solid black;">
-                                                    <span style="cursor: pointer; text-decoration: underline;" onclick="open_detail('${details.id_request}')">
-                                                        <b>${details.request_no}</b>
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="background-color: white; border: 1px solid black;">${details.requested_by_name}</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="background-color: white; border: 1px solid black;">${details.record_date}</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="background-color: white; border: 1px solid black;">${details.remark}</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="background-color: ${bgColor}; border: 1px solid black;">${details.status_desc}</td>
-                                            </tr>
-                                        </table>
-                                    </div>  
-                                </td>
-                            `);
-                        } else if (emptyColumns.has(colIndex) && !noDataShown.has(colIndex)) {
-                            row.append(`
-                                <td>
-                                    <div class="card">
-                                        <div>No data available</div>
-                                    </div>
-                                </td>
-                            `);
-                            noDataShown.add(colIndex);
-                        } else {
-                            row.append('<td></td>'); // Empty cell
-                        }
-                    });
-
-                    $('#table-body-list').append(row);
-                }
-
-
-    
-                // Initialize DataTable
-                var tables = $('#tbl_mst_bin').DataTable({
-                    "paging": false,
-                    "searching": false,
-                    "info": false,
-                    "ordering": false,
-                    "autoWidth": false,
-                    "scrollY": "465px",
-                    "fixedHeader": true
-                });
-
-                const totalColumns = tables.columns().count();
-                const columnsPerPage = 4;
-                let currentPage = 0;
-                function updateTable() {
-                    // Hide all columns
-                    tables.columns().visible(false); // Use 'tables' instead of 'table'
-                    // Show the columns for the current page
-                    const startColumn = currentPage * columnsPerPage;
-                    const endColumn = Math.min(startColumn + columnsPerPage, totalColumns);
-                    for (let i = startColumn; i < endColumn; i++) {
-                        tables.column(i).visible(true); // Use 'tables' instead of 'table'
-                    }
-                    // Enable or disable navigation buttons
-                    $('#prev').prop('disabled', currentPage === 0);
-                    $('#next').prop('disabled', endColumn >= totalColumns);
-                }
-
-                $('#prev').click(function () {
-                    if (currentPage > 0) {
-                        currentPage--;
-                        updateTable();
-                    }
-                });
-                $('#next').click(function () {
-                    if ((currentPage + 1) * columnsPerPage < totalColumns) {
-                        currentPage++;
-                        updateTable();
-                    }
-                });
-            
-                // Initial table update
-                updateTable();
-
-            }).fail(function (error) {
-                console.error("Error fetching data:", error);
-            }); 
-        });
     </script>
-
 }

@@ -792,6 +792,28 @@ namespace SEMB_ERP.Controllers
                 return View(userDetail);
             });
         }
+
+        public IActionResult RequestMonitoring()
+        {
+            return this.CheckSession(() =>
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> userRoles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                //sesa_id = "SESA126011";
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                List<string> listStatus = db.GetStatusRequest();
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.listStatus = listStatus;
+                ViewBag.userRoles = userRoles;
+                return View(userDetail);
+            });
+        }
         public IActionResult GetRequestList()
         {
             try
