@@ -1,0 +1,242 @@
+﻿@using SEMB_ERP.Models
+@*@model ViewModel*@
+@using System.Globalization;
+@using Microsoft.AspNetCore.Http;
+@using SEMB_ERP.Controllers;
+@model List<TempPalletModel>;
+@inject IHttpContextAccessor Accessor
+
+@{
+    string sesa_id = ViewBag.sesa_id;
+    string name = ViewBag.name;
+    string plant = ViewBag.plant;
+    string todayDate = DateTime.Today.ToString("yyyy-MM-dd");
+    List<string> catList = ViewBag.catList;
+
+    int no = 0;
+}
+
+<style>
+
+    .table-row {
+        cursor: pointer;
+    }
+
+    .modal {
+        overflow-y: auto;
+    }
+
+    .box_form_input {
+        background-color: #fcfcfc;
+        border-radius: 5px;
+        box-shadow: 1px 2px 8px 2px rgba(152,152,152,0.7);
+    }
+
+    /* .content {
+        font-family: Verdana
+    } */
+
+</style>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row pt-3">
+            <div class="col-md-12">
+                <div class="card card-info card-outline">
+                    <div class="card-header bg-info">
+                        <h5 class="text-center"><i class="fas fa-truck"></i> Transfer</h5>
+                        @*<div class="card-tools">
+                        <a href="~/Template/TemplateUploadPallet.xlsx" class="btn btn-danger mr-1">
+                        <i class="fa fa-download"></i> Template
+                        </a>
+                        <button class="btn btn-success mr-1" name="btn_filter" data-bs-toggle="modal" data-bs-target="#ImportDataModel"><i class="fas fa-file-import"></i> Upload Pallet List</button>
+                        </div>*@
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="text-center"><label style="font-size:14pt"><i class="fas fa-qrcode"></i> Scan Pallet ID</label></div>
+                                <div class="form-group">
+                                    <input class="form-control" type="text" name="pallet_no" placeholder="Scan Pallet ID Here..." autocomplete="off" required />
+                                </div>
+                                @* <div class="form-group text-center">
+                                    <button type="submit" class="btn btn-block btn-success mt-2" name="btn_proceed">Proceed <i class="fa fa-arrow-right"></i></button>
+                                </div> *@
+                            </div>
+                            <div class="col-12 mt-4">
+                                <table class="table table-sm table-striped table-bordered">
+                                    <tr>
+                                        <th>No.</th>
+                                        <th>Pallet No</th>
+                                        <th>Request No</th>
+                                        <th>Action</th>
+                                    </tr>
+                                    @foreach(var temp in Model)
+                                    {
+                                        no = no + 1;
+                                        <tr>
+                                            <td>@no</td>
+                                            <td>@temp.pallet_no</td>
+                                            <td>@temp.request_no</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-danger" onclick="remove_box(@temp.id_temp)"><i class="fas fa-trash"></i> Remove</button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </table>
+                            </div>
+                            @if(no>0){
+                                <div class="col-12 text-center mt-2">
+                                    <button class="btn btn-success" name="btn_submit_transfer"><i class="fas fa-truck"></i> Submit Transfer</button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal_temp_order" class="modal fade">
+    <div class="modal-dialog" role="document" style="min-width:80%">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-file-import"></i> Review Order</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row" id="body_temp_order"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" data-bs-dismiss="modal"><i class="fas fa-times"></i> Cancel</button>
+                <button class="btn btn-success" name="btn_confirm_order"><i class="fas fa-save"></i> Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts
+{
+    <script>
+        var Table;
+        var loading = "<div class='text-center'><i class='fa fa-4x fa-spinner fa-spin'></i></div>";
+        var selectedSbin;
+
+        $(document).ready(function () {
+            $("input[name=pallet_no]").focus();
+
+            $("input[name=pallet_no]").keyup(function (event) {
+                if (event.keyCode == 13) {
+                    let pallet_no = $(this).val();
+                    showLoadingSpinner("Checking Box...");
+                    $.ajax({
+                        type: "POST",
+                        url: "@Url.Action("InsertPalletTransfer")",
+                        data: {
+                            pallet_no: pallet_no
+                        }
+                    }).done(function (res) {
+                        let arr = res.split(";");
+                        if(arr[0]=="OK"){
+                            location.reload();
+                        }
+                        else{
+                            swal.fire("Error!",res,"error");
+                        }
+                    }).fail(function (err) {
+                        swal.fire("Error!", err, "error");
+                    })
+                }
+            })
+
+            $("button[name=btn_submit_transfer]").click(function(){
+                Swal.fire({
+                  title: 'Confirmation!',
+                  text: "Are you sure ?" ,
+                  icon: 'warning',
+                  showCancelButton: true,
+                  confirmButtonColor: '#28a745',
+                  cancelButtonColor: '#dc3545',
+                  confirmButtonText: 'Yes!',
+                  cancelButtonText: 'No!',
+                  showLoaderOnConfirm: true,
+                  preConfirm: function() {
+                      return new Promise(function(resolve, reject) {
+                        $.ajax({
+                            type: "POST",
+                            url: "@Url.Action("SubmitPalletTransfer")"
+                        }).done(function (res) {
+                            let arr = res.split(";");
+                            if(arr[0]=="OK"){
+                                swal.fire("Done!","Transfering success!!<br>Gatepass/Transfer No : "+arr[1],"success").then(function(){
+                                    location.reload();
+                                })
+                            }
+                            else{
+                                swal.fire("Error!",res,"error");
+                            }
+                        }).fail(function (err) {
+                            swal.fire("Error!", err, "error");
+                        })
+                      })
+                  },
+                  allowOutsideClick: () => !Swal.isLoading()
+              })
+            })
+        })
+
+        function remove_box(id_temp){
+            Swal.fire({
+              title: 'Confirmation!',
+              text: "Are you sure ?" ,
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#28a745',
+              cancelButtonColor: '#dc3545',
+              confirmButtonText: 'Yes!',
+              cancelButtonText: 'No!',
+              showLoaderOnConfirm: true,
+              preConfirm: function() {
+                  return new Promise(function(resolve, reject) {
+                    $.ajax({
+                        type: "POST",
+                        url: "@Url.Action("RemovePalletTransfer")",
+                        data: {
+                            id_temp: id_temp
+                        }
+                    }).done(function (res) {
+                        let arr = res.split(";");
+                        if(arr[0]=="OK"){
+                            location.reload();
+                        }
+                        else{
+                            swal.fire("Error!",res,"error");
+                        }
+                    }).fail(function (err) {
+                        swal.fire("Error!", err, "error");
+                    })
+                  })
+              },
+              allowOutsideClick: () => !Swal.isLoading()
+          })
+        }
+
+        function showLoadingSpinner(msg = 'Please wait...') {
+            Swal.fire({
+                title: 'Processing',
+                html: msg,
+                allowOutsideClick: false,
+                showConfirmButton: false, // Hide the initial OK button
+                onBeforeOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        }
+        
+    </script>
+}

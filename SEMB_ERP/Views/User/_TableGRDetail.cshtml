@@ -77,14 +77,14 @@
             else{
                 $.ajax({
                     type: "POST",
-                    url: "https://eajdigitization.se.com/wh_trans/SEMBERP_PrintLabel_Webservices.aspx",
+                    url: "https://warehouse.semb.se.com/wh_trans/Printlabel_project_box_gr_Webservices.aspx",
                     data: {
-                        id_gr: id_gr,
-                        printer_name: printer_name
+                        print: printer_name,
+                        id_gr: id_gr
                     }
                 }).done(function(res){
                     let arr = res.split(";");
-                    if(res=="OK"){
+                    if(arr[0]=="OK"){
                         swal.fire("OK","Print Succesfully!","success");
                     }
                 }).fail(function(err){

@@ -15,6 +15,7 @@ namespace SEMB_ERP.Function
         public DbSet<NonConfModel> V_NON_CONF { get; set; }
         public DbSet<BlockBinModel> v_block_bin { get; set; }
         public DbSet<VarianceModel> v_picking_variance { get; set; }
+        public DbSet<PalletModel> v_pallet_header { get; set; }
 
     }
 }

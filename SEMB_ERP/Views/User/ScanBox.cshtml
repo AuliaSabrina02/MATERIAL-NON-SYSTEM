@@ -485,13 +485,13 @@
         function print_label(print, box_id) {
             $.ajax({
                 type: "GET",
-                url: "https://sembdigitization.se.com/wh_trans/print_label",
+                url: "https://warehouse.semb.se.com/wh_trans/Printlabel_project_box_Webservices.aspx",
                 data: {
                     print: print,
                     box_id: box_id
                 }
             }).done(function (res) {
-                swal.fire("Done!", "Kitting Success!", "success").then(function () {
+                swal.fire("Done!", "Kitting Success!<br>Label printed to printer "+print, "success").then(function () {
                     location.reload();
                 })
             }).fail(function(err){

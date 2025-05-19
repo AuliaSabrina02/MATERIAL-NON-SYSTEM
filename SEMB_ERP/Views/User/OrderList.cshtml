@@ -126,6 +126,8 @@
                                             <th>Part No</th>
                                             <th>PO NO</th>
                                             <th>Qty</th>
+                                            <th>Pick.Qty</th>
+                                            <th>Avai.Qty</th>
                                             <th>UOM</th>
                                             <th>Revision</th>
                                             <th>Project Name</th>
@@ -144,7 +146,7 @@
                                             <th>Height(mm)</th>
                                         </tr> *@
                                         <tr>
-                                            @for (int i = 0; i < 14; i++) // Adjusted the loop to 24 to exclude Img Tagging
+                                            @for (int i = 0; i < 16; i++) // Adjusted the loop to 24 to exclude Img Tagging
                                             {
                                                 if (i != 1) // i!=1, because column index 1 is for button GR
                                                 {
@@ -166,14 +168,14 @@
                                                     }
                                                 }
                                             }
-                                            <th>Length(mm)</th>
-                                            <th>Width(mm)</th>
-                                            <th>Height(mm)</th>
+                                            <th>L(mm)</th>
+                                            <th>W(mm)</th>
+                                            <th>H(mm)</th>
                                         </tr>
                                     </thead>
                                     <tfoot>
                                         <tr>
-                                            <td colspan="19" class="text-center">
+                                            <td colspan="21" class="text-center">
                                                 <button class="btn btn-info" name="start_gr"><i class="fas fa-arrow-right"></i> GR <span id="total_gr_line"></span></button>
                                             </td>
                                         </tr>
@@ -485,6 +487,8 @@
                     { "data": "partno", "className": "align-middle" },
                     { "data": "po_no", "className": "align-middle" },
                     { "data": "qty", "className": "align-middle" },
+                    { "data": "picked_qty", "className": "align-middle" },
+                    { "data": "available_qty", "className": "align-middle" },
                     { "data": "uom", "className": "align-middle" },
                     { "data": "revision", "className": "align-middle" },
                     { "data": "project_name", "className": "align-middle" },
@@ -531,15 +535,15 @@
                             let btn_delete = "";
                             let btn_order_picking = "";
                             if(row['status_code']==1){
-                                btn_edit = `<button class="btn btn-sm btn-warning ml-1 btn-block" onclick="update_order('${data}', '${row['material_type']}','${row['partno']}',
+                                btn_edit = `<button class="btn btn-sm btn-warning btn-block" onclick="update_order('${data}', '${row['material_type']}','${row['partno']}',
                                                     '${row['po_no']}','${row['qty']}','${row['uom']}','${row['revision']}','${row['project_name']}','${row['storage_requirement']}'
                                                     ,'${row['supplier_name']}','${row['pic']}','${row['order_type']}','${row['unit_price']}','${row['length_mm']}'
                                                     ,'${row['width_mm']}','${row['height_mm']}','${row['remark']}','${row['file_support']}','${row['pic_name']}')"><i class="fas fa-edit"></i> Edit</button>`;
 
-                                btn_delete = `<div class="mt-1"><button class="btn btn-sm btn-danger ml-1 btn-block" onclick="delete_order('${data}','${row['partno']}')"><i class="fas fa-trash"></i> Delete</button></div>`;
+                                btn_delete = `<div class="mt-1"><button class="btn btn-sm btn-danger btn-block" onclick="delete_order('${data}','${row['partno']}')"><i class="fas fa-trash"></i> Delete</button></div>`;
                             }
                             if (row['status_code'].toLowerCase() == 3 || row['status_code'].toLowerCase() == 4) {
-                                btn_order_picking = `<button class="btn btn-sm btn-success" onclick="add_order(${row['id_order']},${row['qty']})"><i class="fas fa-plus"></i> Req. Picking</button>`;
+                                btn_order_picking = `<button class="btn btn-sm btn-success" onclick="add_order(${row['id_order']},${row['available_qty']})"><i class="fas fa-plus"></i> Req. Picking</button>`;
                             }
                             return btn_edit + btn_delete + btn_order_picking;
                         }
@@ -568,7 +572,11 @@
                             bg_color = "bg-secondary";
                         }
                         $(rowNode).find('td').css("background-color", "#edfcf1")
-                        $(rowNode).find('td:eq(0)').addClass(bg_color); // Change to desired color
+                        $(rowNode).find('td:eq(0)').addClass(bg_color);
+
+                        $(rowNode).find('td:eq(5)').addClass("bg-warning");
+                        $(rowNode).find('td:eq(6)').addClass("bg-warning");
+                        $(rowNode).find('td:eq(7)').addClass("bg-warning");
 
                     });
                     // Initialize tooltips
@@ -577,7 +585,8 @@
                         return new bootstrap.Tooltip(tooltipTriggerEl);
                     });
 
-                }
+                },
+                "order": [[0, 'asc']]
             });
 
 

@@ -925,8 +925,10 @@ namespace SEMB_ERP.Function
                         id_order = Convert.ToInt32(reader["id_order"]),
                         partno = reader["partno"].ToString(),
                         qty = Convert.ToDecimal(reader["qty"]),
+                        picked_qty = Convert.ToDecimal(reader["picked_qty"]),
                         uom = reader["uom"].ToString(),
-                        material_type = reader["material_type"].ToString()
+                        material_type = reader["material_type"].ToString(),
+                        status_pick = reader["status_picking"].ToString()
                     });
                 }
             }
@@ -939,7 +941,7 @@ namespace SEMB_ERP.Function
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
                 conn.Open();
-                using (SqlCommand cmd = new SqlCommand("SELECT request_no, remark FROM tbl_request WHERE id_request=@id_request", conn))
+                using (SqlCommand cmd = new SqlCommand("SELECT request_no, remark, status_desc FROM v_request WHERE id_request=@id_request", conn))
                 {
                     cmd.Parameters.AddWithValue("@id_request", id_request);
                     using (SqlDataReader reader = cmd.ExecuteReader())
@@ -949,7 +951,8 @@ namespace SEMB_ERP.Function
                             var result = new
                             {
                                 request_no = reader["request_no"]?.ToString(),
-                                remark = reader["remark"]?.ToString()
+                                remark = reader["remark"]?.ToString(),
+                                status_desc = reader["status_desc"]?.ToString()
                             };
                             return JsonConvert.SerializeObject(result);
                         }
@@ -959,7 +962,8 @@ namespace SEMB_ERP.Function
             return JsonConvert.SerializeObject(new
             {
                 request_no = (string)null,
-                remark = (string)null
+                remark = (string)null,
+                status_desc = (string)null
             });
         }
         public List<RequestListModel> GetReqList()
@@ -1813,6 +1817,149 @@ namespace SEMB_ERP.Function
                         return "NOK";
                     }
                 }
+            }
+        }
+        public List<PickBoxModel> GetPickBox(int id_request)
+        {
+            List<PickBoxModel> dataList = new List<PickBoxModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("SELECT * FROM v_pick WHERE id_request=@id_request ORDER BY record_date", conn);
+                //cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@id_request", id_request);
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    dataList.Add(new PickBoxModel
+                    {
+                        id_pick = Convert.ToInt32(reader["id_pick"]),
+                        box_id = reader["box_id"].ToString(),
+                        partno = reader["partno"].ToString(),
+                        sbin = reader["sbin"].ToString(),
+                        qty = Convert.ToDecimal(reader["qty"]),
+                        picked_by_name = reader["picked_by_name"].ToString(),
+                        pallet_no = reader["pallet_no"].ToString(),
+                        record_date = Convert.ToDateTime(reader["record_date"])
+                    });
+                }
+            }
+
+            return dataList;
+        }
+        public List<TempPalletModel> GetTempPallet(string sesa_id)
+        {
+            List<TempPalletModel> dataList = new List<TempPalletModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("GET_TEMP_PALLET_TRANSFER", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    dataList.Add(new TempPalletModel
+                    {
+                        id_temp = Convert.ToInt32(reader["id_temp"]),
+                        pallet_no = reader["pallet_no"].ToString(),
+                        request_no = reader["request_no"].ToString()
+                    });
+                }
+            }
+
+            return dataList;
+        }
+        public string InsertPalletTransfer(string pallet_no, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("INSERT_PALLET_TRANSFER", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@pallet_no", pallet_no);
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        object result = cmd.ExecuteScalar();
+
+                        if (result != null)
+                        {
+                            return result.ToString() ?? "";
+                        }
+                        else
+                        {
+                            return "ERROR;No result returned from database.";
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine($"SQL Error: {ex.Message}");
+                return $"SQL Error: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General Error: {ex.Message}");
+                return $"General Error: {ex.Message}";
+            }
+        }
+        public string RemovePalletTransfer(int id_temp)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand(@"DELETE FROM temp_pallet_transfer WHERE id_temp = @id_temp", conn))
+                {
+                    // Use parameterized query to prevent SQL injection
+                    cmd.Parameters.AddWithValue("@id_temp", id_temp);
+
+                    // Execute the command
+                    int rowsAffected = cmd.ExecuteNonQuery();
+
+                    return "OK";
+                }
+            }
+        }
+        public string SubmitPalletTransfer(string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("SUBMIT_PALLET_TRANSFER", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        object result = cmd.ExecuteScalar();
+
+                        if (result != null)
+                        {
+                            return result.ToString() ?? "";
+                        }
+                        else
+                        {
+                            return "ERROR;No result returned from database.";
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine($"SQL Error: {ex.Message}");
+                return $"SQL Error: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General Error: {ex.Message}");
+                return $"General Error: {ex.Message}";
             }
         }
     }

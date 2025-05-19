@@ -7,7 +7,6 @@
     var user = Model.First();
     string sesa_id = ViewBag.sesa_id;
     string name = ViewBag.name;
-    List<string> listStatus = ViewBag.listStatus;
     List<string> userRoles = ViewBag.userRoles;
 }
 
@@ -100,34 +99,21 @@
                     <div class="card-header">
                         <h5>
                             <i class="fas fa-list"></i>
-                            Picking List
+                            Pallet - To Be Received
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            @* <div class="col-12 d-flex justify-content-end mb-2">
-                                <a href="@Url.Action("DOWNLOAD_ASSET_LIST", "Requestor")" id="btn_download_data" class="btn btn-dark">
-                                    <i class="fas fa-download"></i> Download Asset List
-                                </a>
-                            </div> *@
-                            @* <div class="col-12 text-right">
-                                <button class="btn btn-success" name="btn_gr"><i class="fas fa-boxes"></i> GR</button>
-                            </div> *@
                             <div class="col-12 table-responsive">
                                 <table class="table table-bordered table-striped align-center nowrap" id="table_req" style="font-size:12pt;width:100%;">
                                     <thead class="bg-warning align-middle text-center">
                                         <tr>
+                                            <th>Pallet No</th>
                                             <th>Req. No</th>
                                             <th>Status</th>
                                             <th>Requested By</th>
                                             <th>Request Date</th>
                                         </tr>
-                                        @* <tr>
-                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="0" /></td>
-                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="1" /></td>
-                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="2" /></td>
-                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="3" /></td>
-                                        </tr> *@
                                     </thead>
                                 </table>
                             </div>
@@ -182,40 +168,32 @@
                     "datatype": "json"
                 },
                 "columns": [
-                    { "data": "request_no", 
+                    { "data": "pallet_no", 
                         "className": "align-middle",
                         "render": function (data, type, row) {
-                            return `<button class="btn btn-sm btn-secondary" onclick="open_detail(${row["id_request"]})">${data}</button>`;
+                            return `<button class="btn btn-sm btn-secondary" onclick="open_detail(${row["id_pallet"]})">${data}</button>`;
                         }
                     },
-                    { "data": "status_desc", "className": "align-middle" },
-                    { "data": "requested_by_name", "className": "align-middle" },
+                    { "data": "request_no", "className": "align-middle" },
+                    { "data": "status_pallet", "className": "align-middle" },
+                    { "data": "name", "className": "align-middle" },
                     { "data": "record_date", "className": "align-middle" }
                 ],
                 "drawCallback": function (settings) {
                     // Set the background color for the second column (index 1)
                     this.api().rows().every(function () {
                         var rowNode = this.node();
-                        let status_desc = $(rowNode).find('td:eq(1)').html();
+                        let status_desc = $(rowNode).find('td:eq(2)').html();
                         status_desc = status_desc.toLowerCase();
                         let bg_color = "";
-                        if(status_desc=="request"){
-                            bg_color = "bg-light";
-                        }
-                        else if(status_desc=="start picking"){
+                        if(status_desc=="creation"){
                             bg_color = "bg-warning";
                         }
-                        else if (status_desc=="picking") {
-                            bg_color = "bg-warning";
-                        } 
-                        else if (status_desc=="done picking") {
+                        else if(status_desc=="transfer"){
                             bg_color = "bg-info";
-                        } 
-                        else if (status_desc=="closed") {
-                            bg_color = "bg-secondary";
                         }
                         // $(rowNode).find('td').css("background-color", "#edfcf1")
-                        $(rowNode).find('td:eq(1)').addClass(bg_color); // Change to desired color
+                        $(rowNode).find('td:eq(2)').addClass(bg_color); // Change to desired color
 
                     });
                 }

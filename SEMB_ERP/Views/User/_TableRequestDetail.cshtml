@@ -1,7 +1,9 @@
 ﻿@model List<RequestListModel>
 @{
     var reqInfo = ViewBag.reqInfo;
+    List<PickBoxModel> boxList = ViewBag.boxList;
     int no = 0;
+    int no_box = 0;
     int total_shortage = 0;
 }
 <div class="row m-4">
@@ -9,42 +11,96 @@
         <table class="table table-borderless table-sm">
             <tr>
                 <td>Request No</td>
-                <td>
-                    <input class="form-control" value="@reqInfo.request_no" readonly />
-                </td>
+                <td>: @reqInfo.request_no</td>
             </tr>
             <tr>
                 <td>Remark</td>
-                <td>
-                    <textarea class="form-control" readonly>@reqInfo.remark</textarea>
-                </td>
+                <td>: @reqInfo.remark</td>
+            </tr>
+            <tr>
+                <td>Status</td>
+                <td>: @reqInfo.status_desc</td>
             </tr>
         </table>
     </div>
     <div class="col-12">
-        <table class="table table-bordered table-striped table-sm text-center">
-            <thead class="bg-secondary">
-                <tr>
-                    <th>No.</th>
-                    <th>Part</th>
-                    <th>Qty</th>
-                    <th>UOM</th>
-                    <th>Material Type</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var temp in Model)
-                {
-                    no++;
-                    <tr>
-                        <td>@no</td>
-                        <td>@temp.partno</td>
-                        <td>@temp.qty</td>
-                        <td>@temp.uom</td>
-                        <td>@temp.material_type</td
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <ul class="nav nav-tabs nav-pills nav-justified" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" data-bs-toggle="tab" href="#mainmenu">All Material</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" data-bs-toggle="tab" href="#boxid">Picking Menu</a>
+            </li>
+        </ul>
+        <div class="tab-content mt-3">
+            <div id="mainmenu" class="tab-pane fade show active">
+                <table id="table_material" class="table table-bordered table-striped table-sm text-center">
+                    <thead class="bg-secondary">
+                        <tr>
+                            <th>No.</th>
+                            <th>Part</th>
+                            <th>Qty</th>
+                            <th>Picked Qty</th>
+                            <th>UOM</th>
+                            <th>Material Type</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var temp in Model)
+                        {
+                            no++;
+                            <tr>
+                                <td>@no</td>
+                                <td>@temp.partno</td>
+                                <td>@temp.qty</td>
+                                <td>@temp.picked_qty</td>
+                                <td>@temp.uom</td>
+                                <td>@temp.material_type</td>
+                                <td>@temp.status_pick</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div id="boxid" class="tab-pane fade">
+                <table id="table_box" class="table table-bordered table-striped table-sm text-center">
+                    <thead class="bg-secondary">
+                        <tr>
+                            <th>No.</th>
+                            <th>Box ID</th>
+                            <th>Part</th>
+                            <th>Qty</th>
+                            <th>Location</th>
+                            <th>Picked By Name</th>
+                            <th>Pallet</th>
+                            <th>Record Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var box in boxList)
+                        {
+                            no_box++;
+                            <tr>
+                                <td>@no_box</td>
+                                <td>@box.box_id</td>
+                                <td>@box.partno</td>
+                                <td>@box.qty</td>
+                                <td>@box.sbin</td>
+                                <td>@box.picked_by_name</td>
+                                <td>@box.pallet_no</td>
+                                <td>@box.record_date?.ToString("yyyy-MM-ddTHH:mm:ss.fff")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
+<script>
+    $(document).ready(function(){
+        $("table#table_material").DataTable();
+        $("table#table_box").DataTable();
+    })
+</script>

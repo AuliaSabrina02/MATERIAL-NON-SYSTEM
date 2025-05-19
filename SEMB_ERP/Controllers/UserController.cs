@@ -231,6 +231,8 @@ namespace SEMB_ERP.Controllers
                                        OrderList.partno,
                                        OrderList.po_no,
                                        OrderList.qty,
+                                       OrderList.picked_qty,
+                                       OrderList.available_qty,
                                        OrderList.uom,
                                        OrderList.revision,
                                        OrderList.project_name,
@@ -259,7 +261,7 @@ namespace SEMB_ERP.Controllers
                     mstData = mstData.Where(m => m.partno.Contains(searchValue)
                                                 || m.pic.Contains(searchValue));
                 }
-                for (int i = 0; i < 13; i++)
+                for (int i = 0; i < 15; i++)
                 {
                     var searchColVal = Request.Form["columns[" + i.ToString() + "][search][value]"];
                     var fieldName = Request.Form["columns[" + i.ToString() + "][data]"].FirstOrDefault();
@@ -285,7 +287,15 @@ namespace SEMB_ERP.Controllers
                         {
                             mstData = mstData.Where(m => m.qty.ToString().Contains(searchColVal));
                         }
-                        else if (fieldName == "uom")
+                        else if (fieldName == "qty")
+                        {
+                            mstData = mstData.Where(m => m.qty.ToString().Contains(searchColVal));
+                        }
+                        else if (fieldName == "picked_qty")
+                        {
+                            mstData = mstData.Where(m => m.qty.ToString().Contains(searchColVal));
+                        }
+                        else if (fieldName == "available_qty")
                         {
                             mstData = mstData.Where(m => m.uom.Contains(searchColVal));
                         }
@@ -867,7 +877,9 @@ namespace SEMB_ERP.Controllers
             var db = new DatabaseAccessLayer();
             var reqInfo = JsonConvert.DeserializeObject<RequestListModel>(db.GetRequestInfo(id_request));
             List<RequestListModel> dataList = db.GetReqDetail(id_request);
+            List<PickBoxModel> boxList = db.GetPickBox(id_request);
             ViewBag.reqInfo = reqInfo;
+            ViewBag.boxList = boxList;
             //return Content("Upload Success!!", "text/plain");
 
             return PartialView("_TableRequestDetail", dataList);
@@ -1423,6 +1435,122 @@ namespace SEMB_ERP.Controllers
 
             // Return the result directly
             return Content(deleteResult, "text/plain");
+        }
+        [Authorize(Policy = "RequireRequestor")]
+        public IActionResult PalletReceived()
+        {
+            return this.CheckSession(() =>
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> userRoles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                //sesa_id = "SESA126011";
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.userRoles = userRoles;
+                return View(userDetail);
+            });
+        }
+        public IActionResult GetPalletReceived()
+        {
+            try
+            {
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = Request.Form["start"].FirstOrDefault();
+                var length = Request.Form["length"].FirstOrDefault();
+                //var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][name]"].FirstOrDefault();
+                var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][data]"].FirstOrDefault();
+                var sortColumnDirection = Request.Form["order[0][dir]"].FirstOrDefault();
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                var column0Value = Request.Form["columns[0][search][value]"];
+                var column1Value = Request.Form["columns[1][search][value]"];
+                var column2Value = Request.Form["columns[2][search][value]"];
+                int pageSize = length != null ? Convert.ToInt32(length) : 0;
+                int skip = start != null ? Convert.ToInt32(start) : 0;
+                int recordsTotal = 0;
+                var mstData = (from Pallet in _context.v_pallet_header
+                               where Pallet.status_pallet=="CREATION" || Pallet.status_pallet=="TRANSFER"
+                               select
+                                   new
+                                   {
+                                       Pallet.id_pallet,
+                                       Pallet.id_request,
+                                       Pallet.request_no,
+                                       Pallet.pallet_no,
+                                       Pallet.status_pallet,
+                                       Pallet.record_date,
+                                       Pallet.name,
+                                   });
+
+                //var mstData = (from temp in _context.mst_material_plant select temp);
+                if (!(string.IsNullOrEmpty(sortColumn) && string.IsNullOrEmpty(sortColumnDirection)))
+                {
+                    mstData = mstData.OrderBy(sortColumn + " " + sortColumnDirection);
+                }
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    mstData = mstData.Where(m => m.request_no.Contains(searchValue)
+                                                || m.pallet_no.Contains(searchValue)
+                                                || m.name.Contains(searchValue));
+                }
+                recordsTotal = mstData.Count();
+                var data = mstData.Skip(skip).Take(pageSize).ToList();
+                var jsonData = new { draw = draw, recordsFiltered = recordsTotal, recordsTotal = recordsTotal, data = data };
+                return Ok(jsonData);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+        [Authorize(Policy = "RequireRequestor")]
+        public IActionResult Transfer()
+        {
+            return this.CheckSession(() =>
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                List<string> userRoles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                //sesa_id = "SESA126011";
+                var db = new DatabaseAccessLayer();
+                List<TempPalletModel> tempList = db.GetTempPallet(sesa_id);
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.userRoles = userRoles;
+                return View(tempList);
+            });
+        }
+        [HttpPost]
+        public IActionResult InsertPalletTransfer(string pallet_no)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            string submit = db.InsertPalletTransfer(pallet_no, sesa_id);
+            return Content(submit, "text/plain");
+        }
+        [HttpPost]
+        public IActionResult RemovePalletTransfer(int id_temp)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            string submit = db.RemovePalletTransfer(id_temp);
+            return Content(submit, "text/plain");
+        }
+        [HttpPost]
+        public IActionResult SubmitPalletTransfer()
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            string submit = db.SubmitPalletTransfer(sesa_id);
+            return Content(submit, "text/plain");
         }
     }
 }
