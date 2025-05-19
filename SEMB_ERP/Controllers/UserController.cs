@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Http;
 using System.Diagnostics;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Http.HttpResults;
+using MailKit.Search;
 
 namespace SEMB_ERP.Controllers
 {
@@ -1274,6 +1276,38 @@ namespace SEMB_ERP.Controllers
 
             // Return the result directly
             return Content(deleteResult, "text/plain");
+        }
+
+        public IActionResult GetDeptList()
+        {
+            var db = new DatabaseAccessLayer();
+            List<RequestListModel> listDept = db.GetDeptList();
+            var result = listDept.Select(item => new
+            {
+                Depts = item.department,
+            });
+
+            return Json(result);
+        }
+
+        public IActionResult GetReqLists()
+        {
+            var db = new DatabaseAccessLayer();
+            List<RequestListModel> ReqsList = db.GetReqLists();
+            var result = ReqsList.Select(item => new
+            {
+               id_request = item.id_request,
+               request_no = item.request_no,
+               status_code = item.status_code,
+               status_desc = item.status_desc,
+               remark = item.remark,
+               record_date = item.record_date,
+               requested_by = item.requested_by,
+               requested_by_name = item.requested_by_name,
+               department = item.department
+            });
+
+            return Json(result);
         }
     }
 }

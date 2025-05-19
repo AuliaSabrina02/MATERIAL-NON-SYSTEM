@@ -20,5 +20,6 @@ namespace SEMB_ERP.Models
         public string? material_type { get; set; }
         public decimal? picked_qty { get; set; }
         public string? status_pick { get; set; }
+        public string? department { get; set; }
     }
 }
