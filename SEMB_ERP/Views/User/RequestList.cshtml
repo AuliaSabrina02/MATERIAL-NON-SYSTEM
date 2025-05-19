@@ -210,8 +210,20 @@
                         } 
                         else if (status_desc=="done picking") {
                             bg_color = "bg-info";
-                        } 
-                        else if (status_desc=="closed") {
+                        }
+                        else if (status_desc == "consolidation") {
+                            bg_color = "bg-info";
+                        }
+                        else if (status_desc == "transfering") {
+                            bg_color = "bg-primary";
+                        }
+                        else if (status_desc == "plant received") {
+                            bg_color = "bg-success";
+                        }
+                        else if (status_desc == "supplied") {
+                            bg_color = "bg-success";
+                        }
+                        else if (status_desc=="close") {
                             bg_color = "bg-secondary";
                         }
                         // $(rowNode).find('td').css("background-color", "#edfcf1")
