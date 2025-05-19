@@ -6,6 +6,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing;
 using System.IO;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Ocsp;
 
 namespace SEMB_ERP.Function
 {
@@ -1818,6 +1819,60 @@ namespace SEMB_ERP.Function
                     }
                 }
             }
+        }
+        public List<RequestListModel> GetDeptList()
+        {
+            List<RequestListModel> depts = new List<RequestListModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("SELECT DISTINCT department FROM mst_users WHERE department is not NULL and department != 'NULL' ", conn);
+                //cmd.Parameters.AddWithValue("@box_id", box_id);
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    depts.Add(new RequestListModel
+                    {
+                        department = reader["department"].ToString(),                        
+                    });
+                }
+            }
+
+            return depts;
+        }
+
+        public List<RequestListModel> GetReqLists()
+        {
+            List<RequestListModel> reqs = new List<RequestListModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("GET_REQS_LIST", conn);
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    using SqlDataReader reader = cmd.ExecuteReader();
+
+                    while (reader.Read())
+                    {
+                        reqs.Add(new RequestListModel
+                        {
+                            id_request = reader["id_request"] != DBNull.Value ? (int?)Convert.ToInt32(reader["id_request"]) : null,
+                            request_no = reader["request_no"].ToString(),
+                            status_code = reader["status_request"].ToString(),
+                            status_desc = reader["status_desc"].ToString(),
+                            remark = reader["remark"].ToString(),
+                            record_date = reader["record_date"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(reader["record_date"]) : null,
+                            requested_by = reader["requested_by"].ToString(),
+                            requested_by_name = reader["name"].ToString(),
+                            department = reader["department"].ToString(),
+                        });
+                    }
+                }
+            }
+            return reqs;
         }
         public List<PickBoxModel> GetPickBox(int id_request)
         {

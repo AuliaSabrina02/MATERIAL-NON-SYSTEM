@@ -1,0 +1,430 @@
+﻿@* @using System.Data; *@
+@model List<UserDetailModel>
+@using Microsoft.AspNetCore.Mvc.Rendering;
+@using Microsoft.AspNetCore.Http;
+@using SEMB_ERP.Function;
+@{
+    var user = Model.First();
+    string sesa_id = ViewBag.sesa_id;
+    string name = ViewBag.name;
+    List<string> listStatus = ViewBag.listStatus;
+    List<string> userRoles = ViewBag.userRoles;
+}
+
+<style>
+    /* CSS untuk membuat modal berada di tengah layar */
+    #loadingSpinner {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5); /* Transparan hitam */
+    }
+
+    #loadingSpinner img {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .box_form_input {
+        background-color: #fcfcfc;
+        border-radius: 5px;
+        box-shadow: 1px 2px 8px 2px rgba(152,152,152,0.7);
+    }
+
+    .modal{
+        overflow: auto !important
+    }
+
+    .smaller-input {
+        height: 25px; /* Adjust height as necessary */
+        padding: 5px; /* Adjust padding as necessary */
+        font-size: 10px; /* Optional: Adjust font size */
+        line-height: 1; /* Optional: Reset line height */
+    }
+
+    table#table_req tr > th {
+        padding: 5px;
+    }
+
+    table#table_req tr > td {
+        padding: 5px;
+    }
+
+    .btn-group-xs > .btn, .btn-xs {
+        padding: .25rem .4rem;
+        font-size: .875rem;
+        line-height: .5;
+        border-radius: .2rem;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .form-check-input.bigger-checkbox {
+        margin-left: 15px;
+        transform: scale(2); /* Adjust the scale as needed */
+    }
+
+    #tbl_mst_bin {
+        border-collapse: collapse; /* Ensures borders are collapsed */
+        width: 100%; /* Ensures the table takes full width */
+        table-layout: fixed; /* Enforce fixed table layout */
+    }
+
+    #tbl_mst_bin th, #tbl_mst_bin td {
+        padding: 8px; /* Adds padding for better spacing */
+        text-align: center; /* Center align text */
+        width: 250px; /* Set a fixed width for all columns */
+        overflow: hidden; /* Prevent overflow */
+        white-space: nowrap; /* Prevent text wrapping */
+        text-overflow: ellipsis; /* Show ellipsis for overflow text */
+    }
+
+    #tbl_mst_bin th {
+            background-color: #4bac4f;
+    }
+
+    div.dataTables_scrollHead th {
+        background-color: #4bac4f;
+        text-align: center;
+        height: 50px;
+    }
+
+    #tbl_mst_bin td {
+            background-color: #c1f188;
+    }
+</style>
+
+
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 mt-3">
+                <div class="card card-success card-outline">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list"></i>
+                            Request Monitoring
+                        </h5>
+
+                        <div class="filter-dropdown d-flex align-items-center gap-2 ms-auto" style="max-height: 24px">
+                            <label for="departmentFilter" class="mb-0">Department:</label>
+                            <select id="departmentFilter" class="form-select-sm w-auto select2" style="width: 300px;">                                
+                                <option value="all">All</option>
+                                <!-- Options will be populated dynamically -->
+                            </select>
+                        </div>
+
+                    </div>
+                    <div class="card-body" style="padding: 0;">
+                        <div class="row align-items-stretch d-flex g-0 " style="background-color: #c1f188; margin: 0;">
+                            <div class="col-1 d-flex flex-column justify-content-center align-items-center position-relative">
+                                <div class="legend text-start small position-absolute mt-2" style="top: 0; background: white; padding: 5px; z-index: 10;">
+                                    <div><span style="display:inline-block; width:20px; height:12px; background-color:#ffffff; border:1px solid #ccc; margin-right:5px;"></span> Request</div>
+                                    <div><span style="display:inline-block; width:20px; height:12px; background-color:#ffc000; border:1px solid #ccc; margin-right:5px;"></span> Start Picking</div>
+                                    <div><span style="display:inline-block; width:20px; height:12px; background-color:#ffc000; border:1px solid #ccc; margin-right:5px;"></span> Picking</div>
+                                    <div><span style="display:inline-block; width:20px; height:12px; background-color:#ffc000; border:1px solid #ccc; margin-right:5px;"></span> Done Picking</div>
+                                    <div><span style="display:inline-block; width:20px; height:12px; background-color:#86606e; border:1px solid #ccc; margin-right:5px;"></span> Consolidation</div>
+                                    <div><span style="display:inline-block; width:20px; height:12px; background-color:#ffffff; border:1px solid #ccc; margin-right:5px;"></span> transfering</div>
+                                    <div><span style="display:inline-block; width:20px; height:12px; background-color:#33cccc; border:1px solid #ccc; margin-right:5px;"></span> Plant Received</div>
+                                    <div><span style="display:inline-block; width:20px; height:12px; background-color:#305496; border:1px solid #ccc; margin-right:5px;"></span> Supplied</div>
+                                </div>
+                                <div class="d-flex flex-column align-items-center">                                    
+                                    <button id="prev" class="nav-button btn btn-link p-0 border-0 w-100 mb-2">
+                                        <i class="fas fa-arrow-left fa-2x"></i>
+                                    </button>                                    
+                                </div>
+                            </div>
+                            <div class="col-10">
+                                <div class="table-responsive">
+                                    <table id="tbl_mst_bin" class="display" style="width:100%">
+                                        <thead>
+                                            <tr id="table-headers-list"></tr>
+                                        </thead>
+                                        <tbody id="table-body-list"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="col-1 d-flex flex-column justify-content-center align-items-center position-relative">
+                                <button id="next" class="nav-button btn btn-link p-0 border-0 w-100">
+                                    <i class="fas fa-arrow-right fa-2x"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="modal_req_detail" class="modal fade">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-list"></i> Request Detail</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div id="body_req_detail"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <!--TEST-->
+    <script>
+
+
+        $(document).ready(function() {
+            $('#departmentFilter').select2({
+                width: 'style' // Keeps the width from Bootstrap
+            });
+        });
+
+
+        function open_detail(id_request) {
+            $("div#modal_req_detail").modal("show");
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetReqDetail")",
+                data: {
+                    id_request: id_request
+                }
+            }).done(function (res) {
+                $("div#body_req_detail").html(res);
+            }).fail(function(err){
+                swal.fire("Error!", err, "error");
+            });
+        }
+
+        $(document).ready(function () {
+            // Function to fetch headers
+            function fetchHeaders() {
+                return $.ajax({
+                    url: '@Url.Action("GetDeptList")',
+                    method: 'GET',
+                    dataType: 'json'
+                });
+            }
+
+            // Function to fetch data
+            function fetchData() {
+                return $.ajax({
+                    url: '@Url.Action("GetReqLists")',
+                    method: 'GET',
+                    dataType: 'json'
+                });
+            }
+
+            // Fetch headers and data
+            $.when(fetchHeaders(), fetchData()).done(function (headerResponse, dataResponse) {
+                const headers = headerResponse[0];
+                const data = dataResponse[0];
+
+                const departmentMap = {};
+                data.forEach(item => {
+                    if (!departmentMap[item.department]) {
+                        departmentMap[item.department] = [];
+                    }
+                    departmentMap[item.department].push({
+                        id_request: item.id_request,
+                        request_no: item.request_no,
+                        requested_by_name: item.requested_by_name,
+                        record_date: item.record_date,
+                        remark: item.remark,
+                        status_desc: item.status_desc,
+                        status_code: item.status_code
+                    });
+                });
+
+                // Create headers and populate department filter
+                headers.forEach(header => {
+                    $('#table-headers-list').append(`<th>${header.depts}</th>`);
+                    $('#departmentFilter').append(`<option value="${header.depts}">${header.depts}</option>`);
+                });
+
+                const departmentNames = headers.map(header => header.depts);
+
+                function renderTable(selectedDepartment) {
+                    $('#table-body-list').empty();
+
+                    const emptyColumns = new Set();
+
+                    departmentNames.forEach((departmentName, colIndex) => {
+                        const requests = departmentMap[departmentName] || [];
+                        const hasData = requests.some(request => request && request.request_no); // Adjust as needed
+                        if (!hasData) {
+                            emptyColumns.add(colIndex);
+                        }
+                    });
+
+                    const maxRows = Math.max(...Object.values(departmentMap).map(arr => arr.length));
+                    const noDataShown = new Set();
+
+                    for (let i = 0; i < maxRows; i++) {
+                        const row = $('<tr></tr>');
+
+                        departmentNames.forEach((departmentName, colIndex) => {
+                            const requests = departmentMap[departmentName] || [];
+                            const details = requests[i] || null;
+
+                            // Check if the current department should be displayed
+                            if (selectedDepartment === 'all' || selectedDepartment === departmentName) {
+                                if (details) {
+                                    let bgColor;
+                                    if (details.status_code === '1' || details.status_code === '6') {
+                                        bgColor = '#ffffff';
+                                    } else if (details.status_code === '2' || details.status_code === '3' || details.status_code === '4') {
+                                        bgColor = '#ffc000';
+                                    } else if (details.status_code === '5') {
+                                        bgColor = '#86606e';
+                                    } else if (details.status_code === '7') {
+                                        bgColor = '#33cccc';
+                                    } else if (details.status_code === '8') {
+                                        bgColor = '#305496';
+                                    } else {
+                                        bgColor = 'gray';
+                                    }
+
+                                    row.append(`
+                                        <td>
+                                            <div class="card" style="padding: 10px; background-color: white; border-radius: 5px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);">
+                                                <table style="width: 100%; height: 100%; text-align: center; border: 1px solid black;">
+                                                    <tr>
+                                                        <td style="background-color: white; border: 1px solid black;">
+                                                            <span style="cursor: pointer; text-decoration: underline;" onclick="open_detail('${details.id_request}')">
+                                                                <b>${details.request_no}</b>
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="background-color: white; border: 1px solid black;">${details.requested_by_name}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="background-color: white; border: 1px solid black;">${details.record_date}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="background-color: white; border: 1px solid black;">${details.remark}</td>
+                                                    </tr>
+                                                    <tr >
+                                                        <td onclick="open_detail('${details.id_request}')" style="background-color: ${bgColor}; border: 1px solid black; cursor: pointer;">${details.status_desc}</td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </td>
+                                    `);
+                                } else if (emptyColumns.has(colIndex) && !noDataShown.has(colIndex)) {
+                                    row.append(`
+                                        <td>
+                                            <div class="card">
+                                                <div>No data available</div>
+                                            </div>
+                                        </td>
+                                    `);
+                                    noDataShown.add(colIndex);
+                                } else {
+                                    row.append('<td></td>');
+                                }
+                            } else {
+                                // If the department is not selected, append an empty cell
+                                row.append('<td></td>');
+                            }
+                        });
+
+                        $('#table-body-list').append(row);
+                    }
+
+                    // Destroy existing DataTable if it exists
+                    if ($.fn.dataTable.isDataTable('#tbl_mst_bin')) {
+                        $('#tbl_mst_bin').DataTable().destroy();
+                    }
+
+                    // Initialize DataTable after rendering the table
+                    const dataTableOptions = {
+                        "paging": false, // Enable paging only if "All" is selected
+                        "searching": false,
+                        "info": false,
+                        "ordering": false,
+                        "autoWidth": false,
+                        "scrollY": "465px",
+                        "fixedHeader": true
+                    };
+
+                    const dataTable = $('#tbl_mst_bin').DataTable(dataTableOptions);
+
+                    // Show only the selected department column
+                    const columnIndex = departmentNames.indexOf(selectedDepartment);
+                    if (columnIndex !== -1) {
+                        dataTable.columns().visible(false); // Hide all columns
+                        dataTable.column(columnIndex).visible(true); // Show only the selected department column
+                    }
+
+                    // If "All" is selected, apply custom pagination logic
+                    if (selectedDepartment === 'all') {
+                        const totalColumns = dataTable.columns().count();
+                        const columnsPerPage = 4;
+                        let currentPage = 0;
+
+                        function updateTable() {
+                            dataTable.columns().visible(false);
+                            const startColumn = currentPage * columnsPerPage;
+                            const endColumn = Math.min(startColumn + columnsPerPage, totalColumns);
+                            for (let i = startColumn; i < endColumn; i++) {
+                                dataTable.column(i).visible(true);
+                            }
+                            $('#prev').prop('disabled', currentPage === 0);
+                            $('#next').prop('disabled', endColumn >= totalColumns);
+                        }
+
+                        $('#prev').off('click').on('click', function () {
+                            if (currentPage > 0) {
+                                currentPage--;
+                                updateTable();
+                            }
+                        });
+                        $('#next').off('click').on('click', function () {
+                            if ((currentPage + 1) * columnsPerPage < totalColumns) {
+                                currentPage++;
+                                updateTable();
+                            }
+                        });
+
+                        updateTable(); // Initial call to update the table
+                    } else {
+                        // If a single department is selected, disable pagination buttons
+                        $('#prev').prop('disabled', true);
+                        $('#next').prop('disabled', true);
+                    }
+                }
+
+                // Initial call to render the table with all departments
+                renderTable('all');
+
+                // Event listener for department filter change
+                $('#departmentFilter').change(function () {
+                    const selectedDepartment = $(this).val();
+                    renderTable(selectedDepartment);
+                });
+
+            }).fail(function (error) {
+                console.error("Error fetching data:", error);
+            });
+        });
+
+    </script>
+}

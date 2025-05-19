@@ -182,6 +182,14 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a href="@Url.Action("RequestMonitoring", "User")" class="nav-link @Html.IsActive("User","RequestMonitoring")">
+                                    <i class="nav-icon fas fa-eye"></i>
+                                    <p>
+                                        Request Monitoring
+                                    </p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a href="@Url.Action("BlockBin", "User")" class="nav-link @Html.IsActive("User","BlockBin")">
                                     <i class="nav-icon fas fa-lock"></i>
                                     <p>

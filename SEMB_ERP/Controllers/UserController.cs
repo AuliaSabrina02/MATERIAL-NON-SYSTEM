@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Http;
 using System.Diagnostics;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Http.HttpResults;
+using MailKit.Search;
 
 namespace SEMB_ERP.Controllers
 {
@@ -800,6 +802,28 @@ namespace SEMB_ERP.Controllers
                 return View(userDetail);
             });
         }
+
+        public IActionResult RequestMonitoring()
+        {
+            return this.CheckSession(() =>
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> userRoles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                //sesa_id = "SESA126011";
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                List<string> listStatus = db.GetStatusRequest();
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.listStatus = listStatus;
+                ViewBag.userRoles = userRoles;
+                return View(userDetail);
+            });
+        }
         public IActionResult GetRequestList()
         {
             try
@@ -1551,6 +1575,37 @@ namespace SEMB_ERP.Controllers
             var db = new DatabaseAccessLayer();
             string submit = db.SubmitPalletTransfer(sesa_id);
             return Content(submit, "text/plain");
+        }
+        public IActionResult GetDeptList()
+        {
+            var db = new DatabaseAccessLayer();
+            List<RequestListModel> listDept = db.GetDeptList();
+            var result = listDept.Select(item => new
+            {
+                Depts = item.department,
+            });
+
+            return Json(result);
+        }
+
+        public IActionResult GetReqLists()
+        {
+            var db = new DatabaseAccessLayer();
+            List<RequestListModel> ReqsList = db.GetReqLists();
+            var result = ReqsList.Select(item => new
+            {
+               id_request = item.id_request,
+               request_no = item.request_no,
+               status_code = item.status_code,
+               status_desc = item.status_desc,
+               remark = item.remark,
+               record_date = item.record_date,
+               requested_by = item.requested_by,
+               requested_by_name = item.requested_by_name,
+               department = item.department
+            });
+
+            return Json(result);
         }
     }
 }
