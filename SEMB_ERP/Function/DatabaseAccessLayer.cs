@@ -2017,5 +2017,55 @@ namespace SEMB_ERP.Function
                 return $"General Error: {ex.Message}";
             }
         }
+
+        public string UpdateReceived(string id_pallet, string sesa_id)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand("UPDATE_RECEIVE_PALLET", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@id_pallet", id_pallet);
+                    cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+
+                    int rowsAffected = cmd.ExecuteNonQuery();
+
+                    if (rowsAffected > 0)
+                    {
+                        return "OK";
+                    }
+                    else
+                    {
+                        return "NOK";
+                    }
+                }
+            }
+        }
+
+        public string UpdateSupplied(string id_pallet, string sesa_id)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand("UPDATE_SUPPLY_PALLET", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@id_pallet", id_pallet);
+                    cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+
+                    int rowsAffected = cmd.ExecuteNonQuery();
+
+                    if (rowsAffected > 0)
+                    {
+                        return "OK";
+                    }
+                    else
+                    {
+                        return "NOK";
+                    }
+                }
+            }
+        }
     }
 }

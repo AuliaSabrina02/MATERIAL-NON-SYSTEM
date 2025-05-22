@@ -12,6 +12,7 @@ using Org.BouncyCastle.Asn1.Ocsp;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Http.HttpResults;
 using MailKit.Search;
+using Org.BouncyCastle.Bcpg;
 
 namespace SEMB_ERP.Controllers
 {
@@ -1606,6 +1607,174 @@ namespace SEMB_ERP.Controllers
             });
 
             return Json(result);
+        }
+
+        public IActionResult PalletTransferOpen()
+        {
+            return this.CheckSession(() =>
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> userRoles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                //sesa_id = "SESA126011";
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                List<string> listStatus = db.GetStatusRequest();
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.listStatus = listStatus;
+                ViewBag.userRoles = userRoles;
+                return View(userDetail);
+            });
+        }
+
+        public IActionResult PalletTransferHistory()
+        {
+            return this.CheckSession(() =>
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> userRoles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                //sesa_id = "SESA126011";
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                List<string> listStatus = db.GetStatusRequest();
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.listStatus = listStatus;
+                ViewBag.userRoles = userRoles;
+                return View(userDetail);
+            });
+        }
+
+        public IActionResult GetPalletTransferList()
+        {
+            try
+            {
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = Request.Form["start"].FirstOrDefault();
+                var length = Request.Form["length"].FirstOrDefault();
+                //var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][name]"].FirstOrDefault();
+                var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][data]"].FirstOrDefault();
+                var sortColumnDirection = Request.Form["order[0][dir]"].FirstOrDefault();
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                var column0Value = Request.Form["columns[0][search][value]"];
+                var column1Value = Request.Form["columns[1][search][value]"];
+                var column2Value = Request.Form["columns[2][search][value]"];
+                int pageSize = length != null ? Convert.ToInt32(length) : 0;
+                int skip = start != null ? Convert.ToInt32(start) : 0;
+                int recordsTotal = 0;
+                var mstData = (from Pallet in _context.v_pallet_header
+                               join request in _context.v_request
+                                on Pallet.id_request equals request.id_request
+                               where Pallet.status_pallet=="CREATION" || Pallet.status_pallet=="TRANSFER" || Pallet.status_pallet == "RECEIVED"
+                               select
+                                   new
+                                   {
+                                       Pallet.id_pallet,
+                                       Pallet.id_request,
+                                       Pallet.request_no,
+                                       Pallet.pallet_no,
+                                       Pallet.status_pallet,
+                                       Pallet.record_date,
+                                   });
+
+                //var mstData = (from temp in _context.mst_material_plant select temp);
+                if (!(string.IsNullOrEmpty(sortColumn) && string.IsNullOrEmpty(sortColumnDirection)))
+                {
+                    mstData = mstData.OrderBy(sortColumn + " " + sortColumnDirection);
+                }
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    mstData = mstData.Where(m => m.request_no.Contains(searchValue)
+                                                || m.pallet_no.Contains(searchValue));
+                }
+                recordsTotal = mstData.Count();
+                var data = mstData.Skip(skip).Take(pageSize).ToList();
+                var jsonData = new { draw = draw, recordsFiltered = recordsTotal, recordsTotal = recordsTotal, data = data };
+                return Ok(jsonData);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public IActionResult GetPalletTransferHistory()
+        {
+            try
+            {
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = Request.Form["start"].FirstOrDefault();
+                var length = Request.Form["length"].FirstOrDefault();
+                //var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][name]"].FirstOrDefault();
+                var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][data]"].FirstOrDefault();
+                var sortColumnDirection = Request.Form["order[0][dir]"].FirstOrDefault();
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                var column0Value = Request.Form["columns[0][search][value]"];
+                var column1Value = Request.Form["columns[1][search][value]"];
+                var column2Value = Request.Form["columns[2][search][value]"];
+                int pageSize = length != null ? Convert.ToInt32(length) : 0;
+                int skip = start != null ? Convert.ToInt32(start) : 0;
+                int recordsTotal = 0;
+                var mstData = (from Pallet in _context.v_pallet_header
+                               join request in _context.v_request
+                                on Pallet.id_request equals request.id_request
+                               where Pallet.status_pallet == "SUPPLIED"
+                               select
+                                   new
+                                   {
+                                       Pallet.id_pallet,
+                                       Pallet.id_request,
+                                       Pallet.request_no,
+                                       Pallet.pallet_no,
+                                       Pallet.status_pallet,
+                                       Pallet.record_date,
+                                   });
+
+                //var mstData = (from temp in _context.mst_material_plant select temp);
+                if (!(string.IsNullOrEmpty(sortColumn) && string.IsNullOrEmpty(sortColumnDirection)))
+                {
+                    mstData = mstData.OrderBy(sortColumn + " " + sortColumnDirection);
+                }
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    mstData = mstData.Where(m => m.request_no.Contains(searchValue)
+                                                || m.pallet_no.Contains(searchValue));
+                }
+                recordsTotal = mstData.Count();
+                var data = mstData.Skip(skip).Take(pageSize).ToList();
+                var jsonData = new { draw = draw, recordsFiltered = recordsTotal, recordsTotal = recordsTotal, data = data };
+                return Ok(jsonData);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public IActionResult UpdateReceived(string id_pallet, string sesa_id)
+        {
+            var db = new DatabaseAccessLayer();
+            string Result = db.UpdateReceived(id_pallet, sesa_id);
+
+            // Return the result directly
+            return Content(Result, "text/plain");
+        }
+
+        public IActionResult UpdateSupplied(string id_pallet, string sesa_id)
+        {
+            var db = new DatabaseAccessLayer();
+            string Result = db.UpdateSupplied(id_pallet, sesa_id);
+
+            // Return the result directly
+            return Content(Result, "text/plain");
         }
     }
 }

@@ -1,0 +1,357 @@
+﻿@* @using System.Data; *@
+@model List<UserDetailModel>
+@using Microsoft.AspNetCore.Mvc.Rendering;
+@using Microsoft.AspNetCore.Http;
+@using SEMB_ERP.Function;
+@{
+    var user = Model.First();
+    string sesa_id = ViewBag.sesa_id;
+    string name = ViewBag.name;
+    List<string> listStatus = ViewBag.listStatus;
+    List<string> userRoles = ViewBag.userRoles;
+}
+
+<style>
+    /* CSS untuk membuat modal berada di tengah layar */
+    #loadingSpinner {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5); /* Transparan hitam */
+    }
+
+    #loadingSpinner img {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .box_form_input {
+        background-color: #fcfcfc;
+        border-radius: 5px;
+        box-shadow: 1px 2px 8px 2px rgba(152,152,152,0.7);
+    }
+
+    .modal{
+        overflow: auto !important
+    }
+
+    .smaller-input {
+        height: 25px; /* Adjust height as necessary */
+        padding: 5px; /* Adjust padding as necessary */
+        font-size: 10px; /* Optional: Adjust font size */
+        line-height: 1; /* Optional: Reset line height */
+    }
+
+    /* Customize the font size for DataTables elements */
+    .dataTables_info, .dataTables_paginate, .dataTables_filter {
+        font-size: 10pt; /* Adjust the value to your desired font size */
+    }
+
+    /* .dataTables_filter {
+        display: none;
+    } */
+
+    table#table_req tr > th {
+        padding: 5px;
+    }
+
+    table#table_req tr > td {
+        padding: 5px;
+    }
+
+    .btn-group-xs > .btn, .btn-xs {
+        padding: .25rem .4rem;
+        font-size: .875rem;
+        line-height: .5;
+        border-radius: .2rem;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .form-check-input.bigger-checkbox {
+        margin-left: 15px;
+        transform: scale(2); /* Adjust the scale as needed */
+    }
+
+</style>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 mt-3">
+                <div class="card card-success card-outline">
+@*                     <div class="card-header">
+                        <h3 class="text-center half-underline">
+                            <i class="fas fa-list"></i>
+                            Asset List
+                        </h3>
+                    </div> *@
+                    <div class="card-header">
+                        <h5>
+                            <i class="fas fa-list"></i>
+                            Pallet Transfer - Open
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @* <div class="col-12 d-flex justify-content-end mb-2">
+                                <a href="@Url.Action("DOWNLOAD_ASSET_LIST", "Requestor")" id="btn_download_data" class="btn btn-dark">
+                                    <i class="fas fa-download"></i> Download Asset List
+                                </a>
+                            </div> *@
+                            @* <div class="col-12 text-right">
+                                <button class="btn btn-success" name="btn_gr"><i class="fas fa-boxes"></i> GR</button>
+                            </div> *@
+                            <div class="col-12 table-responsive">
+                                <table class="table table-bordered table-striped align-center nowrap" id="table_req" style="font-size:12pt;width:100%;">
+                                    <thead class="bg-warning align-middle text-center">
+                                        <tr>
+                                            <th width="35%">Pallet. No</th>
+                                            <th width="35%">Req. No</th>
+                                            <th width="15%">Receive</th>
+                                            <th width="15%">Supply</th>
+                                        </tr>
+                                        @* <tr>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="0" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="1" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="2" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="3" /></td>
+                                        </tr> *@
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Element spinner -->
+            <div id="loadingSpinner" style="display: none;">
+                <img src="~/images/icon/loading.gif" alt="Loading..." />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal_req_detail" class="modal fade">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-list"></i> Request Detail</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div id="body_req_detail"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script>
+        var table;
+        var loading = "<div class='text-center'><i class='fa fa-4x fa-spinner fa-spin'></i></div>";
+        var sesa_id = "@user.sesa_id".toUpperCase();
+
+        $(document).ready(function () {
+
+            table = $("#table_req").DataTable({
+                // "searching": false,
+                // "scrollX": true,
+                // "fixedColumns": {
+                //     rightColumns: 1
+                // },
+                "orderCellsTop": true,
+                "processing": true,
+                "serverSide": true,
+                "filter": true,
+                "ajax": {
+                    "url": "@Url.Action("GetPalletTransferList")",
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                "columns": [
+                    { "data": "pallet_no", "className": "align-middle text-center" },
+                    { "data": "request_no",  "className": "align-middle text-center" },
+                    {
+                        "data": "status_pallet",
+                        "className": "align-middle text-center",
+                        "render": function (data, type, row) {
+                            if (data === "TRANSFER") {
+                                return `<button class="btn btn-primary btn-sm" onclick="receive_pallet(${row["id_pallet"]})">
+                                            <i class="fas fa-truck"></i> Receive
+                                        </button>`;
+                            }
+
+                            if (data === "RECEIVED") {
+                                return data
+                            }
+
+                            return data;
+                        }
+                    },
+                    {
+                        "data": "status_pallet",
+                        "className": "align-middle text-center",
+                        "render": function (data, type, row) {
+                            if (row.status_pallet === "RECEIVED") {
+                                return `<button class="btn btn-primary btn-sm" onclick="supply_pallet(${row["id_pallet"]})">
+                                            <i class="fas fa-box"></i> Supply
+                                        </button>`;
+                            } else {
+                                return `<button class="btn btn-secondary btn-sm" disabled>
+                                            <i class="fas fa-box"></i> Supply
+                                        </button>`;
+                            }
+                        }
+
+                    }
+
+                ],
+                "drawCallback": function (settings) {
+                    // Set the background color for the second column (index 1)
+                    this.api().rows().every(function () {
+                        var rowNode = this.node();
+                        let receive_status = $(rowNode).find('td:eq(2)').html();
+                        let supply_status = $(rowNode).find('td:eq(3)').html();
+                        receive_status = receive_status ? receive_status.toLowerCase() : "";
+                        supply_status = supply_status ? supply_status.toLowerCase() : "";
+                        let bg_color = "";
+                        //console.log(receive_status);
+                        if(receive_status=="received"){
+                            bg_color = "bg-success";
+                            $(rowNode).find('td:eq(2)').addClass(bg_color);
+                        }
+                        if(supply_status=="supplied"){
+                            bg_color = "bg-success";
+                            $(rowNode).find('td:eq(3)').addClass(bg_color);
+                        }
+                        // $(rowNode).find('td').css("background-color", "#edfcf1")
+                        // $(rowNode).find('td:eq(2)').addClass(bg_color);
+                        // $(rowNode).find('td:eq(3)').addClass(bg_color);
+
+                    });
+                }
+            });
+
+
+            $('input.filter_table, select.filter_table', this).on('keyup change', function () {
+                let trgt = $(this).attr('target');
+                // alert(trgt);
+                if (table.column(trgt).search() !== this.value) {
+                    table
+                        .column(trgt)
+                        .search(this.value)
+                        .draw();
+                }
+            });
+        })
+
+        function receive_pallet(id_pallet) {
+            //console.log(id_pallet)
+            var sesa_id = '@ViewBag.sesa_id'
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes!',
+                cancelButtonText: 'No, cancel',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("UpdateReceived")',
+                        data: {
+                            id_pallet: id_pallet,
+                            sesa_id: sesa_id
+                        },
+                        success: function(response) {
+                            console.log(response);
+                            if (response.trim() === "OK") {
+                                Swal.fire(
+                                    'Received!',
+                                    'Bin has been received.',
+                                    'success'
+                                );
+                            } else {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Warning!',
+                                    text: 'Unexpected response received.',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+
+                            table.ajax.reload();
+                        },
+                        error: function(xhr, status, error) {
+                            alert('An error occurred: ' + error);
+                        }
+                    });
+                }
+            });
+
+        }
+
+        function supply_pallet(id_pallet) {
+            //console.log(id_pallet)
+            var sesa_id = '@ViewBag.sesa_id'
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes!',
+                cancelButtonText: 'No, cancel',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("UpdateSupplied")',
+                        data: {
+                            id_pallet: id_pallet,
+                            sesa_id: sesa_id
+                        },
+                        success: function(response) {
+                            console.log(response);
+                            if (response.trim() === "OK") {
+                                Swal.fire(
+                                    'Received!',
+                                    'Bin has been received.',
+                                    'success'
+                                );
+                            } else {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Warning!',
+                                    text: 'Unexpected response received.',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+
+                            table.ajax.reload();
+                        },
+                        error: function(xhr, status, error) {
+                            alert('An error occurred: ' + error);
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}
