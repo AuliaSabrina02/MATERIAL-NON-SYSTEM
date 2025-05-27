@@ -2043,7 +2043,7 @@ namespace SEMB_ERP.Function
             }
         }
 
-        public string UpdateSupplied(string id_pallet, string sesa_id)
+        public string UpdateSupplied(string id_pallet, string sesa_id, string supplied_name)
         {
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
@@ -2053,6 +2053,66 @@ namespace SEMB_ERP.Function
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@id_pallet", id_pallet);
                     cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                    cmd.Parameters.AddWithValue("@comment", supplied_name);
+
+                    int rowsAffected = cmd.ExecuteNonQuery();
+
+                    if (rowsAffected > 0)
+                    {
+                        return "OK";
+                    }
+                    else
+                    {
+                        return "NOK";
+                    }
+                }
+            }
+        }
+
+        public List<PickBoxModel> GetPalletDetail(string plt_id)
+        {
+            List<PickBoxModel> reqs = new List<PickBoxModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("GET_PALLET_DETAILS", conn);
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@plt_id", plt_id);
+                    using SqlDataReader reader = cmd.ExecuteReader();
+
+                    while (reader.Read())
+                    {
+                        reqs.Add(new PickBoxModel
+                        {
+                            id_pick = reader["id_pick"] != DBNull.Value ? (int?)Convert.ToInt32(reader["id_request"]) : null,
+                            id_request = reader["id_request"] != DBNull.Value ? (int?)Convert.ToInt32(reader["id_request"]) : null,
+                            id_det = reader["id_det"] != DBNull.Value ? (int?)Convert.ToInt32(reader["id_request"]) : null,
+                            box_id = reader["box_id"].ToString(),
+                            partno = reader["partno"].ToString(),
+                            qty = reader["qty"] != DBNull.Value ? (int?)Convert.ToInt32(reader["id_request"]) : null,
+                            sbin = reader["sbin"].ToString(),
+                            picked_by = reader["picked_by"].ToString(),
+                            record_date = reader["record_date"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(reader["record_date"]) : null,
+                        });
+                    }
+                }
+            }
+            return reqs;
+        }
+
+        public string close_non_conf(string id_non_conf, string sesa_id, string cls_comment)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand("CLOSE_NON_CONF", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@id_non_conf", id_non_conf);
+                    cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                    cmd.Parameters.AddWithValue("@comment", cls_comment);
 
                     int rowsAffected = cmd.ExecuteNonQuery();
 

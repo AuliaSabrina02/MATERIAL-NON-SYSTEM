@@ -12,5 +12,12 @@ namespace SEMB_ERP.Models
         public DateTime? record_date { get; set; }
         public string? sesa_id { get; set; }
         public string? name { get; set; }
+        public DateTime? receive_date { get; set; }
+        public string? received_by { get; set; }
+        public DateTime? supply_date { get; set; }
+        public string? supplied_by { get; set; }
+        public string? supply_comment { get; set; }
+        public string? received_by_name { get; set; }
+        public string? supplied_by_name { get; set; }
     }
 }

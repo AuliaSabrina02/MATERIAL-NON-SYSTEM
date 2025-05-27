@@ -14,5 +14,6 @@ namespace SEMB_ERP.Models
         public string? picked_by_name { get; set; }
         public string? pallet_no { get; set; }
         public DateTime? record_date { get; set; }
+        public string? pallet_id { get; set; }
     }
 }

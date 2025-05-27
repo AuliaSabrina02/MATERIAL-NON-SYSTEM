@@ -117,10 +117,12 @@
                                 <table class="table table-bordered table-striped align-center nowrap" id="table_req" style="font-size:12pt;width:100%;">
                                     <thead class="bg-warning align-middle text-center">
                                         <tr>
-                                            <th width="35%">Pallet. No</th>
-                                            <th width="35%">Req. No</th>
-                                            <th width="15%">Receive</th>
-                                            <th width="15%">Supply</th>
+                                            <th width="12%">Pallet. No</th>
+                                            <th width="12%">Req. No</th>
+                                            <th width="12%">Status</th>
+                                            <th width="12%">Receive Date</th>
+                                            <th width="12%">Receive By</th>
+                                            <th width="10%">Action</th>
                                         </tr>
                                         @* <tr>
                                             <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="0" /></td>
@@ -147,12 +149,45 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="fas fa-list"></i> Request Detail</h5>
+                <h5 class="modal-title"><i class="fas fa-list"></i> Pallet Detail</h5>
                 <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div id="body_req_detail"></div>
+            <div>
+                <div class="row m-4">
+                    <div class="col-12">
+                        <table class="table table-borderless table-sm">
+                            <tr>
+                                <td>Request No</td>
+                                <td id="request-no">:</td>
+                            </tr>
+                            <tr>
+                                <td>Pallet No</td>
+                                <td id="pallet-no">:</td>
+                            </tr>
+                            <tr>
+                                <td>Status</td>
+                                <td id="pallet-status">:</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-12 table-responsive">
+                        <table class="table table-bordered table-striped align-center nowrap" id="tbl-detail" style="font-size:12pt;width:100%;">
+                            <thead class="bg-warning align-middle text-center">
+                                <tr>
+                                    <th width="12%">Box Id</th>
+                                    <th width="12%">Part No</th>
+                                    <th width="12%">Quantity</th>
+                                    <th width="12%">S-Bin</th>
+                                    <th width="12%">Picked By</th>
+                                    <th width="12%">Record Date</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -182,8 +217,18 @@
                     "datatype": "json"
                 },
                 "columns": [
-                    { "data": "pallet_no", "className": "align-middle text-center" },
+                    {   "data": "pallet_no", 
+                        "className": "align-middle text-center",
+                        "render": function(data, type, row){
+                            return `<span style="cursor: pointer;" onclick="show_detail(${row["id_pallet"]}, '${data}', '${row["status_pallet"]}', '${row["request_no"]}')">
+                                        <b>${data}</b>
+                                    </span>` ;
+                        }
+                    },
                     { "data": "request_no",  "className": "align-middle text-center" },
+                    { "data": "status_pallet", "className": "align-middle text-center"},
+                    { "data": "receive_date", "className": "align-middle text-center"},
+                    { "data": "received_by_name", "className": "align-middle text-center"},
                     {
                         "data": "status_pallet",
                         "className": "align-middle text-center",
@@ -192,50 +237,32 @@
                                 return `<button class="btn btn-primary btn-sm" onclick="receive_pallet(${row["id_pallet"]})">
                                             <i class="fas fa-truck"></i> Receive
                                         </button>`;
+                            } if (row.status_pallet === "RECEIVED") {
+                                return `<button class="btn btn-success btn-sm" onclick="supply_pallet(${row["id_pallet"]})">
+                                            <i class="fas fa-box"></i> Supply
+                                        </button>`;
                             }
-
-                            if (data === "RECEIVED") {
-                                return data
-                            }
-
-                            return data;
                         }
                     },
-                    {
-                        "data": "status_pallet",
-                        "className": "align-middle text-center",
-                        "render": function (data, type, row) {
-                            if (row.status_pallet === "RECEIVED") {
-                                return `<button class="btn btn-primary btn-sm" onclick="supply_pallet(${row["id_pallet"]})">
-                                            <i class="fas fa-box"></i> Supply
-                                        </button>`;
-                            } else {
-                                return `<button class="btn btn-secondary btn-sm" disabled>
-                                            <i class="fas fa-box"></i> Supply
-                                        </button>`;
-                            }
-                        }
-
-                    }
-
                 ],
                 "drawCallback": function (settings) {
                     // Set the background color for the second column (index 1)
                     this.api().rows().every(function () {
                         var rowNode = this.node();
                         let receive_status = $(rowNode).find('td:eq(2)').html();
+                        //console.log(receive_status);
                         let supply_status = $(rowNode).find('td:eq(3)').html();
                         receive_status = receive_status ? receive_status.toLowerCase() : "";
                         supply_status = supply_status ? supply_status.toLowerCase() : "";
                         let bg_color = "";
                         //console.log(receive_status);
                         if(receive_status=="received"){
-                            bg_color = "bg-success";
-                            $(rowNode).find('td:eq(2)').addClass(bg_color);
+                            bg_color = "bg-warning";
+                            $(rowNode).find('td:eq(0)').addClass(bg_color);
                         }
                         if(supply_status=="supplied"){
                             bg_color = "bg-success";
-                            $(rowNode).find('td:eq(3)').addClass(bg_color);
+                            $(rowNode).find('td:eq(0)').addClass(bg_color);
                         }
                         // $(rowNode).find('td').css("background-color", "#edfcf1")
                         // $(rowNode).find('td:eq(2)').addClass(bg_color);
@@ -265,7 +292,7 @@
             Swal.fire({
                 title: 'Are you sure?',
                 text: "",
-                icon: 'question',
+                icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'Yes!',
                 cancelButtonText: 'No, cancel',
@@ -284,7 +311,7 @@
                             if (response.trim() === "OK") {
                                 Swal.fire(
                                     'Received!',
-                                    'Bin has been received.',
+                                    'Pallet has been received.',
                                     'success'
                                 );
                             } else {
@@ -312,27 +339,36 @@
             var sesa_id = '@ViewBag.sesa_id'
             Swal.fire({
                 title: 'Are you sure?',
-                text: "",
-                icon: 'question',
+                text: "Please Input Your Name!",
+                input: "textarea",
+                inputPlaceholder: "Enter your name",
+                icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'Yes!',
                 cancelButtonText: 'No, cancel',
-                reverseButtons: true
+                reverseButtons: true,
+                preConfirm: (value) => {
+                    if (!value) {
+                        Swal.showValidationMessage('You need to enter a name!');
+                    }
+                    return value;
+                }
             }).then((result) => {
-                if (result.isConfirmed) {
+                if (result.isConfirmed && result.value) {
                     $.ajax({
                         type: "POST",
                         url: '@Url.Action("UpdateSupplied")',
                         data: {
                             id_pallet: id_pallet,
-                            sesa_id: sesa_id
+                            sesa_id: sesa_id,
+                            supplied_name: result.value
                         },
                         success: function(response) {
                             console.log(response);
                             if (response.trim() === "OK") {
                                 Swal.fire(
                                     'Received!',
-                                    'Bin has been received.',
+                                    'Pallet has been Supplied.',
                                     'success'
                                 );
                             } else {
@@ -352,6 +388,59 @@
                     });
                 }
             });
+        }
+
+        function show_detail(id_pallet, palletNo, palletStatus, requestNo) {
+            $('#request-no').text(': ' + requestNo);
+            $('#pallet-no').text(': ' + palletNo);
+            $('#pallet-status').text(': ' + palletStatus);
+
+            if ($.fn.dataTable.isDataTable('#tbl-detail')) {
+                $('#tbl-detail').DataTable().destroy();
+            }
+            var table2 = $('#tbl-detail').DataTable({
+                "ajax": {
+                    "url": "@Url.Action("GetPalletDetail")",
+                    "data": {
+                        plt_id : id_pallet
+                    },
+                    "dataSrc": function (json) {
+                        return json.map(function (item) {
+                            return {
+                                BinId: item.id_pick,
+                                RequestId: item.id_request,
+                                DetID: item.id_det,
+                                BoxId: item.box_id,
+                                PartNo: item.partno,
+                                Qty: item.qty,
+                                Bin: item.sbin,
+                                PickedBy: item.picked_by,
+                                RecordDate: item.record_date
+                            }
+                        });
+                    }
+                },
+                "columns": [
+                    { "data": "BoxId" },
+                    { "data": "PartNo" },
+                    { "data": "Qty" },
+                    { "data": "Bin" },
+                    { "data": "PickedBy" },
+                    { "data": "RecordDate" }
+                ]
+            });
+            $("div#modal_req_detail").modal("show");
+            // $.ajax({
+            //     type: "GET",
+            //     url: "@Url.Action("GetReqDetail")",
+            //     data: {
+            //         id_request: id_request
+            //     }
+            // }).done(function (res) {
+            //     $("div#body_req_detail").html(res);
+            // }).fail(function(err){
+            //     swal.fire("Error!", err, "error");
+            // })
         }
     </script>
 }
