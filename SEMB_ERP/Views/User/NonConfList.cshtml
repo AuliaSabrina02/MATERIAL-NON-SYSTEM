@@ -10,67 +10,67 @@
 <style>
     /* CSS untuk membuat modal berada di tengah layar */
     #loadingSpinner {
-        display: none;
-        position: fixed;
-        z-index: 9999;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0, 0, 0, 0.5); /* Transparan hitam */
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5); /* Transparan hitam */
     }
 
-        #loadingSpinner img {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
+    #loadingSpinner img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    }
 
     .box_form_input {
-        background-color: #fcfcfc;
-        border-radius: 5px;
-        box-shadow: 1px 2px 8px 2px rgba(152,152,152,0.7);
+    background-color: #fcfcfc;
+    border-radius: 5px;
+    box-shadow: 1px 2px 8px 2px rgba(152,152,152,0.7);
     }
 
     .modal {
-        overflow: auto !important;
+    overflow: auto !important;
     }
 
     .smaller-input {
-        height: 25px; /* Adjust height as necessary */
-        padding: 5px; /* Adjust padding as necessary */
-        font-size: 10px; /* Optional: Adjust font size */
-        line-height: 1; /* Optional: Reset line height */
+    height: 25px; /* Adjust height as necessary */
+    padding: 5px; /* Adjust padding as necessary */
+    font-size: 10px; /* Optional: Adjust font size */
+    line-height: 1; /* Optional: Reset line height */
     }
 
     /* Customize the font size for DataTables elements */
     .dataTables_info, .dataTables_paginate, .dataTables_filter {
-        font-size: 10pt; /* Adjust the value to your desired font size */
+    font-size: 10pt; /* Adjust the value to your desired font size */
     }
 
     .dataTables_filter {
-        display: none; /* Hides just the input field */
+    display: none; /* Hides just the input field */
     }
 
     table#table_non_conf tr > th,
     table#table_non_conf tr > td {
-        padding: 5px;
-        vertical-align: middle;
+    padding: 5px;
+    vertical-align: middle;
     }
 
     .btn-group-xs > .btn, .btn-xs {
-        padding: .25rem .4rem;
-        font-size: .875rem;
-        line-height: .5;
-        border-radius: .2rem;
+    padding: .25rem .4rem;
+    font-size: .875rem;
+    line-height: .5;
+    border-radius: .2rem;
     }
 
     .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     }
 </style>
 <div class="content">
@@ -99,11 +99,12 @@
                                             <th class="align-middle text-center">PIC</th>
                                             <th class="align-middle text-center">Category Issue</th>
                                             <th class="align-middle text-center">Detail Issue</th>
+                                            <th class="align-middle text-center">Status</th>
                                             <th class="align-middle text-center" rowspan="2">File<br />Support</th>
                                             <th class="align-middle text-center" rowspan="2">Action</th>
                                         </tr>
                                         <tr class="align-middle text-center">
-                                            @for (int i = 0; i < 9; i++) // Adjusted the loop to 24 to exclude Img Tagging
+                                            @for (int i = 0; i < 10; i++) // Adjusted the loop to 24 to exclude Img Tagging
                                             {
                                                 if (i == 0)
                                                 {
@@ -124,6 +125,15 @@
                                                             {
                                                                 <option value="@cat">@cat</option>
                                                             }
+                                                        </select>
+                                                    </td>
+                                                } else if (i == 9)
+                                                {
+                                                    <td style="padding: 5px;">
+                                                        <select class="form-control smaller-input filter_table" target="@i">
+                                                            <option value="">#ALL</option>
+                                                            <option value="0">OPEN</option>
+                                                            <option value="1">CLOSE</option>
                                                         </select>
                                                     </td>
                                                 }
@@ -231,7 +241,40 @@
     </div>
 </div>
 
-
+<div id="modal_close_detail" class="modal fade">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-list"></i> Close Detail</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div>
+                <div class="row m-4">
+                    <div class="col-12">
+                        <table class="table table-borderless table-sm">
+                            <tr>
+                                <td>Close Date</td>
+                                <td id="close-date">:</td>
+                            </tr>
+                            <tr>
+                                <td>Closed By</td>
+                                <td id="closed-by">:</td>
+                            </tr>
+                            <tr>
+                                <td>Close Comment</td>
+                                <td>
+                                    <textarea id="close-comment" class="form-control" rows="4" readonly></textarea>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script>
@@ -264,11 +307,22 @@
                     { "data": "pic", "className": "align-middle" },
                     { "data": "category_issue", "className": "align-middle" },
                     { "data": "detail_issue", "className": "align-middle" },
+                    { 
+                        "data": "is_close", 
+                        "className": "text-center allign-middle",
+                        "render": function (data, type, row) {
+                            if (data === 0 || data === null || data === "") {
+                                return "OPEN"
+                            } else if (data === 1){
+                                return "CLOSE"
+                            }
+                        }
+                    },
                     {
                         "data": "file_doc",
                         "className": "text-center align-middle",
                         "render": function (data, type, row) {
-                            if (data === null || data == "") {
+                            if (data === null || data === "") {
                                 return "";
                             } else {
                                 return `<a href="../Upload/Non_Conf/${data}" target="_blank">
@@ -280,18 +334,40 @@
                         }
                     },
                     {
-                        "data": "id_non_conf",
+                        "data": "is_close",
                         "className": "align-middle text-center",
                         "render": function (data, type, row) {
-                            return `<button class="btn btn-sm btn-warning" onclick="update_non_conf('${data}', '${row['material_type']}','${row['partno']}',
-                                    '${row['po_no']}','${row['qty']}','${row['uom']}', '${row['supplier_name']}', '${row['pic']}', '${row['category_issue']}', '${row['detail_issue']}','${row['file_doc']}')"><i class="fas fa-edit"></i> Edit</button>`;
+                            if (data === 0 || data === null || data === "") {
+                                return `<button class="btn btn-sm btn-warning" onclick="update_non_conf('${row['id_non_conf']}', '${row['material_type']}','${row['partno']}',
+                                    '${row['po_no']}','${row['qty']}','${row['uom']}', '${row['supplier_name']}', '${row['pic']}', '${row['category_issue']}', '${row['detail_issue']}','${row['file_doc']}')"><i class="fas fa-edit"></i> Edit</button><br>
+                                    <button class="btn btn-sm btn-danger mt-1" onclick="close_non_conf(${row['id_non_conf']})"><i class="fas fa-times"></i> Close</button>`;
+                            } else if (data === 1){
+                                return `<button class="button btn-sm btn-primary" onclick="show_close_modal('${row['close_date']}', '${row['closed_by']}', '${row['close_comment']}')"><i class="fas fa-list"></i> Closed</button>`;
+                            }
+                            
                         }
                     }
                 ]
             });
 
+            // Step 2: Add the custom search function
+            $.fn.dataTable.ext.search.push(
+                function(settings, data, dataIndex) {
+                    let filterValue = $('select.filter_table[target="9"]').val(); // Get the selected value from the dropdown
+                    let isCloseValue = data[9]; // This is the underlying data for the is_close column
+                    // If no filter is selected, include all rows
+                    if (filterValue === "") {
+                        return true;
+                    }
+                    // Compare the selected filter value with the underlying data
+                    return isCloseValue == filterValue; // This will return true if they match
+                }
+            );
+
             $('input.filter_table, select.filter_table', this).on('keyup change', function () {
                 let trgt = $(this).attr('target');
+                console.log("Target Column Index: ", trgt);
+                console.log("Filter Value: ", this.value);
                 if (table.column(trgt).search() !== this.value) {
                     table
                         .column(trgt)
@@ -428,6 +504,70 @@
                 allowOutsideClick: () => !Swal.isLoading()
             })
         })
+
+        function close_non_conf(id_non_conf){
+            var sesa_id = '@ViewBag.sesa_id'
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Please Input Your Comment!",
+                input: "textarea",
+                inputPlaceholder: "Enter the comment",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes!',
+                cancelButtonText: 'No, cancel',
+                reverseButtons: true,
+                preConfirm: (value) => {
+                    if (!value) {
+                        Swal.showValidationMessage('You need to enter a comment!');
+                    }
+                    return value;
+                }
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("close_non_conf")',
+                        data: {
+                            id_non_conf: id_non_conf,
+                            sesa_id: sesa_id,
+                            cls_comment: result.value
+                        },
+                        success: function(response) {
+                            console.log(response);
+                            if (response.trim() === "OK") {
+                                Swal.fire(
+                                    'Closed!',
+                                    'Item has been Closed.',
+                                    'success'
+                                ).then(function () {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Warning!',
+                                    text: 'Unexpected response received.',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+
+                            table.ajax.reload();
+                        },
+                        error: function(xhr, status, error) {
+                            alert('An error occurred: ' + error);
+                        }
+                    });
+                }
+            });
+        }
+
+        function show_close_modal(close_date, closed_by, close_comment) {
+            $('#close-date').text(': ' + close_date);
+            $('#closed-by').text(': ' + closed_by);
+            $('#close-comment').val(close_comment);
+            $("div#modal_close_detail").modal("show");
+        }
 
     </script>
 

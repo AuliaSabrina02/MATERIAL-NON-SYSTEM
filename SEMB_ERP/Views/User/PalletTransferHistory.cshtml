@@ -100,7 +100,7 @@
                     <div class="card-header">
                         <h5>
                             <i class="fas fa-list"></i>
-                            Picking List
+                            Pallet Transfer - History
                         </h5>
                     </div>
                     <div class="card-body">
@@ -117,10 +117,13 @@
                                 <table class="table table-bordered table-striped align-center nowrap" id="table_req" style="font-size:12pt;width:100%;">
                                     <thead class="bg-warning align-middle text-center">
                                         <tr>
-                                            <th width="35%">Pallet. No</th>
-                                            <th width="35%">Req. No</th>
-                                            <th width="15%">Receive</th>
-                                            <th width="15%">Supply</th>
+                                            <th width="15%">Pallet. No</th>
+                                            <th width="15%">Req. No</th>
+                                            <th width="10%">Status</th>
+                                            <th width="15%">Receive Date</th>
+                                            <th width="15%">Receive By</th>
+                                            <th width="15%">Supply Date</th>
+                                            <th width="15%">Supplied By</th>
                                         </tr>
                                         @* <tr>
                                             <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="0" /></td>
@@ -143,16 +146,49 @@
     </div>
 </div>
 
-<div id="modal_req_detail" class="modal fade">
+<div id="modal_pallet_detail" class="modal fade">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="fas fa-list"></i> Request Detail</h5>
+                <h5 class="modal-title"><i class="fas fa-list"></i> Pallet Detail</h5>
                 <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div id="body_req_detail"></div>
+            <div>
+                <div class="row m-4">
+                    <div class="col-12">
+                        <table class="table table-borderless table-sm">
+                            <tr>
+                                <td>Request No</td>
+                                <td id="request-no">:</td>
+                            </tr>
+                            <tr>
+                                <td>Pallet No</td>
+                                <td id="pallet-no">:</td>
+                            </tr>
+                            <tr>
+                                <td>Status</td>
+                                <td id="pallet-status">:</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-12 table-responsive">
+                        <table class="table table-bordered table-striped align-center nowrap" id="tbl-detail" style="font-size:12pt;width:100%;">
+                            <thead class="bg-warning align-middle text-center">
+                                <tr>
+                                    <th width="12%">Box Id</th>
+                                    <th width="12%">Part No</th>
+                                    <th width="12%">Quantity</th>
+                                    <th width="12%">S-Bin</th>
+                                    <th width="12%">Picked By</th>
+                                    <th width="12%">Record Date</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -182,30 +218,20 @@
                     "datatype": "json"
                 },
                 "columns": [
-                    { "data": "pallet_no", "className": "align-middle text-center" },
-                    { "data": "request_no",  "className": "align-middle text-center" },
-                    {
-                        "data": "status_pallet",
+                    {   "data": "pallet_no",
                         "className": "align-middle text-center",
-                        "render": function (data, type, row) {
-                            if (data === "SUPPLIED") {
-                                return `RECEIVED`;
-                            }
+                        "render": function(data, type, row){
+                            return `<span style="cursor: pointer;" onclick="show_detail(${row["id_pallet"]})">
+                                        <b>${data}</b>
+                                    </span>` ;
                         }
                     },
-                    {
-                        "data": "status_pallet",
-                        "className": "align-middle text-center",
-                        "render": function (data, type, row) {
-                            if (row.status_pallet === "SUPPLIED") {
-                                if (data === "SUPPLIED") {
-                                    return data ;
-                                }
-                            }
-                        }
-
-                    }
-
+                    { "data": "request_no",  "className": "align-middle text-center" },
+                    { "data": "status_pallet", "className": "align-middle text-center"},
+                    { "data": "receive_date", "className": "align-middle text-center"},
+                    { "data": "received_by_name", "className": "align-middle text-center"},
+                    { "data": "supply_date", "className": "align-middle text-center"},
+                    { "data": "supplied_by_name", "className": "align-middle text-center"},
                 ],
                 "drawCallback": function (settings) {
                     // Set the background color for the second column (index 1)
@@ -262,5 +288,46 @@
             })
         }
 
+        function show_detail(id_pallet, palletNo, palletStatus, requestNo) {
+            $('#request-no').text(': ' + requestNo);
+            $('#pallet-no').text(': ' + palletNo);
+            $('#pallet-status').text(': ' + palletStatus);
+
+            if ($.fn.dataTable.isDataTable('#tbl-detail')) {
+                $('#tbl-detail').DataTable().destroy();
+            }
+            var table2 = $('#tbl-detail').DataTable({
+                "ajax": {
+                    "url": "@Url.Action("GetPalletDetail")",
+                    "data": {
+                        plt_id : id_pallet
+                    },
+                    "dataSrc": function (json) {
+                        return json.map(function (item) {
+                            return {
+                                BinId: item.id_pick,
+                                RequestId: item.id_request,
+                                DetID: item.id_det,
+                                BoxId: item.box_id,
+                                PartNo: item.partno,
+                                Qty: item.qty,
+                                Bin: item.sbin,
+                                PickedBy: item.picked_by,
+                                RecordDate: item.record_date
+                            }
+                        });
+                    }
+                },
+                "columns": [
+                    { "data": "BoxId" },
+                    { "data": "PartNo" },
+                    { "data": "Qty" },
+                    { "data": "Bin" },
+                    { "data": "PickedBy" },
+                    { "data": "RecordDate" }
+                ]
+            });
+            $("div#modal_pallet_detail").modal("show");
+        }
     </script>
 }

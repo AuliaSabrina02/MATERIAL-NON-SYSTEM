@@ -16,5 +16,9 @@ namespace SEMB_ERP.Models
         public string? detail_issue { get; set; }
         public string? file_doc { get; set; }
         public string? created_by { get; set; }
+        public int? is_close { get; set; }
+        public DateTime? close_date { get; set; }
+        public string? closed_by { get; set; }
+        public string? close_comment { get; set; }
     }
 }

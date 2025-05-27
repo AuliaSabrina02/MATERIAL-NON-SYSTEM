@@ -110,7 +110,7 @@ namespace SEMB_ERP.Controllers
                 string file_support_db = "";
                 if (file_support != null && file_support.Length > 0)
                 {
-                    string filePath = getNextFileName(_environment.WebRootPath + "\\Documents\\" + id_upload + " - " +file_support.FileName);
+                    string filePath = getNextFileName(_environment.WebRootPath + "\\Documents\\" + id_upload + " - " + file_support.FileName);
                     //filePaths.Add(filePath);
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
@@ -125,7 +125,7 @@ namespace SEMB_ERP.Controllers
 
         [Authorize(Policy = "RequireRequestor")]
         [HttpPost]
-        public async Task<IActionResult> SubmitOrder(IFormFile file_support, string material_type, string partno, string po_no, double qty, string uom, string revision, string project_name, 
+        public async Task<IActionResult> SubmitOrder(IFormFile file_support, string material_type, string partno, string po_no, double qty, string uom, string revision, string project_name,
             string storage_requirement, string supplier_name, string pic, string order_type, double unit_price, double length_mm, double width_mm, double height_mm, string remark)
         {
             DateTime now = DateTime.Now;
@@ -149,7 +149,7 @@ namespace SEMB_ERP.Controllers
                         file_support_db = Path.GetFileName(filePath);
                     }
                 }
-                string submit = db.SubmitOrder(id_upload, material_type, partno, po_no, qty, uom, revision, project_name, storage_requirement, supplier_name, 
+                string submit = db.SubmitOrder(id_upload, material_type, partno, po_no, qty, uom, revision, project_name, storage_requirement, supplier_name,
                                                 pic, order_type, unit_price, length_mm, width_mm, height_mm, remark, file_support_db, sesa_id);
                 return Content("success;Succesfully Submitted!", "text/plain");
             }
@@ -413,7 +413,7 @@ namespace SEMB_ERP.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SUBMIT_NON_CONF(IFormFile file_support, string material_type, string partno, string po_no, double qty, string uom, 
+        public async Task<IActionResult> SUBMIT_NON_CONF(IFormFile file_support, string material_type, string partno, string po_no, double qty, string uom,
             string supplier_name, string pic, string category_issue, string detail_issue)
         {
             DateTime now = DateTime.Now;
@@ -492,7 +492,11 @@ namespace SEMB_ERP.Controllers
                                        NonConfList.category_issue,
                                        NonConfList.detail_issue,
                                        NonConfList.file_doc,
-                                       NonConfList.created_by
+                                       NonConfList.created_by,
+                                       NonConfList.is_close,
+                                       NonConfList.close_date,
+                                       NonConfList.closed_by,
+                                       NonConfList.close_comment
                                    });
 
                 //var mstData = (from temp in _context.mst_material_plant select temp);
@@ -668,14 +672,14 @@ namespace SEMB_ERP.Controllers
             {
                 PartNo = item.partno,
                 PartName = item.partname,
-                Quantity = item.qty               
+                Quantity = item.qty
             });
 
             return Json(result);
         }
 
         [HttpPost]
-        public IActionResult InsertBinItem(string box_id , string sesa_id)
+        public IActionResult InsertBinItem(string box_id, string sesa_id)
         {
             var db = new DatabaseAccessLayer();
             string insertResult = db.InsertBinItem(box_id, sesa_id);
@@ -1115,7 +1119,7 @@ namespace SEMB_ERP.Controllers
                                         .Select(c => c.Value)
                                         .ToList();
             var db = new DatabaseAccessLayer();
-            var pickInfo = JsonConvert.DeserializeObject<PickingModel>(db.GetBinPicking(id_request, id_det,sesa_id));
+            var pickInfo = JsonConvert.DeserializeObject<PickingModel>(db.GetBinPicking(id_request, id_det, sesa_id));
             var reqInfo = JsonConvert.DeserializeObject<RequestListModel>(db.GetRequestInfo(id_request));
             ViewBag.id_request = id_request;
             ViewBag.id_det = id_det;
@@ -1267,7 +1271,7 @@ namespace SEMB_ERP.Controllers
         }
         [HttpPost]
         public IActionResult AddMstBin(string bin_name, string bin_length, string bin_width, string bin_height)
-        {            
+        {
             var db = new DatabaseAccessLayer();
             string addResult = db.AddMstBin(bin_name, bin_length, bin_width, bin_height);
 
@@ -1442,7 +1446,7 @@ namespace SEMB_ERP.Controllers
             var result = listBin.Select(item => new
             {
                 BoxId = item.BoxId,
-                PartNo= item.PartNo,
+                PartNo = item.PartNo,
                 Qty = item.Qty,
                 Sbin = item.Sbin,
                 Unit = item.Unit,
@@ -1499,7 +1503,7 @@ namespace SEMB_ERP.Controllers
                 int skip = start != null ? Convert.ToInt32(start) : 0;
                 int recordsTotal = 0;
                 var mstData = (from Pallet in _context.v_pallet_header
-                               where Pallet.status_pallet=="CREATION" || Pallet.status_pallet=="TRANSFER"
+                               where Pallet.status_pallet == "CREATION" || Pallet.status_pallet == "TRANSFER"
                                select
                                    new
                                    {
@@ -1595,15 +1599,15 @@ namespace SEMB_ERP.Controllers
             List<RequestListModel> ReqsList = db.GetReqLists();
             var result = ReqsList.Select(item => new
             {
-               id_request = item.id_request,
-               request_no = item.request_no,
-               status_code = item.status_code,
-               status_desc = item.status_desc,
-               remark = item.remark,
-               record_date = item.record_date,
-               requested_by = item.requested_by,
-               requested_by_name = item.requested_by_name,
-               department = item.department
+                id_request = item.id_request,
+                request_no = item.request_no,
+                status_code = item.status_code,
+                status_desc = item.status_desc,
+                remark = item.remark,
+                record_date = item.record_date,
+                requested_by = item.requested_by,
+                requested_by_name = item.requested_by_name,
+                department = item.department
             });
 
             return Json(result);
@@ -1673,7 +1677,7 @@ namespace SEMB_ERP.Controllers
                 var mstData = (from Pallet in _context.v_pallet_header
                                join request in _context.v_request
                                 on Pallet.id_request equals request.id_request
-                               where Pallet.status_pallet=="CREATION" || Pallet.status_pallet=="TRANSFER" || Pallet.status_pallet == "RECEIVED"
+                               where Pallet.status_pallet == "CREATION" || Pallet.status_pallet == "TRANSFER" || Pallet.status_pallet == "RECEIVED"
                                select
                                    new
                                    {
@@ -1683,6 +1687,13 @@ namespace SEMB_ERP.Controllers
                                        Pallet.pallet_no,
                                        Pallet.status_pallet,
                                        Pallet.record_date,
+                                       Pallet.receive_date,
+                                       Pallet.received_by,
+                                       Pallet.received_by_name,
+                                       Pallet.supply_date,
+                                       Pallet.supplied_by,
+                                       Pallet.supplied_by_name,
+                                       Pallet.supply_comment,
                                    });
 
                 //var mstData = (from temp in _context.mst_material_plant select temp);
@@ -1736,6 +1747,13 @@ namespace SEMB_ERP.Controllers
                                        Pallet.pallet_no,
                                        Pallet.status_pallet,
                                        Pallet.record_date,
+                                       Pallet.receive_date,
+                                       Pallet.received_by,
+                                       Pallet.received_by_name,
+                                       Pallet.supply_date,
+                                       Pallet.supplied_by,
+                                       Pallet.supplied_by_name,
+                                       Pallet.supply_comment,
                                    });
 
                 //var mstData = (from temp in _context.mst_material_plant select temp);
@@ -1768,13 +1786,43 @@ namespace SEMB_ERP.Controllers
             return Content(Result, "text/plain");
         }
 
-        public IActionResult UpdateSupplied(string id_pallet, string sesa_id)
+        public IActionResult UpdateSupplied(string id_pallet, string sesa_id, string supplied_name)
         {
             var db = new DatabaseAccessLayer();
-            string Result = db.UpdateSupplied(id_pallet, sesa_id);
+            string Result = db.UpdateSupplied(id_pallet, sesa_id, supplied_name);
+
+            // Return the result directly
+            return Content(Result, "text/plain");
+        }
+
+        public IActionResult GetPalletDetail(string plt_id)
+        {
+            var db = new DatabaseAccessLayer();
+            List<PickBoxModel> ReqsList = db.GetPalletDetail(plt_id);
+            var result = ReqsList.Select(item => new
+            {
+                id_pick = item.id_pick,
+                id_request = item.id_request,
+                id_det = item.id_det,
+                box_id = item.box_id,
+                partno = item.partno,
+                qty = item.qty,
+                sbin = item.sbin,
+                picked_by = item.picked_by,
+                record_date = item.record_date
+            });
+
+            return Json(result);
+        }
+
+        public IActionResult close_non_conf(string id_non_conf, string sesa_id, string cls_comment)
+        {
+            var db = new DatabaseAccessLayer();
+            string Result = db.close_non_conf(id_non_conf, sesa_id, cls_comment);
 
             // Return the result directly
             return Content(Result, "text/plain");
         }
     }
 }
+    
