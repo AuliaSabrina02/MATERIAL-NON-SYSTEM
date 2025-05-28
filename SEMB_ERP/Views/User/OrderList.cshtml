@@ -574,9 +574,15 @@
                         $(rowNode).find('td').css("background-color", "#edfcf1")
                         $(rowNode).find('td:eq(0)').addClass(bg_color);
 
-                        $(rowNode).find('td:eq(5)').addClass("bg-warning");
-                        $(rowNode).find('td:eq(6)').addClass("bg-warning");
-                        $(rowNode).find('td:eq(7)').addClass("bg-warning");
+                        let avai_qty = $(rowNode).find('td:eq(7)').html();
+                        let bg_color_avai_qty = "bg-secondary";
+                        if(parseFloat(avai_qty)>0){
+                            bg_color_avai_qty = "bg-warning";
+                        }
+
+                        // $(rowNode).find('td:eq(5)').addClass("bg-warning");
+                        // $(rowNode).find('td:eq(6)').addClass("bg-warning");
+                        $(rowNode).find('td:eq(7)').addClass(bg_color_avai_qty);
 
                     });
                     // Initialize tooltips
