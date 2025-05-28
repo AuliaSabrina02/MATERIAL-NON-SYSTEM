@@ -221,7 +221,7 @@
                     {   "data": "pallet_no",
                         "className": "align-middle text-center",
                         "render": function(data, type, row){
-                            return `<span style="cursor: pointer;" onclick="show_detail(${row["id_pallet"]})">
+                            return `<span style="cursor: pointer;" onclick="show_detail(${row["id_pallet"]}, '${data}', '${row["status_pallet"]}', '${row["request_no"]}')">
                                         <b>${data}</b>
                                     </span>` ;
                         }
