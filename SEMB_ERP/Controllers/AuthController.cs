@@ -29,7 +29,7 @@ namespace SEMB_ERP.Controllers
             _configuration = configuration;
         }
         [HttpGet("Index")]
-        public async Task<IActionResult> Index(string originalPath = "/")
+        public async Task<IActionResult> Index(string originalPath = "/Home/Login")
         {
             string pathBase = HttpContext.Request.PathBase;
             if (originalPath == "/")
@@ -102,21 +102,22 @@ namespace SEMB_ERP.Controllers
                 else
                 {
                     claimsIdentity.AddClaim(new Claim("semb_erp_level", "no_access"));
+                    TempData["AccessDenied"] = "You dont have access";
+                    return RedirectToAction("Index", "Home");
                 }
             }
             else
             {
                 claimsIdentity.AddClaim(new Claim("semb_erp_level", "no_access"));
+
+                TempData["AccessDenied"] = "You dont have access";
+                return RedirectToAction("Index", "Home");
             }
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
-            return Redirect(originalPath);
+            //return Redirect(originalPath);
+            return RedirectToAction("Open", "Home");
         }
-        //[HttpGet("Login")]
-        //public IActionResult Login()
-        //{
-        //    return Challenge(new AuthenticationProperties { RedirectUri = Url.Action("GetUserProfile") });
-        //}
         public static void RemoveClaims(ClaimsPrincipal claimsPrincipal, string claimType, string claimValueToRemove)
         {
             if (claimsPrincipal == null) return;

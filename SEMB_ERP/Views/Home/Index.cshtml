@@ -50,7 +50,7 @@
                 <div class="col-md-6 mt-5">
                     <div class="">
                         <div class="text-success">
-                            <h1 style="font-size:50pt;"><i class="fas fa-chart-area"></i></h1>
+                            <h1 style="font-size:50pt;"><i class="fas fa-warehouse"></i></h1>
                         </div>
                         <h1 class="text-success"><b>SEMB Material Non System</b></h1>
                         <h5>Digital Transformation</h5>
@@ -65,15 +65,38 @@
                 <div class="col-md-4 ">
                     <div class="align-items-center">
                         <h4>Welcome,</h4>
-                        <h4>@name - @sesa_id</h4>
-                        @if (is_registered == 1)
+                        <h4>Please Login</h4>
+                        <p class="login-box-msg text-dark">@ViewData["Message"]</p>
+                        @using (Html.BeginForm("LoginManual", "Home", FormMethod.Post))
                         {
-                            @* <div class="row">
-                                <select class="form-control" name="level">
-                                    <option value="Requestor|Requestor">Requestor</option>
-                                    <option value="Finance|Finance">Finance</option>
-                                </select>
-                            </div> *@
+                            @Html.AntiForgeryToken()
+                            <p>SESA ID <span class="text-danger">*</span></p>
+                            <div class="input-group mb-3">
+                                @Html.EditorFor(model => model.sesa_id, new { htmlAttributes = new { @class = "form-control", Required = true } })
+
+                                <div class="input-group-append">
+                                    <span class="fa fa-user input-group-text bg-success"></span>
+                                </div>
+                            </div>
+                            <p>Password <span class="text-danger">*</span></p>
+                            <div class="input-group mb-3">
+                                @Html.EditorFor(model => model.password, new { htmlAttributes = new { @Type = "password", @class = "form-control", Required = true } })
+                                <div class="input-group-append">
+                                    <span class="input-group-text bg-success"><i class="fas fa-lock"></i></span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12 mt-3">
+                                    <button type="submit" name="submit" class="btn btn-success btn-block btn-flat rounded"><i class="fas fa-sign-in-alt"></i> Login</button>
+                                </div>
+
+
+                            </div>
+                        }
+                        @* <h4>Welcome,</h4>
+                        <h4>@name - @sesa_id</h4> *@
+                        @* @if (is_registered == 1)
+                        {
                             <div class="row">
                                 <div class="col-12 mt-3">
                                     <a type="submit" name="submit" class="btn btn-success btn-block btn-flat rounded" href="@Url.Action("Open")" @(is_registered == 0 ? "disabled" : "")><i class="fas fa-sign-in-alt"></i> SSO Login</a>
@@ -82,17 +105,35 @@
                         }
                         else
                         {
-                            @* <div class="row">
-                                <div class="col-12 mt-3">
-                                    <a type="submit" name="submit" class="btn btn-success btn-block btn-flat rounded" @(is_registered == 0 ? "disabled" : "")><i class="fas fa-sign-in-alt"></i> Login</a>
+                            <div class="row text-center">
+                                <div class="col-12 mt-3 ">
+                                    <div class="alert alert-danger">You don't have access,<br />Please contact admin for support.</div>
                                 </div>
-                            </div> *@
+                            </div>
+                        } *@
+                        @if (TempData["AccessDenied"] != null)
+                        {
                             <div class="row text-center">
                                 <div class="col-12 mt-3 ">
                                     <div class="alert alert-danger">You don't have access,<br />Please contact admin for support.</div>
                                 </div>
                             </div>
                         }
+                        else
+                        {
+                            <div class="row">
+                                <div class="col-12 mt-3">
+                                    <h6 class="text-center">- OR -</h6>
+                                    <a type="submit" name="submit" class="btn btn-info btn-block btn-flat rounded" href="@Url.Action("Login" , "Home")"><i class="fas fa-sign-in-alt"></i> SSO Login</a>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="row text-center">
+                            @* <div class="col-12 mt-3 ">
+                            <span>Don't have account ? </span><a class="text-success" href="#"> <b><u>Sign Up</u></b></a>
+                            </div>*@
+                        </div>
                     </div>
                 </div>
             </div>

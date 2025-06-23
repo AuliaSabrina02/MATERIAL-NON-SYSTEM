@@ -229,9 +229,10 @@
                                     sesa_id: sesa_id
                                 },
                                 success: function (response) {
+                                    let arr = response.split(";");
                                     // Optionally handle the response
                                     console.log(response);
-                                    if (response.trim() === "OK") {
+                                    if (arr[0] === "OK") {
                                         Swal.fire({
                                             icon: 'success',
                                             title: 'Success!',
@@ -240,11 +241,11 @@
                                         }).then(() => {
                                             $('#box_id_input').val(''); // Clear the input field
                                         });
-                                    } else if (response.trim() === "NOK") {
+                                    } else if (arr[0] === "NOK") {
                                         Swal.fire({
                                             icon: 'error',
                                             title: 'Error!',
-                                            text: 'No data found. Please try again.',
+                                            text: arr[1],
                                             confirmButtonText: 'OK'
                                         }).then(() => {
                                             $('#box_id_input').val(''); // Clear the input field

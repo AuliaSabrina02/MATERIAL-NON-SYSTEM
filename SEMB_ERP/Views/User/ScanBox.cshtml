@@ -483,6 +483,14 @@
         })
 
         function print_label(print, box_id) {
+            // let url_print = "http://10.155.129.223/wh_trans/Printlabel_project_box_closetab_Webservices.aspx?print=" + print + "&box_id=" + box_id;
+            // window.open(url_print, '_blank');
+            // setTimeout(function () {
+            //     swal.fire("Done!", "Kitting Success!<br>Label printed to printer " + print, "success").then(function () {
+            //         location.reload();
+            //     })
+            // }, 2000)
+
             $.ajax({
                 type: "GET",
                 url: "https://warehouse.semb.se.com/wh_trans/Printlabel_project_box_Webservices.aspx",

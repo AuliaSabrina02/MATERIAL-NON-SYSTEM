@@ -13,6 +13,9 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using SEMB_ERP.Models;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +51,9 @@ builder.Services.AddAuthentication(options =>
 .AddCookie(
     options =>
     {
+        options.AccessDeniedPath = "/AccessDenied"; // All 403s go here
+        //options.LoginPath = "/Account/Login"; // Specify the login page path
+        //options.AccessDeniedPath = "/Account/AccessDenied"; // Optional: Specify the access denied page
         options.Cookie.Name = "ping";
         options.Cookie.Path = "/"; // Make cookie accessible for all paths
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Use Always in production
@@ -87,6 +93,32 @@ builder.Services.AddAuthentication(options =>
         },
         OnRedirectToIdentityProvider = context =>
         {
+            //if (context.Response.StatusCode == StatusCodes.Status401Unauthorized || !context.HttpContext.User.Identity.IsAuthenticated)
+            //{
+            //    // Redirect to the custom login page instead of Ping SSO
+            //    context.Response.Redirect("/Account/Login");
+            //    context.HandleResponse(); // Prevent the default redirection to Ping SSO
+            //    return Task.CompletedTask;
+            //}
+            if (context.Response.StatusCode == StatusCodes.Status401Unauthorized || (!context.HttpContext.User.Identity.IsAuthenticated && context.HttpContext.Request.Path != "/Home/Login"))
+            {
+                var actionContext = new ActionContext(
+                    context.HttpContext,
+                    new RouteData(),
+                    new ActionDescriptor()
+                );
+
+                // Use the UrlHelperFactory to create a UrlHelper
+                var urlHelperFactory = context.HttpContext.RequestServices.GetRequiredService<IUrlHelperFactory>();
+                var urlHelper = urlHelperFactory.GetUrlHelper(actionContext);
+
+                // Generate the URL to the Login action in the Account controller
+                var redirectToUrl = urlHelper.Action("Index", "Home");
+
+                context.Response.Redirect(redirectToUrl);
+                context.HandleResponse(); // Prevent the default redirection to Ping SSO
+                return Task.CompletedTask;
+            }
             var request = context.HttpContext.Request;
             var scheme = request.Scheme; // HTTP or HTTPS
             var host = request.Host.Value; // domain and port
@@ -163,14 +195,30 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("RequireRequestor", policy => policy.RequireClaim("semb_erp_role", "requestor"));
+    options.AddPolicy("RequireReceiver", policy => policy.RequireClaim("semb_erp_role", "receiver"));
+    options.AddPolicy("RequirePlantreceiver", policy => policy.RequireClaim("semb_erp_role", "plant_receiver"));
+    options.AddPolicy("RequireAdmin", policy => policy.RequireClaim("semb_erp_role", "admin"));
 
-    options.AddPolicy("RequireFinanceApprover", policy => policy.RequireAssertion(context => context.User.HasClaim("semb_erp_level", "finance") || context.User.HasClaim("semb_erp_level", "approver")));
-    options.AddPolicy("RequireAny", policy => policy.RequireAssertion(context =>
-                    context.User.HasClaim("semb_erp_level", "requestor") ||
-                    context.User.HasClaim("semb_erp_level", "approver") ||
-                    context.User.HasClaim("semb_erp_level", "security") ||
-                    context.User.HasClaim("semb_erp_level", "admin") ||
-                    context.User.HasClaim("semb_erp_level", "finance")));
+    options.AddPolicy("RequireRequestorReceiver", policy => policy.RequireClaim("semb_erp_role", "requestor", "receiver"));
+    options.AddPolicy("RequireRequestorReceiverPlantreceiver", policy => policy.RequireClaim("semb_erp_role", "requestor", "receiver", "plant_receiver"));
+    options.AddPolicy("RequireRequestorReceiverAdmin", policy => policy.RequireClaim("semb_erp_role", "requestor", "receiver", "admin"));
+    options.AddPolicy("RequireRequestorPlantreceiver", policy => policy.RequireClaim("semb_erp_role", "requestor", "plant_receiver"));
+    options.AddPolicy("RequireRequestorPlantreceiverAdmin", policy => policy.RequireClaim("semb_erp_role", "requestor", "plant_receiver", "admin"));
+    options.AddPolicy("RequireRequestorAdmin", policy => policy.RequireClaim("semb_erp_role", "requestor", "admin"));
+
+    options.AddPolicy("RequireReceiverPlantreceiver", policy => policy.RequireClaim("semb_erp_role", "receiver", "plant_receiver"));
+    options.AddPolicy("RequireReceiverPlantreceiverAdmin", policy => policy.RequireClaim("semb_erp_role", "receiver", "plant_receiver", "admin"));
+    options.AddPolicy("RequireReceiverAdmin", policy => policy.RequireClaim("semb_erp_role", "receiver", "admin"));
+
+    options.AddPolicy("RequirePlantreceiverAdmin", policy => policy.RequireClaim("semb_erp_role", "plant_receiver", "admin"));
+
+    //options.AddPolicy("RequireRequestorReceiver", policy =>
+    //    policy.RequireClaim("semb_erp_role", "requestor", "receiver"));
+    //options.AddPolicy("RequireRequestorPlantreceiver", policy =>
+    //    policy.RequireClaim("semb_erp_role", "requestor", "plant_receiver"));
+
+    options.AddPolicy("RequireAny", policy =>
+        policy.RequireClaim("semb_erp_role", "requestor", "receiver","plant_receiver","admin"));
 });
 // END OPENID CONNECT
 

@@ -63,6 +63,17 @@
                     <h3><b>SEMB Material Non System</b></h3>
                 </li>
             </ul>
+
+            <ul class="navbar-nav ml-auto">
+                <div class="dropdown" style="flex-shrink: 0;">
+                    <button class="btn btn-sm btn-warning dropdown-toggle" type="button" id="wiDropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-file-pdf"></i> Work Instructions
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="wiDropdownMenuButton">
+                        <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Requestor.pdf">JBS Non System Apps - Section Requestor</a></li>
+                    </ul>
+                </div>
+            </ul>
             @*<ul class="navbar-nav ml-auto">
             <li class="nav-item dropdown dropstart">
             <a class="nav-link" data-bs-toggle="dropdown" href="#" aria-expanded="false">
@@ -99,152 +110,188 @@
                     </div>
                     <div class="info">
                         <a class="d-block">@name</a>
-                        <span style="color:white">@sesa_id</span>
+                        <span style="color:black">@sesa_id</span>
                     </div>
                 </div>
                 <nav class="mt-3">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
                         @if (user_level == "user")
                         {
-                            <li class="nav-item">
-                                <a href="@Url.Action("AddNewOrder", "User")" class="nav-link @Html.IsActive("User","AddNewOrder")">
-                                    <i class="nav-icon fas fa-plus"></i>
-                                    <p>
-                                        Add New Request
-                                    </p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="@Url.Action("OrderList", "User")" class="nav-link @Html.IsActive("User","OrderList")">
-                                    <i class="nav-icon fas fa-table"></i>
-                                    <p>
-                                        Request List
-                                    </p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="@Url.Action("AddNonConformity", "User")" class="nav-link @Html.IsActive("User","AddNonConformity")">
-                                    <i class="nav-icon fas fa-exclamation"></i>
-                                    <p>
-                                        Add Non Conformity
-                                    </p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="@Url.Action("NonConfList", "User")" class="nav-link @Html.IsActive("User","NonConfList")">
-                                    <i class="nav-icon fas fa-table"></i>
-                                    <p>
-                                        Non Conformity List
-                                    </p>
-                                </a>
-                            </li>
-                            string checkMenuMasterData = Html.IsMenuopen("User", "MasterBin");
-                            string checkActiveMasterData = Html.IsActive("User", "MasterBin");
-                            <li class="nav-item has-treeview @checkMenuMasterData">
-                                <a href="#" class="nav-link @checkActiveMasterData">
-                                    <i class="nav-icon fas fa-database"></i>
-                                    <p>
-                                        Master Data
-                                        <i class="right fas fa-angle-left"></i>
-                                    </p>
-                                </a>
-                                <ul class="nav nav-treeview ml-1">
-                                    <li class="nav-item">
-                                        <a href="@Url.Action("MasterBin", "User")" class="nav-link @Html.IsActive("User","MasterBin")">
-                                            <i class="nav-icon fas fa-box-open"></i>
-                                            <p>Master Bin</p>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                            <li class="nav-item">
-                                <a href="@Url.Action("Putaway", "User")" class="nav-link @Html.IsActive("User","Putaway")">
-                                    <i class="nav-icon fas fa-boxes"></i>
-                                    <p>
-                                        Putaway
-                                    </p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="@Url.Action("RequestList", "User")" class="nav-link @Html.IsActive("User","RequestList")">
-                                    <i class="nav-icon fas fa-list"></i>
-                                    <p>
-                                        Picking List
-                                    </p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="@Url.Action("RequestDetail", "User")" class="nav-link @Html.IsActive("User","RequestDetail")">
-                                    <i class="nav-icon fas fa-list"></i>
-                                    <p>
-                                        Picking Detail
-                                    </p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="@Url.Action("RequestMonitoring", "User")" class="nav-link @Html.IsActive("User","RequestMonitoring")">
-                                    <i class="nav-icon fas fa-eye"></i>
-                                    <p>
-                                        Request Monitoring
-                                    </p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="@Url.Action("BlockBin", "User")" class="nav-link @Html.IsActive("User","BlockBin")">
-                                    <i class="nav-icon fas fa-lock"></i>
-                                    <p>
-                                        Block Bin
-                                    </p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="@Url.Action("VarianceHistory", "User")" class="nav-link @Html.IsActive("User","VarianceHistory")">
-                                    <i class="nav-icon fas fa-history"></i>
-                                    <p>
-                                        Variance History
-                                    </p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="@Url.Action("Picking", "User")" class="nav-link @Html.IsActive("User","Picking") @Html.IsActive("User","PickingMaterial") @Html.IsActive("User","ScanBin") @Html.IsActive("User","ScanBox")">
-                                    <i class="nav-icon fas fa-pallet"></i>
-                                    <p>
-                                        Start Picking
-                                    </p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="@Url.Action("Consolidation", "User")" class="nav-link @Html.IsActive("User","Consolidation")">
-                                    <i class="nav-icon fas fa-pallet"></i>
-                                    <p>
-                                        Consolidation
-                                    </p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="@Url.Action("Transfer", "User")" class="nav-link @Html.IsActive("User","Transfer")">
-                                    <i class="nav-icon fas fa-truck"></i>
-                                    <p>
-                                        Transfer
-                                    </p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="@Url.Action("PalletTransferOpen", "User")" class="nav-link @Html.IsActive("User","PalletTransferOpen")">
-                                    <i class="nav-icon fas fa-pallet"></i>
-                                    <p>
-                                        Pallet Transfer - Open
-                                    </p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="@Url.Action("PalletTransferHistory", "User")" class="nav-link @Html.IsActive("User","PalletTransferHistory")">
-                                    <i class="nav-icon fas fa-pallet"></i>
-                                    <p>
-                                        Pallet Transfer - History
-                                    </p>
-                                </a>
-                            </li>
+                            if (user_roles.HasAnyRole("requestor","admin"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("AddNewOrder", "User")" class="nav-link @Html.IsActive("User","AddNewOrder")">
+                                        <i class="nav-icon fas fa-plus"></i>
+                                        <p>
+                                            Add New Request
+                                        </p>
+                                    </a>
+                                </li>
+                            }
+                            if (user_roles.HasAnyRole("requestor", "receiver", "admin"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("OrderList", "User")" class="nav-link @Html.IsActive("User","OrderList")">
+                                        <i class="nav-icon fas fa-table"></i>
+                                        <p>
+                                            Request List
+                                        </p>
+                                    </a>
+                                </li>
+                            }
+                            if (user_roles.HasAnyRole("receiver"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("AddNonConformity", "User")" class="nav-link @Html.IsActive("User","AddNonConformity")">
+                                        <i class="nav-icon fas fa-exclamation"></i>
+                                        <p>
+                                            Add Non Conformity
+                                        </p>
+                                    </a>
+                                </li>
+                            }
+                            if (user_roles.HasAnyRole("requestor", "receiver", "admin"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("NonConfList", "User")" class="nav-link @Html.IsActive("User","NonConfList")">
+                                        <i class="nav-icon fas fa-table"></i>
+                                        <p>
+                                            Non Conformity List
+                                        </p>
+                                    </a>
+                                </li>
+                            }
+                            if (user_roles.HasAnyRole("receiver", "admin"))
+                            {
+                                string checkMenuMasterData = Html.IsMenuopen("User", "MasterBin");
+                                string checkActiveMasterData = Html.IsActive("User", "MasterBin");
+                                <li class="nav-item has-treeview @checkMenuMasterData">
+                                    <a href="#" class="nav-link @checkActiveMasterData">
+                                        <i class="nav-icon fas fa-database"></i>
+                                        <p>
+                                            Master Data
+                                            <i class="right fas fa-angle-left"></i>
+                                        </p>
+                                    </a>
+                                    <ul class="nav nav-treeview ml-1">
+                                        <li class="nav-item">
+                                            <a href="@Url.Action("MasterBin", "User")" class="nav-link @Html.IsActive("User","MasterBin")">
+                                                <i class="nav-icon fas fa-box-open"></i>
+                                                <p>Master Bin</p>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            }
+                            if (user_roles.HasAnyRole("receiver"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("Putaway", "User")" class="nav-link @Html.IsActive("User","Putaway")">
+                                        <i class="nav-icon fas fa-boxes"></i>
+                                        <p>
+                                            Putaway
+                                        </p>
+                                    </a>
+                                </li>
+                            }
+                            if (user_roles.HasAnyRole("requestor", "receiver", "admin"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("RequestList", "User")" class="nav-link @Html.IsActive("User","RequestList")">
+                                        <i class="nav-icon fas fa-list"></i>
+                                        <p>
+                                            Picking List
+                                        </p>
+                                    </a>
+                                </li>
+                            }
+                            if (user_roles.HasAnyRole("receiver","admin"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("RequestDetail", "User")" class="nav-link @Html.IsActive("User","RequestDetail")">
+                                        <i class="nav-icon fas fa-list"></i>
+                                        <p>
+                                            Picking Detail
+                                        </p>
+                                    </a>
+                                </li>
+                            }
+                            if (user_roles.HasAnyRole("requestor", "receiver", "plant_receiver", "admin"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("RequestMonitoring", "User")" class="nav-link @Html.IsActive("User","RequestMonitoring")">
+                                        <i class="nav-icon fas fa-eye"></i>
+                                        <p>
+                                            Request Monitoring
+                                        </p>
+                                    </a>
+                                </li>
+                            }
+                            if (user_roles.HasAnyRole("receiver", "admin"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("BlockBin", "User")" class="nav-link @Html.IsActive("User","BlockBin")">
+                                        <i class="nav-icon fas fa-lock"></i>
+                                        <p>
+                                            Block Bin
+                                        </p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="@Url.Action("VarianceHistory", "User")" class="nav-link @Html.IsActive("User","VarianceHistory")">
+                                        <i class="nav-icon fas fa-history"></i>
+                                        <p>
+                                            Variance History
+                                        </p>
+                                    </a>
+                                </li>
+                            }
+                            if (user_roles.HasAnyRole("receiver"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("Picking", "User")" class="nav-link @Html.IsActive("User","Picking") @Html.IsActive("User","PickingMaterial") @Html.IsActive("User","ScanBin") @Html.IsActive("User","ScanBox")">
+                                        <i class="nav-icon fas fa-pallet"></i>
+                                        <p>
+                                            Start Picking
+                                        </p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="@Url.Action("Consolidation", "User")" class="nav-link @Html.IsActive("User","Consolidation")">
+                                        <i class="nav-icon fas fa-pallet"></i>
+                                        <p>
+                                            Consolidation
+                                        </p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="@Url.Action("Transfer", "User")" class="nav-link @Html.IsActive("User","Transfer")">
+                                        <i class="nav-icon fas fa-truck"></i>
+                                        <p>
+                                            Transfer
+                                        </p>
+                                    </a>
+                                </li>
+                            }
+                            if (user_roles.HasAnyRole("receiver", "plant_receiver", "admin"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("PalletTransferOpen", "User")" class="nav-link @Html.IsActive("User","PalletTransferOpen")">
+                                        <i class="nav-icon fas fa-pallet"></i>
+                                        <p>
+                                            Pallet Transfer - Open
+                                        </p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="@Url.Action("PalletTransferHistory", "User")" class="nav-link @Html.IsActive("User","PalletTransferHistory")">
+                                        <i class="nav-icon fas fa-pallet"></i>
+                                        <p>
+                                            Pallet Transfer - History
+                                        </p>
+                                    </a>
+                                </li>
+                            }
                         }
 
                         <li class="nav-item ">

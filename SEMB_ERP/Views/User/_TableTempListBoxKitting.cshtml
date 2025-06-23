@@ -1,0 +1,166 @@
+﻿@model List<BoxModel>
+@{
+    decimal total_qty = ViewBag.total_qty;
+    string box_id = ViewBag.box_id;
+    int no = 0;
+    List<string> listPrinter = ViewBag.listPrinter;
+}
+
+<table class="table table-bordered table-sm text-center">
+    <thead class="bg-secondary">
+        <tr>
+            <th>Box.</th>
+            <th>Qty</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(var box in Model)
+        {
+            <tr>
+                <td>@box.BoxId</td>
+                <td>
+                    <input class="form-control form-control-sm" type="number" step="0" min="0" name="qty_perbox[]" value="@box.Qty" />
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<div class="form-group text-center">
+    <button type="submit" class="btn btn-success mt-2" name="btn_submit_kitting"><i class="fa fa-arrow-right"></i> Submit</button>
+</div>
+
+<script>
+    $(document).ready(function () {
+        let box_id_kitting = "@box_id";
+        let total_qty = @total_qty;
+        var list_printers_kitting = @Html.Raw(Json.Serialize(listPrinter));
+        const printInputOptionsKitting = list_printers.reduce((acc, text) => {
+            acc[text] = text;
+            return acc;
+        }, {});
+        $("button[name=btn_submit_kitting]").click(function () {
+            let arr_qty = [];
+            let total_qty_kitting = 0;
+            $('input[name^="qty_perbox"]').each(function (i) {
+                arr_qty.push($(this).val());
+                total_qty_kitting = total_qty_kitting + parseFloat($(this).val());
+            });
+            // total1 = total1.toFixed(2);
+            // total2 = total2.toFixed(2);
+            if (parseInt(total_qty) != parseInt(total_qty_kitting)) {
+                swal.fire("Error!", "Jumlah Qty tidak sama! " + total_qty + "|" + total_qty_kitting, "error");
+            }
+            else {
+                // Swal.fire({
+                //     title: 'Confirm ?',
+                //     text: "Are you sure ?",
+                //     icon: 'warning',
+                //     showCancelButton: true,
+                //     confirmButtonColor: '#28a745',
+                //     cancelButtonColor: '#dc3545',
+                //     confirmButtonText: 'Yes!',
+                //     cancelButtonText: 'No!',
+                //     showLoaderOnConfirm: true,
+                //     preConfirm: function () {
+                //         return new Promise(function (resolve, reject) {
+                //             $.ajax({
+                //                 type: "POST",
+                //                 url: "@Url.Action("CreateBoxKitting")",
+                //                 data: {
+                //                     box_id: box_id_kitting,
+                //                     qtys: arr_qty.join(";")
+                //                 }
+                //             }).done(function (res) {
+
+                //             }).fail(function(err){
+                //                 swal.fire("Error!", "Page Error => " + err, "error");
+                //             })
+                //         })
+                //     },
+                //     allowOutsideClick: () => !Swal.isLoading()
+                // })
+
+                Swal.fire({
+                    title: 'Confirm',
+                    input: 'select',
+                    inputOptions: printInputOptionsKitting,
+                    text: 'Are you sure ?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes!'
+                }).then((result) => {
+                    if (result.value) {
+                        var printer = result.value;
+                        // console.log(printer);
+                        if (printer == '0') {
+                            swal.fire("Failed!", "Pilih printer terlebih dahulu!", "warning");
+                            // alert("pilih printer")
+                        }
+                        else {
+                            showLoadingSpinner("Printing...");
+
+                            $.ajax({
+                                type: "POST",
+                                url: "@Url.Action("CreateBoxKitting")",
+                                data: {
+                                    box_id: box_id_kitting,
+                                    qtys: arr_qty.join(";")
+                                }
+                            }).done(function (res) {
+                                let arr = res.split("|");
+                                if (arr[0] == "OK") {
+                                    // let url_print = "http://10.155.129.223/wh_trans/Printlabel_project_box_closetab_Webservices.aspx?print=" + printer + "&box_id=" + arr[1];
+                                    // window.open(url_print, '_blank');
+                                    // setTimeout(function () {
+                                    //     let id_order = $("#modal_box_info").data("orderId");
+                                    //     // console.log(id_order);
+                                    //     swal.fire("OK", "Print Succesfully!", "success").then(function () {
+                                    //         box_list(id_order)
+
+                                    //         $("div#modal_box_kitting").modal("hide");
+                                    //     })
+                                    // },2000)
+                                    $.ajax({
+                                        type: "GET",
+                                        url: "https://warehouse.semb.se.com/wh_trans/Printlabel_project_box_Webservices.aspx",
+                                        data: {
+                                            print: printer,
+                                            box_id: arr[1]
+                                        }
+                                    }).done(function (res) {
+                                        let arr = res.split(";");
+                                        if (arr[0] == "OK") {
+                                            let id_order = $("#modal_box_info").data("orderId");
+                                            console.log(id_order);
+                                            swal.fire("OK", "Print Succesfully!", "success").then(function () {
+                                                // $("#modal_box_info").modal('hide');
+                                                // $("#modal_box_info").data("orderId", id_order);
+                                                // $("#modal_box_info").modal('show');
+                                                box_list(id_order)
+
+                                                $("div#modal_box_kitting").modal("hide");
+                                            })
+                                        }
+                                        else {
+                                            swal.fire("Error", res, "error");
+                                        }
+                                    }).fail(function (err) {
+                                        swal.fire("Page Error", err, "error");
+                                    })
+                                }
+                                else {
+                                    swal.fire("Error", "Error=>" + res, "error");
+                                }
+                            }).fail(function (err) {
+                                swal.fire("Error!", "Page Error => " + err, "error");
+                            })
+                        }
+                        // $("#loading_modal").modal('show');
+                    }
+                })
+            }
+        })
+    });
+</script>

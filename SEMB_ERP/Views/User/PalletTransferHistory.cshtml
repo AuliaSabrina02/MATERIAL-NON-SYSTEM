@@ -121,9 +121,9 @@
                                             <th width="15%">Req. No</th>
                                             <th width="10%">Status</th>
                                             <th width="15%">Receive Date</th>
-                                            <th width="15%">Receive By</th>
+                                            <th width="15%">Received By</th>
                                             <th width="15%">Supply Date</th>
-                                            <th width="15%">Supplied By</th>
+                                            <th width="15%">Supplied to</th>
                                         </tr>
                                         @* <tr>
                                             <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="0" /></td>
@@ -231,7 +231,7 @@
                     { "data": "receive_date", "className": "align-middle text-center"},
                     { "data": "received_by_name", "className": "align-middle text-center"},
                     { "data": "supply_date", "className": "align-middle text-center"},
-                    { "data": "supplied_by_name", "className": "align-middle text-center"},
+                    { "data": "supply_comment", "className": "align-middle text-center" },
                 ],
                 "drawCallback": function (settings) {
                     // Set the background color for the second column (index 1)

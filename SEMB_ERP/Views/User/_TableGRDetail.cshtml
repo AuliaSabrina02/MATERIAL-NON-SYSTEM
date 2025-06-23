@@ -70,26 +70,36 @@
     $(document).ready(function () {
         $("button[name=print_label]").click(function(){
             let id_gr = $("input[name=id_gr]").val();
-            let printer_name = $("input[name=printer_name]").val();
+            let printer_name = $("select[name=printer_name]").val();
             if(printer_name==""){
                 swal.fire("Error","Please select printer!!","error");
             }
-            else{
-                $.ajax({
-                    type: "POST",
-                    url: "https://warehouse.semb.se.com/wh_trans/Printlabel_project_box_gr_Webservices.aspx",
-                    data: {
-                        print: printer_name,
-                        id_gr: id_gr
-                    }
-                }).done(function(res){
-                    let arr = res.split(";");
-                    if(arr[0]=="OK"){
-                        swal.fire("OK","Print Succesfully!","success");
-                    }
-                }).fail(function(err){
-                    swal.fire("Error",err,"error");
-                })
+            else {
+                let url_print = "http://10.155.129.223/wh_trans/Printlabel_project_box_gr_closetab_Webservices.aspx?print=" + printer_name + "&id_gr=" + id_gr;
+                window.open(url_print, '_blank');
+                setTimeout(function () {
+                    swal.fire("OK","Print Succesfully!","success");
+                    location.reload();
+                }, 2000)
+                // $.ajax({
+                //     type: "GET",
+                //     url: "https://warehouse.semb.se.com/wh_trans/Printlabel_project_box_gr_Webservices.aspx",
+                //     data: {
+                //         print: printer_name,
+                //         id_gr: id_gr
+                //     }
+                // }).done(function(res){
+                //     let arr = res.split(";");
+                //     if(arr[0]=="OK"){
+                //         swal.fire("OK","Print Succesfully!","success");
+                //         location.reload();
+                //     }
+                //     else {
+                //         swal.fire("Error", res, "error");
+                //     }
+                // }).fail(function(err){
+                //     swal.fire("Page Error",err+ "<br>Printer Name => "+printer_name+"<br>ID GR => "+id_gr,"error");
+                // })
             }
         })
     })

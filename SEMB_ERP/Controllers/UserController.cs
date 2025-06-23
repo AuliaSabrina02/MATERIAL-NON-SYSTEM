@@ -186,7 +186,7 @@ namespace SEMB_ERP.Controllers
             }
         }
 
-        [Authorize(Policy = "RequireRequestor")]
+        [Authorize(Policy = "RequireAny")]
         public IActionResult OrderList()
         {
             return this.CheckSession(() =>
@@ -200,11 +200,13 @@ namespace SEMB_ERP.Controllers
                 var db = new DatabaseAccessLayer();
                 List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
                 List<string> listStatus = db.GetStatus();
+                List<string> listPrinter = db.GetPrinter();
                 string name = User.FindFirst("semb_erp_name")?.Value;
                 ViewBag.name = name;
                 ViewBag.sesa_id = sesa_id;
                 ViewBag.listStatus = listStatus;
                 ViewBag.userRoles = userRoles;
+                ViewBag.listPrinter = listPrinter;
                 return View(userDetail);
             });
         }
@@ -212,6 +214,15 @@ namespace SEMB_ERP.Controllers
         {
             try
             {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> user_roles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                var user = userDetail.First();
+
                 var draw = Request.Form["draw"].FirstOrDefault();
                 var start = Request.Form["start"].FirstOrDefault();
                 var length = Request.Form["length"].FirstOrDefault();
@@ -225,7 +236,11 @@ namespace SEMB_ERP.Controllers
                 int pageSize = length != null ? Convert.ToInt32(length) : 0;
                 int skip = start != null ? Convert.ToInt32(start) : 0;
                 int recordsTotal = 0;
+
+                var departments = user.other_dept.Split(',').Select(d => d.Trim()).ToList();
+
                 var mstData = (from OrderList in _context.v_order
+                               where user_roles.Contains("receiver") || user_roles.Contains("admin") || (user_roles.Contains("requestor") && departments.Contains(OrderList.pic_department))
                                select
                                    new
                                    {
@@ -251,6 +266,7 @@ namespace SEMB_ERP.Controllers
                                        OrderList.status_code,
                                        OrderList.status_desc,
                                        OrderList.pic_name,
+                                       OrderList.pic_department,
                                        OrderList.remark
                                    });
 
@@ -392,7 +408,7 @@ namespace SEMB_ERP.Controllers
                 return PartialView("_TableGRDetail", dataGR);
             }
         }
-        [Authorize(Policy = "RequireRequestor")]
+        [Authorize(Policy = "RequireReceiver")]
         public IActionResult AddNonConformity()
         {
             return this.CheckSession(() =>
@@ -451,11 +467,16 @@ namespace SEMB_ERP.Controllers
                 string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 string name = User.FindFirst("semb_erp_name")?.Value;
                 string plant = db.GetUserPlant(sesa_id);
+                List<string> userRoles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
                 List<string> catList = db.GET_CAT_NON_CONF();
                 ViewBag.catList = catList;
                 ViewBag.name = name;
                 ViewBag.sesa_id = sesa_id;
                 ViewBag.plant = plant;
+                ViewBag.userRoles = userRoles;
                 return View();
             });
         }
@@ -464,6 +485,15 @@ namespace SEMB_ERP.Controllers
         {
             try
             {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> user_roles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                var user = userDetail.First();
+
                 var draw = Request.Form["draw"].FirstOrDefault();
                 var start = Request.Form["start"].FirstOrDefault();
                 var length = Request.Form["length"].FirstOrDefault();
@@ -478,6 +508,7 @@ namespace SEMB_ERP.Controllers
                 int skip = start != null ? Convert.ToInt32(start) : 0;
                 int recordsTotal = 0;
                 var mstData = (from NonConfList in _context.V_NON_CONF
+                               where NonConfList.pic==sesa_id
                                select
                                    new
                                    {
@@ -493,7 +524,6 @@ namespace SEMB_ERP.Controllers
                                        NonConfList.detail_issue,
                                        NonConfList.file_doc,
                                        NonConfList.created_by,
-                                       NonConfList.is_close,
                                        NonConfList.close_date,
                                        NonConfList.closed_by,
                                        NonConfList.close_comment
@@ -605,7 +635,7 @@ namespace SEMB_ERP.Controllers
             }
         }
 
-        [Authorize(Policy = "RequireRequestor")]
+        [Authorize(Policy = "RequireReceiver")]
         public IActionResult Putaway()
         {
             return this.CheckSession(() =>
@@ -633,7 +663,7 @@ namespace SEMB_ERP.Controllers
             //return Json(new { status = "OK" });
         }
 
-        [Authorize(Policy = "RequireRequestor")]
+        [Authorize(Policy = "RequireReceiver")]
         public IActionResult BinMaterial(string binId) //add string erpId
         {
             var referrer = Request.Headers["Referer"].ToString();
@@ -785,7 +815,7 @@ namespace SEMB_ERP.Controllers
             string submit = db.SubmitReqPicking(remark ?? "", sesa_id);
             return Content(submit, "text/plain");
         }
-        [Authorize(Policy = "RequireRequestor")]
+        [Authorize(Policy = "RequireRequestorReceiverAdmin")]
         public IActionResult RequestList()
         {
             return this.CheckSession(() =>
@@ -833,6 +863,15 @@ namespace SEMB_ERP.Controllers
         {
             try
             {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> user_roles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                var user = userDetail.First();
+
                 var draw = Request.Form["draw"].FirstOrDefault();
                 var start = Request.Form["start"].FirstOrDefault();
                 var length = Request.Form["length"].FirstOrDefault();
@@ -847,6 +886,7 @@ namespace SEMB_ERP.Controllers
                 int skip = start != null ? Convert.ToInt32(start) : 0;
                 int recordsTotal = 0;
                 var mstData = (from RequestList in _context.v_request
+                               where RequestList.requested_by==sesa_id || user_roles.HasAnyRole("admin","receiver")
                                select
                                    new
                                    {
@@ -913,7 +953,7 @@ namespace SEMB_ERP.Controllers
 
             return PartialView("_TableRequestDetail", dataList);
         }
-        [Authorize(Policy = "RequireRequestor")]
+        [Authorize(Policy = "RequireReceiverAdmin")]
         public IActionResult BlockBin()
         {
             return this.CheckSession(() =>
@@ -980,7 +1020,7 @@ namespace SEMB_ERP.Controllers
                 throw;
             }
         }
-        [Authorize(Policy = "RequireRequestor")]
+        [Authorize(Policy = "RequireReceiverAdmin")]
         public IActionResult VarianceHistory()
         {
             return this.CheckSession(() =>
@@ -1060,7 +1100,7 @@ namespace SEMB_ERP.Controllers
             string open = db.OpenBlockBin(partno, sbin, sesa_id);
             return Content(open, "text/plain");
         }
-        [Authorize(Policy = "RequireRequestor")]
+        [Authorize(Policy = "RequireReceiver")]
         public IActionResult Picking()
         {
             return this.CheckSession(() =>
@@ -1089,7 +1129,7 @@ namespace SEMB_ERP.Controllers
             string submit = db.StartPicking(id_request, sesa_id);
             return Content(submit, "text/plain");
         }
-        [Authorize(Policy = "RequireRequestor")]
+        [Authorize(Policy = "RequireReceiver")]
         public IActionResult PickingMaterial(int id_request)
         {
             string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -1109,7 +1149,7 @@ namespace SEMB_ERP.Controllers
             ViewBag.userRoles = userRoles;
             return View(reqList);
         }
-        [Authorize(Policy = "RequireRequestor")]
+        [Authorize(Policy = "RequireReceiver")]
         public IActionResult ScanBin(int id_request, int id_det)
         {
             string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -1138,7 +1178,7 @@ namespace SEMB_ERP.Controllers
             string delTemp = db.DeleteTempBox(sesa_id);
             return Content(delTemp, "text/plain");
         }
-        [Authorize(Policy = "RequireRequestor")]
+        [Authorize(Policy = "RequireReceiver")]
         public IActionResult ScanBox(int id_request, int id_det, string sbin)
         {
             string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -1213,7 +1253,7 @@ namespace SEMB_ERP.Controllers
             string variance = db.VariancePicking(id_request, id_det, sbin, sesa_id);
             return Content(variance, "text/plain");
         }
-        [Authorize(Policy = "RequireRequestor")]
+        [Authorize(Policy = "RequireReceiverAdmin")]
         public IActionResult MasterBin()
         {
             return this.CheckSession(() =>
@@ -1287,7 +1327,7 @@ namespace SEMB_ERP.Controllers
             // Return the result directly
             return Content(addResult, "text/plain");
         }
-        [Authorize(Policy = "RequireRequestor")]
+        [Authorize(Policy = "RequireReceiverAdmin")]
         public IActionResult RequestDetail()
         {
             return this.CheckSession(() =>
@@ -1311,6 +1351,15 @@ namespace SEMB_ERP.Controllers
         {
             try
             {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> user_roles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                var user = userDetail.First();
+
                 var draw = Request.Form["draw"].FirstOrDefault();
                 var start = Request.Form["start"].FirstOrDefault();
                 var length = Request.Form["length"].FirstOrDefault();
@@ -1369,7 +1418,7 @@ namespace SEMB_ERP.Controllers
 
             return Content(upd, "text/plain");
         }
-        [Authorize(Policy = "RequireRequestor")]
+        [Authorize(Policy = "RequireReceiver")]
         public IActionResult Consolidation()
         {
             return this.CheckSession(() =>
@@ -1398,7 +1447,7 @@ namespace SEMB_ERP.Controllers
             string submit = db.StartConsol(id_request, sesa_id);
             return Content(submit, "text/plain");
         }
-        [Authorize(Policy = "RequireRequestor")]
+        [Authorize(Policy = "RequireReceiver")]
         public IActionResult ConsolScanBox(int id_request)
         {
             string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -1450,7 +1499,7 @@ namespace SEMB_ERP.Controllers
                 Qty = item.Qty,
                 Sbin = item.Sbin,
                 Unit = item.Unit,
-                Pstats = item.Pstats,
+                Pstats = item.Pstats
             });
 
             return Json(result);
@@ -1537,7 +1586,7 @@ namespace SEMB_ERP.Controllers
                 throw;
             }
         }
-        [Authorize(Policy = "RequireRequestor")]
+        [Authorize(Policy = "RequireReceiver")]
         public IActionResult Transfer()
         {
             return this.CheckSession(() =>
@@ -1613,6 +1662,7 @@ namespace SEMB_ERP.Controllers
             return Json(result);
         }
 
+        [Authorize(Policy = "RequireReceiverPlantreceiverAdmin")]
         public IActionResult PalletTransferOpen()
         {
             return this.CheckSession(() =>
@@ -1635,6 +1685,7 @@ namespace SEMB_ERP.Controllers
             });
         }
 
+        [Authorize(Policy = "RequireReceiverPlantreceiverAdmin")]
         public IActionResult PalletTransferHistory()
         {
             return this.CheckSession(() =>
@@ -1819,6 +1870,36 @@ namespace SEMB_ERP.Controllers
         {
             var db = new DatabaseAccessLayer();
             string Result = db.close_non_conf(id_non_conf, sesa_id, cls_comment);
+
+            // Return the result directly
+            return Content(Result, "text/plain");
+        }
+        [Authorize(Policy = "RequireReceiverAdmin")]
+        public IActionResult CreateListBox(string box_id, decimal total_qty, decimal spq)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (sesa_id == "")
+            {
+                return Content("Session Timeout, Please relogin!!", "text/plain");
+            }
+            else
+            {
+                var db = new DatabaseAccessLayer();
+                List<string> listPrinter = db.GetPrinter();
+                List<BoxModel> dataTemp = db.GetTempBoxKitting(total_qty, spq);
+                //return Content("Upload Success!!", "text/plain");
+                ViewBag.box_id = box_id;
+                ViewBag.total_qty = total_qty;
+                ViewBag.listPrinter = listPrinter;
+                return PartialView("_TableTempListBoxKitting", dataTemp);
+            }
+        }
+        [Authorize(Policy = "RequireReceiverAdmin")]
+        public IActionResult CreateBoxKitting(string box_id, string qtys)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            string Result = db.CreateBoxKitting(box_id, qtys, sesa_id);
 
             // Return the result directly
             return Content(Result, "text/plain");

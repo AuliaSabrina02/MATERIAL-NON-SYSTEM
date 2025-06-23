@@ -20,6 +20,7 @@ namespace SEMB_ERP.Models
         public string? supplier_name { get; set; }
         public string? pic { get; set; }
         public string? pic_name { get; set; }
+        public string? pic_department { get; set; }
         public string? order_type { get; set; }
         public decimal? length_mm { get; set; }
         public decimal? width_mm { get; set; }

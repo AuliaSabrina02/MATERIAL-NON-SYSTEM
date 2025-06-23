@@ -302,6 +302,13 @@
         })
 
         function print_label(print, pallet_no) {
+            // let url_print = "http://10.155.129.223/wh_trans/Printlabel_project_pallet_closetab_Webservices.aspx?print=" + print + "&pallet_no=" + pallet_no;
+            // window.open(url_print, '_blank');
+            // setTimeout(function () {
+            //     swal.fire("Done!", "Success Create Pallet : " + pallet_no, "success").then(function () {
+            //         window.location = "@Url.Action("Consolidation")";
+            //     })
+            // }, 2000)
             $.ajax({
                 type: "GET",
                 url: "https://warehouse.semb.se.com/wh_trans/Printlabel_project_pallet_Webservices.aspx",

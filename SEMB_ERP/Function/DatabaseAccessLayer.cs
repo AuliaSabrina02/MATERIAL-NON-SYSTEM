@@ -250,13 +250,18 @@ namespace SEMB_ERP.Function
                 }
             }
         }
-        public List<string> GetPrinter()
+        public List<string> GetPrinter(string loc = "")
         {
+            string qry_printer = "SELECT printer_name FROM mst_printer WHERE loc='"+loc+"' ORDER BY printer_name";
+            if (loc == "")
+            {
+                qry_printer = "SELECT printer_name FROM mst_printer ORDER BY printer_name";
+            }
             List<string> listPrinter = new List<string>();
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
                 conn.Open();
-                using (SqlCommand cmd = new SqlCommand("SELECT printer_name FROM mst_printer ORDER BY printer_name", conn))
+                using (SqlCommand cmd = new SqlCommand(qry_printer, conn))
                 {
                     //cmd.CommandType = CommandType.StoredProcedure;
                     //cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
@@ -686,10 +691,7 @@ namespace SEMB_ERP.Function
                         {
                             return "OK";
                         }
-                        else if (status == "NOK")
-                        {
-                            return "NOK";
-                        }
+                        return status ?? "NOK";
                     }
                     return "NOK";
                 }
@@ -2125,6 +2127,69 @@ namespace SEMB_ERP.Function
                         return "NOK";
                     }
                 }
+            }
+        }
+        public List<BoxModel> GetTempBoxKitting(decimal total_qty, decimal spq)
+        {
+            List<BoxModel> boxs = new List<BoxModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("GEN_LIST_BOX_KITTING", conn);
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@TotalQty", total_qty);
+                    cmd.Parameters.AddWithValue("@QtyPerBox", spq);
+                    using SqlDataReader reader = cmd.ExecuteReader();
+
+                    while (reader.Read())
+                    {
+                        boxs.Add(new BoxModel
+                        {
+                            BoxId = reader["box_no"].ToString(),
+                            Qty = reader["qty"].ToString()
+                        });
+                    }
+                }
+            }
+            return boxs;
+        }
+        public string CreateBoxKitting(string box_id, string qtys, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("CREATE_BOX_KITTING", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@box_id", box_id);
+                        cmd.Parameters.AddWithValue("@qtys", qtys);
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        object result = cmd.ExecuteScalar();
+
+                        if (result != null)
+                        {
+                            return result.ToString() ?? "";
+                        }
+                        else
+                        {
+                            return "ERROR;No result returned from database.";
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine($"SQL Error: {ex.Message}");
+                return $"SQL Error: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General Error: {ex.Message}");
+                return $"General Error: {ex.Message}";
             }
         }
     }
