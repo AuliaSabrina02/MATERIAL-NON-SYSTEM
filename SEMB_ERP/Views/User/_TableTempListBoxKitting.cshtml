@@ -129,12 +129,13 @@
                                             print: printer,
                                             box_id: arr[1]
                                         }
-                                    }).done(function (res) {
-                                        let arr = res.split(";");
-                                        if (arr[0] == "OK") {
+                                    }).done(function (res2) {
+                                        let arr2 = res2.split(";");
+                                        if (arr2[0] == "OK") {
                                             let id_order = $("#modal_box_info").data("orderId");
-                                            console.log(id_order);
-                                            swal.fire("OK", "Print Succesfully!", "success").then(function () {
+                                            // console.log(id_order);
+                                            // swal.fire("OK", "Print Succesfully!", "success").then(function () {
+                                            swal.fire("OK", "Print Succesfully!<br>print="+printer+"&box_id="+arr[1], "success").then(function () {
                                                 // $("#modal_box_info").modal('hide');
                                                 // $("#modal_box_info").data("orderId", id_order);
                                                 // $("#modal_box_info").modal('show');
@@ -144,7 +145,7 @@
                                             })
                                         }
                                         else {
-                                            swal.fire("Error", res, "error");
+                                            swal.fire("Error", res2, "error");
                                         }
                                     }).fail(function (err) {
                                         swal.fire("Page Error", err, "error");
