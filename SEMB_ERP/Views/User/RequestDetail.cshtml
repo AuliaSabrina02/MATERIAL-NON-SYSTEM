@@ -161,6 +161,8 @@
         var loading = "<div class='text-center'><i class='fa fa-4x fa-spinner fa-spin'></i></div>";
         var sesa_id = "@user.sesa_id".toUpperCase();
 
+        var userRoles = @Html.Raw(Json.Serialize(userRoles));
+
         $(document).ready(function () {
 
             var table = $("#table_req").DataTable({
@@ -189,10 +191,27 @@
                         "data": "id_det",
                         "className": "text-center align-middle",
                         "render": function (data, type, row) {
-                            if (row["status_picking"] == "VARIANCE") {
-                                return `<button class="btn btn-sm btn-warning" onclick="open_variance(${data})"><i class="fas fa-edit"></i> Open</button>`;
+
+                            if (userRoles.includes("admin") || userRoles.includes("receiver")) 
+                            {
+                                if (row["status_picking"] == "VARIANCE") {
+                                    return `<button class="btn btn-sm btn-warning" onclick="open_variance(${data})"><i class="fas fa-edit"></i> Open</button>
+                                    <button class="btn btn-sm btn-danger" onclick="delete_partnumber(${data})"><i class="fas fa-trash"></i> Delete</button>`;
+                                }
+                                else 
+                                {
+                                    return `<button class="btn btn-sm btn-danger" onclick="delete_partnumber(${data})"><i class="fas fa-trash"></i> Delete</button>`;
+                                }
                             }
-                            return "N/A";
+                            else {
+                                if (row["status_picking"] == "VARIANCE") {
+                                    return `<button class="btn btn-sm btn-warning" onclick="open_variance(${data})"><i class="fas fa-edit"></i> Open</button>`;
+                                }
+                                else 
+                                {
+                                    return "N/A";
+                                }
+                            }
                         }
                     }
                 ],
@@ -243,6 +262,44 @@
                             let arr = res.split(";");
                             if (arr[0] == "OK") {
                                 swal.fire("OK!", "This part status has changed to Open!!!", "success").then(function () {
+                                    $("#table_req").DataTable().ajax.reload(null, false);
+                                })
+                            }
+                            else {
+                                swal.fire("Error!", res, "error");
+                            }
+                        }).fail(function (err) {
+                            swal.fire("Page Error!", err, "error");
+                        })
+                    })
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            })
+        }
+
+        function delete_partnumber(id_det) {
+            Swal.fire({
+                title: 'Confirmation!!',
+                html: "Are you sure want to delete this part ?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Yes!',
+                cancelButtonText: 'No!',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve, reject) {
+                        $.ajax({
+                            type: "POST",
+                            url: "@Url.Action("DeletePartnumber")",
+                            data: {
+                                id_det: id_det
+                            }
+                        }).done(function (res) {
+                            let arr = res.split(";");
+                            if (arr[0] == "OK") {
+                                swal.fire("OK!", "This part has deleted!", "success").then(function () {
                                     $("#table_req").DataTable().ajax.reload(null, false);
                                 })
                             }

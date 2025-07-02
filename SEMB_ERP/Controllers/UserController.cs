@@ -1418,6 +1418,15 @@ namespace SEMB_ERP.Controllers
 
             return Content(upd, "text/plain");
         }
+        [HttpPost]
+        public IActionResult DeletePartnumber(int id_det)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            string upd = db.DeletePartnumber(id_det, sesa_id);
+
+            return Content(upd, "text/plain");
+        }
         [Authorize(Policy = "RequireReceiver")]
         public IActionResult Consolidation()
         {

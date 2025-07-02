@@ -1552,6 +1552,34 @@ namespace SEMB_ERP.Function
                 return $"General Error: {ex.Message}";
             }
         }
+        public string DeletePartnumber(int id_det, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("DELETE_PARTNUMBER", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@id_det", id_det);
+                        //cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        cmd.ExecuteScalar();
+                        return "OK";
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine($"SQL Error: {ex.Message}");
+                return $"SQL Error: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General Error: {ex.Message}");
+                return $"General Error: {ex.Message}";
+            }
+        }
         public string DeleteTempConsol(string sesa_id)
         {
             try
