@@ -19,5 +19,6 @@ namespace SEMB_ERP.Models
         public string? supply_comment { get; set; }
         public string? received_by_name { get; set; }
         public string? supplied_by_name { get; set; }
+        public string? plant { get; set; }
     }
 }

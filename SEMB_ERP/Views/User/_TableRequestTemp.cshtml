@@ -39,6 +39,15 @@
             </tbody>
         </table>
     </div>
+    <div class="col-4">
+        <div class="form-group">
+            <label>Plant :</label>
+            <select class="form-select" id="picking_plant">
+                <option value="PEM">PEM</option>
+                <option value="PEL">PEL</option>
+            </select>
+        </div>
+    </div>
     <div class="col-12">
         <div class="form-group">
             <label>Remark :</label>
@@ -53,6 +62,8 @@
     $(document).ready(function () {
         $("button[name=btn_submit_picking]").click(function () {
             let remark = $("textarea[name=picking_remark]").val();
+            let plant = $('#picking_plant option:selected').val();
+
             Swal.fire({
                 title: 'Confirmation !',
                 text: "Are you sure want to request picking ?",
@@ -69,7 +80,8 @@
                             type: "POST",
                             url: "@Url.Action("SubmitReqPicking")",
                             data: {
-                                remark: remark
+                                remark: remark,
+                                plant: plant
                             }
                         }).done(function (res) {
                             let arr = res.split(";");

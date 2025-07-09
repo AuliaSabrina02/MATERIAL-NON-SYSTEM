@@ -807,12 +807,12 @@ namespace SEMB_ERP.Controllers
             return Content(deleteResult, "text/plain");
         }
         [HttpPost]
-        public IActionResult SubmitReqPicking(string remark)
+        public IActionResult SubmitReqPicking(string remark, string plant)
         {
             string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             var db = new DatabaseAccessLayer();
-            string submit = db.SubmitReqPicking(remark ?? "", sesa_id);
+            string submit = db.SubmitReqPicking(remark ?? "", sesa_id, plant);
             return Content(submit, "text/plain");
         }
         [Authorize(Policy = "RequireRequestorReceiverAdmin")]
@@ -1719,6 +1719,11 @@ namespace SEMB_ERP.Controllers
 
         public IActionResult GetPalletTransferList()
         {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var db = new DatabaseAccessLayer();
+            string plant = db.GetUserPlant(sesa_id);
+
             try
             {
                 var draw = Request.Form["draw"].FirstOrDefault();
@@ -1737,7 +1742,7 @@ namespace SEMB_ERP.Controllers
                 var mstData = (from Pallet in _context.v_pallet_header
                                join request in _context.v_request
                                 on Pallet.id_request equals request.id_request
-                               where Pallet.status_pallet == "CREATION" || Pallet.status_pallet == "TRANSFER" || Pallet.status_pallet == "RECEIVED"
+                               where (Pallet.status_pallet == "CREATION" || Pallet.status_pallet == "TRANSFER" || Pallet.status_pallet == "RECEIVED") && (Pallet.plant == "ALL" || Pallet.plant == plant)
                                select
                                    new
                                    {

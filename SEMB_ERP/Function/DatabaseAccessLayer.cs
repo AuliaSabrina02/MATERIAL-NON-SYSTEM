@@ -866,7 +866,7 @@ namespace SEMB_ERP.Function
                 }
             }
         }
-        public string SubmitReqPicking(string remark, string sesa_id)
+        public string SubmitReqPicking(string remark, string sesa_id, string plant)
         {
             try
             {
@@ -878,6 +878,7 @@ namespace SEMB_ERP.Function
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.AddWithValue("@remark", remark);
                         cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        cmd.Parameters.AddWithValue("@plant", plant);
                         object result = cmd.ExecuteScalar();
 
                         if (result != null)
