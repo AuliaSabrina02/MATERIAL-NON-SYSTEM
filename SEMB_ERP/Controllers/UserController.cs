@@ -408,6 +408,186 @@ namespace SEMB_ERP.Controllers
                 return PartialView("_TableGRDetail", dataGR);
             }
         }
+
+        [Authorize(Policy = "RequireAny")]
+        public IActionResult StoragebinList()
+        {
+            return this.CheckSession(() =>
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> userRoles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                //sesa_id = "SESA126011";
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                List<string> listStatus = db.GetStatus();
+                List<string> listPrinter = db.GetPrinter();
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.listStatus = listStatus;
+                ViewBag.userRoles = userRoles;
+                ViewBag.listPrinter = listPrinter;
+                return View(userDetail);
+            });
+        }
+
+        public IActionResult GetStoragebinList()
+        {
+            try
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> user_roles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                var user = userDetail.First();
+
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = Request.Form["start"].FirstOrDefault();
+                var length = Request.Form["length"].FirstOrDefault();
+                //var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][name]"].FirstOrDefault();
+                var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][data]"].FirstOrDefault();
+                var sortColumnDirection = Request.Form["order[0][dir]"].FirstOrDefault();
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                var column0Value = Request.Form["columns[0][search][value]"];
+                var column1Value = Request.Form["columns[1][search][value]"];
+                var column2Value = Request.Form["columns[2][search][value]"];
+                int pageSize = length != null ? Convert.ToInt32(length) : 0;
+                int skip = start != null ? Convert.ToInt32(start) : 0;
+                int recordsTotal = 0;
+
+                var departments = user.other_dept.Split(',').Select(d => d.Trim()).ToList();
+
+                var mstData = (from StoragebinList in _context.v_order_sbin
+                               where user_roles.Contains("receiver") || user_roles.Contains("admin") || (user_roles.Contains("requestor") && departments.Contains(StoragebinList.pic_department))
+                               select
+                                   new
+                                   {
+                                       StoragebinList.id_order,
+                                       StoragebinList.material_type,
+                                       StoragebinList.partno,
+                                       StoragebinList.po_no,
+                                       StoragebinList.storage_bin,
+                                       StoragebinList.qty,
+                                       StoragebinList.picked_qty,
+                                       StoragebinList.available_qty,
+                                       StoragebinList.uom,
+                                       StoragebinList.revision,
+                                       StoragebinList.project_name,
+                                       StoragebinList.storage_requirement,
+                                       StoragebinList.supplier_name,
+                                       StoragebinList.pic,
+                                       StoragebinList.order_type,
+                                       StoragebinList.length_mm,
+                                       StoragebinList.width_mm,
+                                       StoragebinList.height_mm,
+                                       StoragebinList.unit_price,
+                                       StoragebinList.file_support,
+                                       StoragebinList.status_code,
+                                       StoragebinList.status_desc,
+                                       StoragebinList.pic_name,
+                                       StoragebinList.pic_department,
+                                       StoragebinList.remark
+                                   });
+
+                //var mstData = (from temp in _context.mst_material_plant select temp);
+                if (!(string.IsNullOrEmpty(sortColumn) && string.IsNullOrEmpty(sortColumnDirection)))
+                {
+                    mstData = mstData.OrderBy(sortColumn + " " + sortColumnDirection);
+                }
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    mstData = mstData.Where(m => m.partno.Contains(searchValue)
+                                                || m.pic.Contains(searchValue));
+                }
+                for (int i = 0; i < 15; i++)
+                {
+                    var searchColVal = Request.Form["columns[" + i.ToString() + "][search][value]"];
+                    var fieldName = Request.Form["columns[" + i.ToString() + "][data]"].FirstOrDefault();
+                    if (!string.IsNullOrEmpty(searchColVal))
+                    {
+                        if (fieldName == "status_desc")
+                        {
+                            mstData = mstData.Where(m => m.status_desc.Contains(searchColVal));
+                        }
+                        else if (fieldName == "material_type")
+                        {
+                            mstData = mstData.Where(m => m.material_type.Contains(searchColVal));
+                        }
+                        else if (fieldName == "partno")
+                        {
+                            mstData = mstData.Where(m => m.partno.Contains(searchColVal));
+                        }
+                        else if (fieldName == "po_no")
+                        {
+                            mstData = mstData.Where(m => m.po_no.Contains(searchColVal));
+                        }
+                        else if (fieldName == "storage_bin")
+                        {
+                            mstData = mstData.Where(m => m.storage_bin.Contains(searchColVal));
+                        }
+                        else if (fieldName == "qty")
+                        {
+                            mstData = mstData.Where(m => m.qty.ToString().Contains(searchColVal));
+                        }
+                        else if (fieldName == "qty")
+                        {
+                            mstData = mstData.Where(m => m.qty.ToString().Contains(searchColVal));
+                        }
+                        else if (fieldName == "picked_qty")
+                        {
+                            mstData = mstData.Where(m => m.qty.ToString().Contains(searchColVal));
+                        }
+                        else if (fieldName == "available_qty")
+                        {
+                            mstData = mstData.Where(m => m.uom.Contains(searchColVal));
+                        }
+                        else if (fieldName == "revision")
+                        {
+                            mstData = mstData.Where(m => m.revision.Contains(searchColVal));
+                        }
+                        else if (fieldName == "project_name")
+                        {
+                            mstData = mstData.Where(m => m.project_name.Contains(searchColVal));
+                        }
+                        else if (fieldName == "storage_requirement")
+                        {
+                            mstData = mstData.Where(m => m.storage_requirement.Contains(searchColVal));
+                        }
+                        else if (fieldName == "supplier_name")
+                        {
+                            mstData = mstData.Where(m => m.supplier_name.Contains(searchColVal));
+                        }
+                        else if (fieldName == "pic")
+                        {
+                            mstData = mstData.Where(m => m.pic.Contains(searchColVal));
+                        }
+                        else if (fieldName == "order_type")
+                        {
+                            mstData = mstData.Where(m => m.order_type.Contains(searchColVal));
+                        }
+                        else if (fieldName == "unit_price")
+                        {
+                            mstData = mstData.Where(m => m.unit_price.ToString().Contains(searchColVal));
+                        }
+                    }
+                }
+                recordsTotal = mstData.Count();
+                var data = mstData.Skip(skip).Take(pageSize).ToList();
+                var jsonData = new { draw = draw, recordsFiltered = recordsTotal, recordsTotal = recordsTotal, data = data };
+                return Ok(jsonData);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
         [Authorize(Policy = "RequireReceiver")]
         public IActionResult AddNonConformity()
         {

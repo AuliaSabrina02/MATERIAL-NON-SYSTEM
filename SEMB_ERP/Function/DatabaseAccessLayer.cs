@@ -12,7 +12,7 @@ namespace SEMB_ERP.Function
 {
     public class DatabaseAccessLayer
     {
-        public string ConnectionString = "Data Source=10.155.152.114;Initial Catalog=SEMB_ERP;Persist Security Info=True;User ID=dt;Password=Dt@123;MultipleActiveResultSets=true";
+        public string ConnectionString = "Data Source=10.155.152.114;Initial Catalog=SEMB_ERP_QAS;Persist Security Info=True;User ID=dt;Password=Dt@123;MultipleActiveResultSets=true";
         public string ConnectionStringBLP = "Data Source=10.155.129.223;Initial Catalog=DBBLP;Persist Security Info=True;User ID=semb;Password=Semb@123;MultipleActiveResultSets=true";
 
         public List<OrderTempListModel> GetTempOrder(string id_upload, string sesa_id)

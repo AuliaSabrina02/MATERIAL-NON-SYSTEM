@@ -1,0 +1,936 @@
+﻿@* @using System.Data; *@
+@model List<UserDetailModel>
+@using Microsoft.AspNetCore.Mvc.Rendering;
+@using Microsoft.AspNetCore.Http;
+@using SEMB_ERP.Function;
+@{
+    var user = Model.First();
+    string sesa_id = ViewBag.sesa_id;
+    string name = ViewBag.name;
+    List<string> listStatus = ViewBag.listStatus;
+    List<string> userRoles = ViewBag.userRoles;
+    List<string> listPrinter = ViewBag.listPrinter;
+}
+
+<style>
+    /* CSS untuk membuat modal berada di tengah layar */
+    #loadingSpinner {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5); /* Transparan hitam */
+    }
+
+        #loadingSpinner img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+    .box_form_input {
+        background-color: #fcfcfc;
+        border-radius: 5px;
+        box-shadow: 1px 2px 8px 2px rgba(152,152,152,0.7);
+    }
+
+    .modal {
+        overflow: auto !important
+    }
+
+    .smaller-input {
+        height: 25px; /* Adjust height as necessary */
+        padding: 5px; /* Adjust padding as necessary */
+        font-size: 10px; /* Optional: Adjust font size */
+        line-height: 1; /* Optional: Reset line height */
+    }
+
+    /* Customize the font size for DataTables elements */
+    .dataTables_info, .dataTables_paginate, .dataTables_filter {
+        font-size: 10pt; /* Adjust the value to your desired font size */
+    }
+
+    #table_order_filter.dataTables_filter {
+        display: none;
+    }
+
+    table#table_order tr > th {
+        padding: 5px;
+    }
+
+    table#table_order tr > td {
+        padding: 5px;
+    }
+
+    .btn-group-xs > .btn, .btn-xs {
+        padding: .25rem .4rem;
+        font-size: .875rem;
+        line-height: .5;
+        border-radius: .2rem;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .form-check-input.bigger-checkbox {
+        margin-left: 0.2px;
+        transform: scale(2); /* Adjust the scale as needed */
+    }
+
+</style>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 mt-3">
+                <div class="card card-success card-outline">
+                    <div class="card-header">
+                        <h5>
+                            <i class="fas fa-list"></i>
+                            Request List
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 table-responsive">
+                                <table class="table table-bordered table-striped align-center nowrap" id="table_order" style="font-size:10pt;width:100%;">
+                                    <thead class="bg-info align-middle text-center">
+                                        <tr>
+                                            <th>Status</th>
+                                            <th rowspan="2">Goods<br />Receipt</th>
+                                            <th>Material Type</th>
+                                            <th>Part No</th>
+                                            <th>PO NO</th>
+                                            <th>Storage Bin</th>
+                                            <th>Qty</th>
+                                            <th>Pick.Qty</th>
+                                            <th>Avai.Qty</th>
+                                            <th>UOM</th>
+                                            <th>Revision</th>
+                                            <th>Project Name</th>
+                                            <th>Storage Requirement</th>
+                                            <th>Supplier Name</th>
+                                            <th>PIC</th>
+                                            <th>Order Type</th>
+                                            <th>Unit Price</th>
+                                            <th rowspan="2">File<br />Support</th>
+                                            <th class="align-middle" colspan="3">Dimension</th> <!-- Merged cell for File Tag -->
+                                        </tr>
+                                        <tr>
+                                            @for (int i = 0; i < 17; i++) // Adjusted the loop to 24 to exclude Img Tagging
+                                            {
+                                                if (i != 1) // i!=1, because column index 1 is for button GR
+                                                {
+                                                    if (i == 0)
+                                                    {
+                                                        <td>
+                                                            <select class="form-control smaller-input filter_table" target="@i">
+                                                                <option value="">#ALL</option>
+                                                                @foreach (var status in listStatus)
+                                                                {
+                                                                    <option value="@status">@status</option>
+                                                                }
+                                                            </select>
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="@i" /></td>
+                                                    }
+                                                }
+                                            }
+                                            <th>L(mm)</th>
+                                            <th>W(mm)</th>
+                                            <th>H(mm)</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Element spinner -->
+            <div id="loadingSpinner" style="display: none;">
+                <img src="~/images/icon/loading.gif" alt="Loading..." />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal_gr" class="modal fade" data-bs-backdrop="static">
+    <div class="modal-dialog" role="document" style="min-width:80%">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-boxes"></i> Goods Receive</h5>
+                @* <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+                </button> *@
+                <button class="btn btn-warning mt-2" data-bs-dismiss="modal" aria-label="Close"><i class="fas fa-times"></i> Cancel</button>
+            </div>
+            <div id="body_gr"></div>
+        </div>
+    </div>
+</div>
+
+<div id="modal_gr_done" class="modal fade" data-bs-backdrop="static">
+    <div class="modal-dialog" role="document" style="min-width:80%">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-boxes"></i> Goods Receive</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div id="body_gr_done"></div>
+        </div>
+    </div>
+</div>
+
+<div id="modal_req_list" class="modal fade" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-list"></i> Req. Picking List</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div id="body_req_list"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal_req_picking" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <h5 class="modal-title" id="chart_title"><i class="fas fa-plus"></i> Add Request Picking</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="body_update_posting">
+                <form id="form_req_picking">
+                    <div class="row">
+                        <div class="col-12">
+                            <input class="form-control" type="hidden" name="picking_id_order" autocomplete="off" required />
+                            <div class="form-group">
+                                <label>Stock Qty</label>
+                                <input class="form-control" type="text" name="picking_stock_qty" placeholder="Part Number" autocomplete="off" readonly />
+                            </div>
+                            <div class="form-group">
+                                <label>Req Picking Qty</label>
+                                <input class="form-control" type="number" name="picking_req_qty" placeholder="Qty" step="any" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-group text-center">
+                                <button type="submit" class="btn btn-success mt-2" name="btn_add_req"><i class="fa fa-plus"></i> Add to Request List</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal_box_info" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title"><i class="fas fa-clipboard"></i> Box List</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group table-responsive" style="padding-top: 15px; padding-left: 5px; padding-right: 5px;">
+                    <table class="table table-bordered table-striped align-center nowrap" id="tbl_box_list" style="font-size:12pt;width:100%;">
+                        <thead class="bg-info align-middle text-center">
+                            <tr>
+                                <th width="25%">Box ID</th>
+                                <th width="25%">Part No</th>
+                                <th width="5%">Qty</th>
+                                <th width="20%">Storage Bin</th>
+                                <th width="20%">Unit</th>
+                                <th width="5%">Picking Status</th>
+                                <th width="10%">Action</th>
+                        </thead>
+                        <tbody class="align-middle text-center">
+                        </tbody>
+                    </table>
+                </div>
+                @* <div class="form-group text-center">
+                    <button class="btn btn-primary" onclick="print_all_box()"><i class="fas fa-print"></i> Print All</button>
+                </div> *@
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal_box_kitting" aria-labelledby="exampleModalLabel">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <h5 class="modal-title" id="chart_title"><i class="fas fa-boxes"></i> Kitting Box</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="body_box_kitting">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label>Box ID</label>
+                            <input class="form-control" type="text" name="box_id" placeholder="Box ID" autocomplete="off" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Box Qty</label>
+                            <input class="form-control" type="number" name="box_qty" placeholder="Qty" step="any" autocomplete="off" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>SPQ (Qty perbox)</label>
+                            <input class="form-control" type="number" name="spq" placeholder="Qty" min="0" step="0" autocomplete="off" />
+                        </div>
+                        <div class="form-group text-center">
+                            <button type="submit" class="btn btn-success mt-2" name="btn_next_kitting"><i class="fa fa-arrow-right"></i> Next</button>
+                        </div>
+                    </div>
+                    <div class="col-12" id="review_box_kitting">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script>
+        var table;
+        var loading = "<div class='text-center'><i class='fa fa-4x fa-spinner fa-spin'></i></div>";
+        var id_order_array = [];
+        var sesa_id = "@user.sesa_id".toUpperCase();
+        var user_roles = @Html.Raw(Json.Serialize(userRoles));
+        var list_printers = @Html.Raw(Json.Serialize(listPrinter));
+        const printInputOptions = list_printers.reduce((acc, text) => {
+            acc[text] = text;
+            return acc;
+        }, {});
+
+        $(document).ready(function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            })
+            get_total_req();
+
+            var table = $("#table_order").DataTable({
+                // "searching": false,
+                // "scrollX": true,
+                // "fixedColumns": {
+                //     rightColumns: 1
+                // },
+                "orderCellsTop": true,
+                "processing": true,
+                "serverSide": true,
+                "filter": true,
+                "ajax": {
+                    "url": "@Url.Action("GetStoragebinList")",
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                "columns": [
+                    { "data": "status_desc",
+                        "className": "align-middle",
+                        "render": function (data, type, row) {
+                            return data;
+                        }
+                    },
+                    {
+                        "data": "id_order",
+                        "className": "text-center align-middle",
+                        "render": function (data, type, row) {
+                            if (row["status_code"] == 1 && user_roles.includes("receiver") &&
+                                row["length_mm"] > 0 &&
+                                row["width_mm"] > 0 &&
+                                row["height_mm"] > 0) {
+                                let order_check = "";
+                                let is_checked = "";
+                                if (id_order_array.includes(data)) {
+                                    order_check = "checked";
+                                    is_checked = "1";
+                                }
+                                // return `<button class="btn btn-sm btn-info" onclick="start_gr('${data}')"><i class="fas fa-arrow-right"></i> GR</button>`;
+                                return `<input type="checkbox" class="form-input form-check-input bigger-checkbox all_row" name='id_order[]' onclick="select_id(${data})" id="id_order-${data}" value="${data}" ${order_check} />
+                                        <label class="form-check-label" for="id_order-${data}"></label>
+                                        <div class="check_sort" id="sort-${data}" hidden>${is_checked}</div>`;
+                            }
+                            else if (row["status_code"] == 1) {
+                                return `<i class="text-danger fas fa-exclamation-circle" style="font-size:14pt" data-bs-toggle="tooltip" data-bs-placement="right" title="Please fill in dimension!!"></i>`;
+                            }
+                            else{
+                                return `<button class="btn btn-sm btn-warning " onclick="box_list(${data})"><i class="fas fa-clipboard"></i></button>`;
+                            }
+                        }
+                    },
+                    { "data": "material_type", "className": "align-middle" },
+                    { "data": "partno", "className": "align-middle" },
+                    { "data": "po_no", "className": "align-middle" },
+                    { "data": "storage_bin", "className": "align-middle" },
+                    { "data": "qty", "className": "align-middle" },
+                    { "data": "picked_qty", "className": "align-middle" },
+                    { "data": "available_qty", "className": "align-middle" },
+                    { "data": "uom", "className": "align-middle" },
+                    { "data": "revision", "className": "align-middle" },
+                    { "data": "project_name", "className": "align-middle" },
+                    { "data": "storage_requirement", "className": "align-middle" },
+                    { "data": "supplier_name", "className": "align-middle" },
+                    { "data": "pic_name", "className": "align-middle" },
+                    { "data": "order_type", "className": "align-middle" },
+                    {
+                        "data": "unit_price",
+                        "className": "text-center align-middle",
+                        "render": function (data, type, row) {
+                            if (data === null || data == "") {
+                                return "";
+                            }
+                            else {
+                                return `$ `+ data.toFixed(2);
+                            }
+                        }
+                    },
+                    {
+                        "data": "file_support",
+                        "className": "text-center align-middle",
+                        "render": function (data, type, row) {
+                            if (data === null || data == "") {
+                                return "";
+                            }
+                            else {
+                                return `<a href="../Documents/${data}" target="_blank">
+                                        <button class="btn btn-sm btn-danger">
+                                            <i class="fas fa-file-alt"></i>
+                                        </button>
+                                    </a>`;
+                            }
+                        }
+                    },
+                    { "data": "length_mm", "className": "align-middle" },
+                    { "data": "width_mm", "className": "align-middle" },
+                    { "data": "height_mm", "className": "align-middle" },
+                    
+                ],
+                "drawCallback": function (settings) {
+                    // Set the background color for the second column (index 1)
+                    this.api().rows().every(function () {
+                        var rowNode = this.node();
+                        let status_desc = $(rowNode).find('td:eq(0)').html();
+                        status_desc = status_desc.toLowerCase();
+                        let bg_color = "";
+                        if(status_desc=="submission"){
+                            bg_color = "bg-warning";
+                        }
+                        else if(status_desc=="received"){
+                            bg_color = "bg-success";
+                        }
+                        else if (status_desc=="putaway") {
+                            bg_color = "bg-info";
+                        }
+                        else if (status_desc=="partially picked") {
+                            bg_color = "bg-info";
+                        }
+                        else if (status_desc=="closed") {
+                            bg_color = "bg-secondary";
+                        }
+                        $(rowNode).find('td').css("background-color", "#edfcf1")
+                        $(rowNode).find('td:eq(0)').addClass(bg_color);
+
+                        let avai_qty = $(rowNode).find('td:eq(7)').html();
+                        let bg_color_avai_qty = "bg-secondary";
+                        if(parseFloat(avai_qty)>0){
+                            bg_color_avai_qty = "bg-warning";
+                        }
+
+                        // $(rowNode).find('td:eq(5)').addClass("bg-warning");
+                        // $(rowNode).find('td:eq(6)').addClass("bg-warning");
+                        $(rowNode).find('td:eq(7)').addClass(bg_color_avai_qty);
+
+                    });
+                    // Initialize tooltips
+                    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                        return new bootstrap.Tooltip(tooltipTriggerEl);
+                    });
+
+                },
+                "order": [[0, 'asc']]
+            });
+
+
+            $('input.filter_table, select.filter_table', this).on('keyup change', function () {
+                let trgt = $(this).attr('target');
+                // alert(trgt);
+                if (table.column(trgt).search() !== this.value) {
+                    table
+                        .column(trgt)
+                        .search(this.value)
+                        .draw();
+                }
+            });
+
+            // $("button[name=btn_gr]").click(function () {
+            //     $.ajax({
+            //         type: "GET",
+            //         url: "@Url.Action("GetListGR")"
+            //     }).done(function (res) {
+
+            //     }).fail(function (err) {
+            //         swal.fire("Error", err, "error");
+            //     })
+            // })
+        })
+
+        function select_id(id_order) {
+            let checked = 0;
+            setTimeout(() => {
+                // console.log($("input#id_order-" + id_order).is(":checked"));
+                if ($("input#id_order-" + id_order).is(":checked")) {
+                    id_order_array.push(id_order);
+                    checked = 1;
+                    // $("tr#row-material-" + id_order).addClass("bg-warning");
+                }
+                else {
+                    removeValue(id_order_array, id_order);
+                    checked = 0
+                    // $("tr#row-material-" + id_order).removeClass("bg-warning");
+                }
+                console.log(id_order_array);
+                $("div#sort-" + id_order).html(checked);
+                $("#table_order").DataTable().rows().invalidate();
+                $("span#total_gr_line").html("("+id_order_array.length + " Lines)");
+            }, 100);
+        }
+
+        function removeValue(arr) {
+            var what, a = arguments, L = a.length, ax;
+            while (L > 1 && arr.length) {
+                what = a[--L];
+                while ((ax = arr.indexOf(what)) !== -1) {
+                    arr.splice(ax, 1);
+                }
+            }
+            return arr;
+        }
+
+        function update_order(this_btn, id_order, material_type, partno, po_no, qty, uom, revision, storage_requirement, supplier_name, pic, order_type, unit_price
+            , length_mm, width_mm, height_mm, file_support, pic_name) {
+            $("input[name='id_order']").val(id_order);
+
+            let remark = $(this_btn).data("remark");
+            let project_name = $(this_btn).data("project_name");
+
+            if (material_type === null || material_type === 'null') {
+                $("select[name='material_type']").val('');
+            } else {
+                $("select[name='material_type']").val(material_type);
+            }
+
+            $("input[name='partno']").val(partno);
+
+            if (po_no === null || po_no === 'null') {
+                $("input[name='po_no']").val('');
+            } else {
+                $("input[name='po_no']").val(po_no);
+            }
+
+            $("input[name='qty']").val(qty);
+            $("input[name='uom']").val(uom);
+            $("input[name='revision']").val(revision);
+            $("input[name='project_name']").val(project_name);
+
+            if (storage_requirement === null || storage_requirement === 'null') {
+                $("select[name='storage_requirement']").val('');
+            } else {
+                $("select[name='storage_requirement']").val(storage_requirement);
+            }
+
+            $("input[name='supplier_name']").val(supplier_name);
+            $("input[name='pic_display']").val(pic + ' - ' + pic_name);
+            $("select[name='order_type']").val(order_type);
+            $("input[name='unit_price']").val(unit_price);
+            $("input[name='length_mm']").val(length_mm);
+            $("input[name='width_mm']").val(width_mm);
+            $("input[name='height_mm']").val(height_mm);
+
+            if (remark === null || remark === 'null') {
+                $("textarea[name='remark']").val('');
+            } else {
+                $("textarea[name='remark']").val(remark);
+            }
+
+            if (file_support && file_support !== 'null' && file_support !== '') {
+                var fileLink = `<a href="../Documents/${file_support}" target="_blank">View Existing File</a>`;
+                $("#file_preview").html(fileLink);
+            } else {
+                $("#file_preview").html("No file uploaded");
+            }
+
+
+            $("div#modal_update_order").modal("show");
+        }
+
+        $("form#form_update_order").submit(function (e) {
+            e.preventDefault();
+            let formData = new FormData(this);
+            // console.log(formData);
+            Swal.fire({
+                title: 'Confirmation!!',
+                text: "Are you sure ?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Yes!',
+                cancelButtonText: 'No!',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve, reject) {
+                        $.ajax({
+                            url: "@Url.Action("UpdateOrder")",
+                            type: 'POST',
+                            data: formData,
+                            cache: false,
+                            contentType: false,
+                            processData: false
+                        }).done(function (msg) {
+                            let arr = msg.split(";");
+                            if (arr[0] == "success") {
+                                swal.fire("Success!", arr[1], "success").then(function () {
+                                    $("div#modal_update_order").modal("hide");
+                                    $("#table_order").DataTable().ajax.reload(null, false);
+                                })
+                            }
+                            else {
+                                swal.fire("Failed!", msg, "error");
+                            }
+                        })
+                    })
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            })
+        })
+
+        function get_total_req(){
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetTotalTempReq")",
+            }).done(function(res){
+                $("span#total_req").html(res);
+            }).fail(function (err) {
+                swal.fire("Failed Getting Total Req!", err, "error");
+            })
+        }
+
+        function add_order(id_order,stock_qty){
+            $("input[name=picking_id_order]").val(id_order);
+            $("input[name=picking_stock_qty]").val(stock_qty);
+            $("input[name=picking_req_qty]").val(0);
+            $("div#modal_req_picking").modal("show");
+        }
+
+        $("form#form_req_picking").submit(function (e) {
+            e.preventDefault();
+            let formData = new FormData(this);
+            let stock_qty = formData.get('picking_stock_qty');
+            let req_qty = formData.get('picking_req_qty');
+            if(parseFloat(req_qty)>parseFloat(stock_qty)){
+                swal.fire("Failed!", "Request qty is more than stock qty!", "error");
+                return;
+            }
+            else {
+                // console.log(formData);
+                Swal.fire({
+                    title: 'Confirmation!!',
+                    text: "Are you sure ?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#dc3545',
+                    confirmButtonText: 'Yes!',
+                    cancelButtonText: 'No!',
+                    showLoaderOnConfirm: true,
+                    preConfirm: function () {
+                        return new Promise(function (resolve, reject) {
+                            $.ajax({
+                                url: "@Url.Action("AddReqPicking")",
+                                type: 'POST',
+                                data: formData,
+                                cache: false,
+                                contentType: false,
+                                processData: false
+                            }).done(function (msg) {
+                                let arr = msg.split(";");
+                                if (arr[0] == "success") {
+                                    swal.fire("Success!", arr[1], "success").then(function () {
+                                        get_total_req();
+                                        $("div#modal_req_picking").modal("hide");
+                                        $("#table_order").DataTable().ajax.reload(null, false);
+                                    })
+                                }
+                                else {
+                                    swal.fire("Failed!", msg, "error");
+                                }
+                            })
+                        })
+                    },
+                    allowOutsideClick: () => !Swal.isLoading()
+                })
+            }
+        })
+
+        function delete_temp_req(id_temp) {
+            Swal.fire({
+                title: 'Confirm ?',
+                text: "Are you sure ?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Yes!',
+                cancelButtonText: 'No!',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve, reject) {
+                        $.ajax({
+                            type: "POST",
+                            url: "@Url.Action("DeleteTempReq")",
+                            data: {
+                                id_temp: id_temp
+                            }
+                        }).done(function (res) {
+                            if (res == "OK") {
+                                swal.close();
+                                get_total_req();
+                                open_request_list();
+                            }
+                            else {
+                                swal.fire("Failed!", res, "error");
+                            }
+                        }).fail(function (err) {
+                            swal.fire("Error!", err, "error");
+                        })
+                    })
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            })
+        }
+
+        function box_list(orderId){
+            $("#modal_box_info").data("orderId", orderId);
+            if ($.fn.DataTable.isDataTable('#tbl_box_list')) {
+                $('#tbl_box_list').DataTable().clear().destroy();
+            }
+            $("#modal_box_info").modal('show');
+
+            $('#tbl_box_list').DataTable({
+                "ajax": {
+                    "url": '@Url.Action("GetBoxList")',
+                    "data": {
+                        orderId: orderId
+                    },
+                    "dataSrc": function (json) {
+                        console.log("AJAX response:", json);
+                        return json.map(function (item) {
+                            return {
+                                BoxId: item.boxId,
+                                PartNo: item.partNo,
+                                Qty: item.qty,
+                                Sbin: item.sbin,
+                                Unit: item.unit,
+                                Pstats: item.pstats,
+                            };
+                        });
+                    }
+                },
+                "columns": [
+                    { data: "BoxId", title: "Box Id" },
+                    { data: "PartNo", title: "Part No" },
+                    { data: "Qty", title: "Qty" },
+                    { data: "Sbin", title: "Storage Bin" },
+                    { data: "Unit", title: "Unit" },
+                    { data: "Pstats", title: "Picking Status" },
+                    {
+                        data: "BoxId",
+                        "render": function (data, type, row) {
+                            let kitting_btn = row['Pstats'] != "DONE" ? `<button class='btn btn-sm btn-warning ml-1' onclick="kitting_box('${orderId}','${data}','${row['Qty']}')"><i class='fas fa-boxes'></i> Kitting</button>` : ``;
+                            return `<button class='btn btn-sm btn-success' onclick="print_box('${data}')"><i class='fas fa-print'></i> Print</button>${kitting_btn}`;
+                        }
+                    }
+                ],
+                "searching": true,
+                "paging": true,
+                "info": true,
+                "ordering": false,
+                "order": [[0, "asc"]],
+
+            });
+        }
+
+        // $('#modal_box_info').on('shown.bs.modal', function () {
+        //     var orderId = $(this).data("orderId");
+        //     console.log(orderId)
+
+
+
+        // });
+
+        function delete_order(orderId, partNo){
+            orderId = String(orderId);
+            console.log(orderId)
+            console.log(partNo)
+            Swal.fire({
+                        title: 'Are you sure?',
+                        text: "You are about to delete " + partNo + ".",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Yes, delete it!',
+                        cancelButtonText: 'No, cancel!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '@Url.Action("DeleteOrderList")',
+                        type: 'POST',
+                        data: { orderId: orderId },
+                        success: function(response) {
+                            if (response.trim() === "OK") {
+                                Swal.fire(
+                                    'Deleted!',
+                                    'Order has been Deleted.',
+                                    'success'
+                                );
+                            } else {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Warning!',
+                                    text: 'Unexpected response received.',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                            $("#table_order").DataTable().ajax.reload(null, false);
+                        },
+                        error: function(xhr, status, error) {
+                            alert("An error occurred while deleting Order: " + error);
+                        }
+                    });
+                }
+            });
+        }
+
+        function print_box(box_id){
+            Swal.fire({
+                title: 'Confirm',
+                input: 'select',
+                inputOptions: printInputOptions,
+                text: 'Are you sure want to print this box ?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes!'
+            }).then((result) => {
+                if (result.value) {
+                    var printer = result.value;
+                    // console.log(printer);
+                    if (printer == '0') {
+                        swal.fire("Failed!", "Pilih printer terlebih dahulu!", "warning");
+                        // alert("pilih printer")
+                    }
+                    else{
+                        showLoadingSpinner("Printing...");
+                        let url_print = "http://10.155.129.223/wh_trans/Printlabel_project_box_closetab_Webservices.aspx?print=" + printer + "&box_id=" + box_id;
+                        window.open(url_print, '_blank');
+                        setTimeout(function () {
+                            swal.fire("OK", "Print Succesfully!", "success");
+                        }, 2000)
+                        // $.ajax({
+                        //     type: "GET",
+                        //     url: "https://warehouse.semb.se.com/wh_trans/Printlabel_project_box_Webservices.aspx",
+                        //     data: {
+                        //         print: printer,
+                        //         box_id: box_id
+                        //     }
+                        // }).done(function (res) {
+                        //     let arr = res.split(";");
+                        //     if (arr[0] == "OK") {
+                        //         swal.fire("OK", "Print Succesfully!", "success");
+                        //     }
+                        //     else {
+                        //         swal.fire("Error", res, "error");
+                        //     }
+                        // }).fail(function (err) {
+                        //     swal.fire("Page Error", err, "error");
+                        // })
+                    }
+                    // $("#loading_modal").modal('show');
+                }
+            })
+        }
+
+        function kitting_box(id_order, kitting_box, qty){
+            $("div#body_box_kitting").find("input[name=box_id]").val(kitting_box);
+            $("div#body_box_kitting").find("input[name=box_qty]").val(qty);
+            $("div#body_box_kitting").find("input[name=spq]").val("");
+            $("div#review_box_kitting").html("");
+            $("div#modal_box_kitting").modal("show");
+        }
+
+        $("button[name=btn_next_kitting]").click(function(){
+            let box_id = $("div#body_box_kitting").find("input[name=box_id]").val();
+            let total_qty = $("div#body_box_kitting").find("input[name=box_qty]").val();
+            let spq = $("div#body_box_kitting").find("input[name=spq]").val();
+            if (parseFloat(spq) > parseFloat(total_qty)) {
+                swal.fire("Failed!", "Total box exceed total qty!", "error");
+            }
+            else {
+                $("div#review_box_kitting").html(loading);
+                $.ajax({
+                    type: "GET",
+                    url: "@Url.Action("CreateListBox")",
+                    data: {
+                        box_id: box_id,
+                        total_qty: total_qty,
+                        spq: spq
+                    }
+                }).done(function (res) {
+                    $("div#review_box_kitting").html(res);
+                }).fail(function (err) {
+                    $("div#review_box_kitting").html(err);
+                    swal.fire("Error!", "Error get list box", "error");
+                })
+            }
+        })
+
+        function showLoadingSpinner(msg = 'Please wait...') {
+            Swal.fire({
+                title: 'Processing',
+                html: msg,
+                allowOutsideClick: false,
+                onBeforeOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        }
+
+    </script>
+}

@@ -140,6 +140,14 @@
                                         </p>
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a href="@Url.Action("StoragebinList", "User")" class="nav-link @Html.IsActive("User","StoragebinList")">
+                                        <i class="nav-icon fas fa-table"></i>
+                                        <p>
+                                            Request Storage Bin List
+                                        </p>
+                                    </a>
+                                </li>
                             }
                             if (user_roles.HasAnyRole("receiver"))
                             {
