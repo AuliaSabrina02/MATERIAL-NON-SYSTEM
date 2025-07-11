@@ -105,7 +105,6 @@
                                     <thead class="bg-info align-middle text-center">
                                         <tr>
                                             <th>Status</th>
-                                            <th rowspan="2">Goods<br />Receipt</th>
                                             <th>Material Type</th>
                                             <th>Part No</th>
                                             <th>PO NO</th>
@@ -125,26 +124,23 @@
                                             <th class="align-middle" colspan="3">Dimension</th> <!-- Merged cell for File Tag -->
                                         </tr>
                                         <tr>
-                                            @for (int i = 0; i < 17; i++) // Adjusted the loop to 24 to exclude Img Tagging
+                                            @for (int i = 0; i < 16; i++) // Adjusted the loop to 24 to exclude Img Tagging
                                             {
-                                                if (i != 1) // i!=1, because column index 1 is for button GR
+                                                if (i == 0)
                                                 {
-                                                    if (i == 0)
-                                                    {
-                                                        <td>
-                                                            <select class="form-control smaller-input filter_table" target="@i">
-                                                                <option value="">#ALL</option>
-                                                                @foreach (var status in listStatus)
-                                                                {
-                                                                    <option value="@status">@status</option>
-                                                                }
-                                                            </select>
-                                                        </td>
-                                                    }
-                                                    else
-                                                    {
-                                                        <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="@i" /></td>
-                                                    }
+                                                    <td>
+                                                        <select class="form-control smaller-input filter_table" target="@i">
+                                                            <option value="">#ALL</option>
+                                                            @foreach (var status in listStatus)
+                                                            {
+                                                                <option value="@status">@status</option>
+                                                            }
+                                                        </select>
+                                                    </td>
+                                                }
+                                                else
+                                                {
+                                                    <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="@i" /></td>
                                                 }
                                             }
                                             <th>L(mm)</th>
@@ -353,33 +349,6 @@
                         "className": "align-middle",
                         "render": function (data, type, row) {
                             return data;
-                        }
-                    },
-                    {
-                        "data": "id_order",
-                        "className": "text-center align-middle",
-                        "render": function (data, type, row) {
-                            if (row["status_code"] == 1 && user_roles.includes("receiver") &&
-                                row["length_mm"] > 0 &&
-                                row["width_mm"] > 0 &&
-                                row["height_mm"] > 0) {
-                                let order_check = "";
-                                let is_checked = "";
-                                if (id_order_array.includes(data)) {
-                                    order_check = "checked";
-                                    is_checked = "1";
-                                }
-                                // return `<button class="btn btn-sm btn-info" onclick="start_gr('${data}')"><i class="fas fa-arrow-right"></i> GR</button>`;
-                                return `<input type="checkbox" class="form-input form-check-input bigger-checkbox all_row" name='id_order[]' onclick="select_id(${data})" id="id_order-${data}" value="${data}" ${order_check} />
-                                        <label class="form-check-label" for="id_order-${data}"></label>
-                                        <div class="check_sort" id="sort-${data}" hidden>${is_checked}</div>`;
-                            }
-                            else if (row["status_code"] == 1) {
-                                return `<i class="text-danger fas fa-exclamation-circle" style="font-size:14pt" data-bs-toggle="tooltip" data-bs-placement="right" title="Please fill in dimension!!"></i>`;
-                            }
-                            else{
-                                return `<button class="btn btn-sm btn-warning " onclick="box_list(${data})"><i class="fas fa-clipboard"></i></button>`;
-                            }
                         }
                     },
                     { "data": "material_type", "className": "align-middle" },
