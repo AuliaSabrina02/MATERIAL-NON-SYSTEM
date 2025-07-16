@@ -35,6 +35,7 @@ namespace SEMB_ERP.Models
         public string? unit_price { get; set; }
         public string? unit_price_msg { get; set; }
         public string? remark { get; set; }
+        public string? gatepass { get; set; }
         public int? is_error { get; set; }
     }
 }

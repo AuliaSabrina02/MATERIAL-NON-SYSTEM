@@ -34,5 +34,6 @@ namespace SEMB_ERP.Models
         public string? gr_no { get; set; }
         public int? total_box { get; set; }
         public string? remark { get; set; }
+        public string? gatepass { get; set; }
     }
 }

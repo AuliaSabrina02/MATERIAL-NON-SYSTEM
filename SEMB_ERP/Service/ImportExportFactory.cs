@@ -94,6 +94,7 @@ namespace SEMB_ERP.Service
                     sqlBulkCopy.ColumnMappings.Add("Column 13", "width_mm");
                     sqlBulkCopy.ColumnMappings.Add("Column 14", "height_mm");
                     sqlBulkCopy.ColumnMappings.Add("Column 15", "remark");
+                    sqlBulkCopy.ColumnMappings.Add("Column 16", "gatepass");
                     sqlBulkCopy.ColumnMappings.Add("id_upload", "id_upload");
                     sqlBulkCopy.ColumnMappings.Add("inserted_by", "inserted_by");
 

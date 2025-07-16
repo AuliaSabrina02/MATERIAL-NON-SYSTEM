@@ -137,6 +137,7 @@
                                             <th>PIC</th>
                                             <th>Order Type</th>
                                             <th>Unit Price</th>
+                                            <th>Gatepass</th>
                                             <th rowspan="2">File<br />Support</th>
                                             <th class="align-middle" colspan="3">Dimension</th> <!-- Merged cell for File Tag -->
                                             <th rowspan="2">Action</th>
@@ -147,7 +148,7 @@
                                             <th>Height(mm)</th>
                                         </tr> *@
                                         <tr>
-                                            @for (int i = 0; i < 16; i++) // Adjusted the loop to 24 to exclude Img Tagging
+                                            @for (int i = 0; i < 17; i++) // Adjusted the loop to 24 to exclude Img Tagging
                                             {
                                                 if (i != 1) // i!=1, because column index 1 is for button GR
                                                 {
@@ -297,6 +298,10 @@
                             <div class="form-group">
                                 <label>Remark</label>
                                 <textarea class="form-control" name="remark" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Gatepass</label>
+                                <input class="form-control" type="text" name="gatepass" placeholder="Gatepass" autocomplete="off"/>
                             </div>
                             <div class="form-group">
                                 <label>Supporting Documents (Excel or PDF)</label>
@@ -558,6 +563,7 @@
                             }
                         }
                     },
+                    { "data": "gatepass", "className": "align-middle" },
                     {
                         "data": "file_support",
                         "className": "text-center align-middle",
@@ -586,10 +592,10 @@
                             let btn_order_picking = "";
                             if (row['status_code'] == 1 && 
                                     (user_roles.includes("receiver") || (user_roles.includes("requestor") && row["pic"].toUpperCase() == sesa_id))
-                                ) {
+                                ) { 
                                 btn_edit = `<button data-remark="${row['remark']}" data-project_name="${row['project_name']}" class="btn btn-sm btn-warning btn-block" onclick="update_order(this, '${data}', '${row['material_type']}','${row['partno']}',
                                                     '${row['po_no']}','${row['qty']}','${row['uom']}','${row['revision']}','${row['storage_requirement']}'
-                                                    ,'${row['supplier_name']}','${row['pic']}','${row['order_type']}','${row['unit_price']}','${row['length_mm']}'
+                                                    ,'${row['supplier_name']}','${row['pic']}','${row['order_type']}','${row['unit_price']}','${row['gatepass']}','${row['length_mm']}'
                                                     ,'${row['width_mm']}','${row['height_mm']}','${row['file_support']}','${row['pic_name']}')"><i class="fas fa-edit"></i> Edit</button>`;
                                 if (row["pic"].toUpperCase() == sesa_id){ // Only PIC can delete
                                     btn_delete = `<div class="mt-1"><button class="btn btn-sm btn-danger btn-block" onclick="delete_order('${data}','${row['partno']}')"><i class="fas fa-trash"></i> Delete</button></div>`;
@@ -733,7 +739,7 @@
             return arr;
         }
 
-        function update_order(this_btn, id_order, material_type, partno, po_no, qty, uom, revision, storage_requirement, supplier_name, pic, order_type, unit_price
+        function update_order(this_btn, id_order, material_type, partno, po_no, qty, uom, revision, storage_requirement, supplier_name, pic, order_type, unit_price, gatepass
             , length_mm, width_mm, height_mm, file_support, pic_name) {
             $("input[name='id_order']").val(id_order);
 
@@ -769,6 +775,7 @@
             $("input[name='pic_display']").val(pic + ' - ' + pic_name);
             $("select[name='order_type']").val(order_type);
             $("input[name='unit_price']").val(unit_price);
+            $("input[name='gatepass']").val(gatepass);
             $("input[name='length_mm']").val(length_mm);
             $("input[name='width_mm']").val(width_mm);
             $("input[name='height_mm']").val(height_mm);

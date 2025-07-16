@@ -12,7 +12,7 @@ namespace SEMB_ERP.Function
 {
     public class DatabaseAccessLayer
     {
-        public string ConnectionString = "Data Source=10.155.152.114;Initial Catalog=SEMB_ERP_QAS;Persist Security Info=True;User ID=dt;Password=Dt@123;MultipleActiveResultSets=true";
+        public string ConnectionString = "Data Source=10.155.152.114;Initial Catalog=SEMB_ERP;Persist Security Info=True;User ID=dt;Password=Dt@123;MultipleActiveResultSets=true";
         public string ConnectionStringBLP = "Data Source=10.155.129.223;Initial Catalog=DBBLP;Persist Security Info=True;User ID=semb;Password=Semb@123;MultipleActiveResultSets=true";
 
         public List<OrderTempListModel> GetTempOrder(string id_upload, string sesa_id)
@@ -61,6 +61,7 @@ namespace SEMB_ERP.Function
                             row.height_mm = reader["height_mm"].ToString();
                             row.height_mm_msg = reader["height_mm_msg"].ToString();
                             row.remark = reader["remark"].ToString();
+                            row.gatepass = reader["gatepass"].ToString();
                             row.is_error = Convert.ToInt32(reader["is_error"]);
                             dataList.Add(row);
                         }
@@ -298,7 +299,7 @@ namespace SEMB_ERP.Function
         }
         public string SubmitOrder(string id_upload, string material_type, string partno, string po_no, double qty, string uom, string revision, string project_name,
             string storage_requirement, string supplier_name, string pic, string order_type, double unit_price, double length_mm, double width_mm, double height_mm,
-            string remark, string file_support, string sesa_id)
+            string remark, string gatepass, string file_support, string sesa_id)
         {
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
@@ -323,6 +324,7 @@ namespace SEMB_ERP.Function
                     cmd.Parameters.AddWithValue("@width_mm", width_mm);
                     cmd.Parameters.AddWithValue("@height_mm", height_mm);
                     cmd.Parameters.AddWithValue("@remark", remark);
+                    cmd.Parameters.AddWithValue("@gatepass", gatepass);
                     cmd.Parameters.AddWithValue("@file_support", file_support);
                     cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
                     cmd.ExecuteNonQuery();
@@ -334,7 +336,7 @@ namespace SEMB_ERP.Function
 
         public string UpdateOrder(string id_order, string id_upload, string material_type, string partno, string po_no, double qty, string uom, string revision, string project_name,
     string storage_requirement, string supplier_name, string order_type, double unit_price, double length_mm, double width_mm, double height_mm,
-    string remark, string file_support, string sesa_id)
+    string remark, string gatepass, string file_support, string sesa_id)
         {
             if (file_support == "")
             {
@@ -363,6 +365,7 @@ namespace SEMB_ERP.Function
                     cmd.Parameters.AddWithValue("@width_mm", width_mm);
                     cmd.Parameters.AddWithValue("@height_mm", height_mm);
                     cmd.Parameters.AddWithValue("@remark", remark);
+                    cmd.Parameters.AddWithValue("@gatepass", gatepass);
                     cmd.Parameters.AddWithValue("@file_support", file_support);
                     cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
                     cmd.ExecuteNonQuery();
@@ -2220,6 +2223,26 @@ namespace SEMB_ERP.Function
                 Console.WriteLine($"General Error: {ex.Message}");
                 return $"General Error: {ex.Message}";
             }
+        }
+        public DataSet GetExportStoragebinList()
+        {
+            DataSet ds = new DataSet();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                string query = "SELECT Status_Desc, Material_Type, Partno, PO_No, Storage_Bin, Qty, Picked_Qty, Available_Qty, UOM, Revision, Project_Name, Storage_Requirement, Supplier_Name, PIC, Order_Type, Unit_Price, Gatepass, Length_mm, Width_mm, Height_mm FROM v_order_sbin";
+                using (SqlCommand cmd = new SqlCommand(query))
+                {
+                    cmd.Connection = conn;
+                    using (SqlDataAdapter sda = new SqlDataAdapter(cmd))
+                    {
+                        sda.Fill(ds);
+                    }
+                }
+            }
+
+            return ds;
+
         }
     }
 }

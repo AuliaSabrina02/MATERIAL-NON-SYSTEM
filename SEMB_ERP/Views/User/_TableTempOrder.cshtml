@@ -38,6 +38,7 @@
                 <th class="align-middle">Height (mm)</th>
                 <th class="align-middle">Unit Price<span class="text-danger">*</span></th>
                 <th class="align-middle">Remark</th>
+                <th class="align-middle">Gatepass</th>
             </tr>
         </thead>
         <tbody>
@@ -64,6 +65,7 @@
                     <td>@item.height_mm @Html.Raw(msg_error(item.height_mm_msg ?? ""))</td>
                     <td>@item.unit_price @Html.Raw(msg_error(item.unit_price_msg ?? ""))</td>
                     <td>@item.remark</td>
+                    <td>@item.gatepass</td>
                 </tr>
             }
         </tbody>

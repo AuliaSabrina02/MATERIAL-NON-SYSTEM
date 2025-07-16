@@ -29,7 +29,7 @@ builder.Configuration
 
 var configuration = builder.Configuration;
 
-string connectionString = "Data Source=10.155.152.114;Initial Catalog=SEMB_ERP_QAS;Persist Security Info=True;User ID=dt;Password=Dt@123;MultipleActiveResultSets=true";
+string connectionString = "Data Source=10.155.152.114;Initial Catalog=SEMB_ERP;Persist Security Info=True;User ID=dt;Password=Dt@123;MultipleActiveResultSets=true";
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseSqlServer(
                     connectionString,

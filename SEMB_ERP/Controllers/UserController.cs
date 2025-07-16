@@ -13,6 +13,9 @@ using Newtonsoft.Json;
 using Microsoft.AspNetCore.Http.HttpResults;
 using MailKit.Search;
 using Org.BouncyCastle.Bcpg;
+using System.Data;
+using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Presentation;
 
 namespace SEMB_ERP.Controllers
 {
@@ -126,7 +129,7 @@ namespace SEMB_ERP.Controllers
         [Authorize(Policy = "RequireRequestor")]
         [HttpPost]
         public async Task<IActionResult> SubmitOrder(IFormFile file_support, string material_type, string partno, string po_no, double qty, string uom, string revision, string project_name,
-            string storage_requirement, string supplier_name, string pic, string order_type, double unit_price, double length_mm, double width_mm, double height_mm, string remark)
+            string storage_requirement, string supplier_name, string pic, string order_type, double unit_price, double length_mm, double width_mm, double height_mm, string remark, string gatepass)
         {
             DateTime now = DateTime.Now;
             string id_upload = now.ToString("yyMMddHHmmssfff");
@@ -150,14 +153,14 @@ namespace SEMB_ERP.Controllers
                     }
                 }
                 string submit = db.SubmitOrder(id_upload, material_type, partno, po_no, qty, uom, revision, project_name, storage_requirement, supplier_name,
-                                                pic, order_type, unit_price, length_mm, width_mm, height_mm, remark, file_support_db, sesa_id);
+                                                pic, order_type, unit_price, length_mm, width_mm, height_mm, remark, gatepass, file_support_db, sesa_id);
                 return Content("success;Succesfully Submitted!", "text/plain");
             }
         }
 
         [HttpPost]
         public async Task<IActionResult> UpdateOrder(IFormFile file_support, string id_order, string material_type, string partno, string po_no, double qty, string uom, string revision, string project_name,
-            string storage_requirement, string supplier_name, string order_type, double unit_price, double length_mm, double width_mm, double height_mm, string remark)
+            string storage_requirement, string supplier_name, string order_type, double unit_price, double length_mm, double width_mm, double height_mm, string remark, string gatepass)
         {
             DateTime now = DateTime.Now;
             string id_upload = now.ToString("yyMMddHHmmssfff");
@@ -181,7 +184,7 @@ namespace SEMB_ERP.Controllers
                     }
                 }
                 string submit = db.UpdateOrder(id_order, id_upload, material_type, partno, po_no, qty, uom, revision, project_name, storage_requirement, supplier_name,
-                                                order_type, unit_price, length_mm, width_mm, height_mm, remark, file_support_db, sesa_id);
+                                                order_type, unit_price, length_mm, width_mm, height_mm, remark, gatepass, file_support_db, sesa_id);
                 return Content("success;Updated Succesfully!", "text/plain");
             }
         }
@@ -267,7 +270,8 @@ namespace SEMB_ERP.Controllers
                                        OrderList.status_desc,
                                        OrderList.pic_name,
                                        OrderList.pic_department,
-                                       OrderList.remark
+                                       OrderList.remark,
+                                       OrderList.gatepass
                                    });
 
                 //var mstData = (from temp in _context.mst_material_plant select temp);
@@ -345,6 +349,10 @@ namespace SEMB_ERP.Controllers
                         else if (fieldName == "unit_price")
                         {
                             mstData = mstData.Where(m => m.unit_price.ToString().Contains(searchColVal));
+                        }
+                        else if (fieldName == "gatepass")
+                        {
+                            mstData = mstData.Where(m => m.gatepass.ToString().Contains(searchColVal));
                         }
                     }
                 }
@@ -492,7 +500,8 @@ namespace SEMB_ERP.Controllers
                                        StoragebinList.status_desc,
                                        StoragebinList.pic_name,
                                        StoragebinList.pic_department,
-                                       StoragebinList.remark
+                                       StoragebinList.remark,
+                                       StoragebinList.gatepass
                                    });
 
                 //var mstData = (from temp in _context.mst_material_plant select temp);
@@ -575,6 +584,10 @@ namespace SEMB_ERP.Controllers
                         {
                             mstData = mstData.Where(m => m.unit_price.ToString().Contains(searchColVal));
                         }
+                        else if (fieldName == "gatepass")
+                        {
+                            mstData = mstData.Where(m => m.gatepass.ToString().Contains(searchColVal));
+                        }
                     }
                 }
                 recordsTotal = mstData.Count();
@@ -585,6 +598,26 @@ namespace SEMB_ERP.Controllers
             catch (Exception ex)
             {
                 throw;
+            }
+        }
+
+        [HttpGet]
+        public IActionResult ExportStoragebinList()
+        {
+            using (XLWorkbook wb = new XLWorkbook())
+            {
+
+                DateTime currentDateTime = DateTime.Now;
+                string formattedDateTime = currentDateTime.ToString("yyyyMMddHHmmss");
+
+                var db = new DatabaseAccessLayer();
+                System.Data.DataTable dt = db.GetExportStoragebinList().Tables[0];
+                wb.Worksheets.Add(dt);
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    wb.SaveAs(stream);
+                    return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Storage Bin List.xlsx");
+                }
             }
         }
 

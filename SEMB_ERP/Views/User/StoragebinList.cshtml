@@ -101,6 +101,9 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-12 table-responsive">
+                                <div class="col col-2 mb-2">
+                                    <button class="btn btn-sm btn-success" onclick="download()"> <i class="fas fa-file-excel"></i> Download</button>
+                                </div>
                                 <table class="table table-bordered table-striped align-center nowrap" id="table_order" style="font-size:10pt;width:100%;">
                                     <thead class="bg-info align-middle text-center">
                                         <tr>
@@ -120,11 +123,12 @@
                                             <th>PIC</th>
                                             <th>Order Type</th>
                                             <th>Unit Price</th>
+                                            <th>Gatepass</th>
                                             <th rowspan="2">File<br />Support</th>
                                             <th class="align-middle" colspan="3">Dimension</th> <!-- Merged cell for File Tag -->
                                         </tr>
                                         <tr>
-                                            @for (int i = 0; i < 16; i++) // Adjusted the loop to 24 to exclude Img Tagging
+                                            @for (int i = 0; i < 17; i++) // Adjusted the loop to 24 to exclude Img Tagging
                                             {
                                                 if (i == 0)
                                                 {
@@ -309,6 +313,7 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
 
     <script>
         var table;
@@ -377,6 +382,7 @@
                             }
                         }
                     },
+                    { "data": "gatepass", "className": "align-middle" },
                     {
                         "data": "file_support",
                         "className": "text-center align-middle",
@@ -899,6 +905,10 @@
                     Swal.showLoading();
                 }
             });
+        }
+
+        function download() {
+            window.location.href = "@Url.Action("ExportStoragebinList", "User")";
         }
 
     </script>
