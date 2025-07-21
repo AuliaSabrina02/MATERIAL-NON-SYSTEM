@@ -323,8 +323,8 @@ namespace SEMB_ERP.Function
                     cmd.Parameters.AddWithValue("@length_mm", length_mm);
                     cmd.Parameters.AddWithValue("@width_mm", width_mm);
                     cmd.Parameters.AddWithValue("@height_mm", height_mm);
-                    cmd.Parameters.AddWithValue("@remark", remark);
-                    cmd.Parameters.AddWithValue("@gatepass", gatepass);
+                    cmd.Parameters.AddWithValue("@remark", remark ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@gatepass", gatepass ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@file_support", file_support);
                     cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
                     cmd.ExecuteNonQuery();
@@ -364,8 +364,8 @@ namespace SEMB_ERP.Function
                     cmd.Parameters.AddWithValue("@length_mm", length_mm);
                     cmd.Parameters.AddWithValue("@width_mm", width_mm);
                     cmd.Parameters.AddWithValue("@height_mm", height_mm);
-                    cmd.Parameters.AddWithValue("@remark", remark);
-                    cmd.Parameters.AddWithValue("@gatepass", gatepass);
+                    cmd.Parameters.AddWithValue("@remark", remark ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@gatepass", gatepass ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@file_support", file_support);
                     cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
                     cmd.ExecuteNonQuery();
@@ -2230,7 +2230,28 @@ namespace SEMB_ERP.Function
 
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
-                string query = "SELECT Status_Desc, Material_Type, Partno, PO_No, Storage_Bin, Qty, Picked_Qty, Available_Qty, UOM, Revision, Project_Name, Storage_Requirement, Supplier_Name, PIC, Order_Type, Unit_Price, Gatepass, Length_mm, Width_mm, Height_mm FROM v_order_sbin";
+                string query = "SELECT Status_Desc, Material_Type, Partno, PO_No, Storage_Bin, Qty, Picked_Qty, Available_Qty, UOM, Revision, Project_Name, Storage_Requirement, Supplier_Name, PIC, Order_Type, Unit_Price, Gatepass, Record_Date, Length_mm, Width_mm, Height_mm FROM v_order_sbin";
+                using (SqlCommand cmd = new SqlCommand(query))
+                {
+                    cmd.Connection = conn;
+                    using (SqlDataAdapter sda = new SqlDataAdapter(cmd))
+                    {
+                        sda.Fill(ds);
+                    }
+                }
+            }
+
+            return ds;
+
+        }
+
+        public DataSet GetExportRequestDetail()
+        {
+            DataSet ds = new DataSet();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                string query = "SELECT Request_No, Partno, Qty, Picked_Qty, UOM, Status_Picking FROM v_request_detail";
                 using (SqlCommand cmd = new SqlCommand(query))
                 {
                     cmd.Connection = conn;

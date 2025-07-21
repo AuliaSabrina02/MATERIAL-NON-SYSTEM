@@ -35,5 +35,6 @@ namespace SEMB_ERP.Models
         public int? total_box { get; set; }
         public string? remark { get; set; }
         public string? gatepass { get; set; }
+        public DateTime? record_date { get; set; }
     }
 }

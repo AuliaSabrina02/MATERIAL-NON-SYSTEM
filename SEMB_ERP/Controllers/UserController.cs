@@ -271,7 +271,8 @@ namespace SEMB_ERP.Controllers
                                        OrderList.pic_name,
                                        OrderList.pic_department,
                                        OrderList.remark,
-                                       OrderList.gatepass
+                                       OrderList.gatepass,
+                                       OrderList.record_date,
                                    });
 
                 //var mstData = (from temp in _context.mst_material_plant select temp);
@@ -284,7 +285,7 @@ namespace SEMB_ERP.Controllers
                     mstData = mstData.Where(m => m.partno.Contains(searchValue)
                                                 || m.pic.Contains(searchValue));
                 }
-                for (int i = 0; i < 15; i++)
+                for (int i = 0; i < 17; i++)
                 {
                     var searchColVal = Request.Form["columns[" + i.ToString() + "][search][value]"];
                     var fieldName = Request.Form["columns[" + i.ToString() + "][data]"].FirstOrDefault();
@@ -352,7 +353,7 @@ namespace SEMB_ERP.Controllers
                         }
                         else if (fieldName == "gatepass")
                         {
-                            mstData = mstData.Where(m => m.gatepass.ToString().Contains(searchColVal));
+                            mstData = mstData.Where(m => m.gatepass.Contains(searchColVal));
                         }
                     }
                 }
@@ -501,7 +502,8 @@ namespace SEMB_ERP.Controllers
                                        StoragebinList.pic_name,
                                        StoragebinList.pic_department,
                                        StoragebinList.remark,
-                                       StoragebinList.gatepass
+                                       StoragebinList.gatepass,
+                                       StoragebinList.record_date
                                    });
 
                 //var mstData = (from temp in _context.mst_material_plant select temp);
@@ -514,7 +516,7 @@ namespace SEMB_ERP.Controllers
                     mstData = mstData.Where(m => m.partno.Contains(searchValue)
                                                 || m.pic.Contains(searchValue));
                 }
-                for (int i = 0; i < 15; i++)
+                for (int i = 0; i < 17; i++)
                 {
                     var searchColVal = Request.Form["columns[" + i.ToString() + "][search][value]"];
                     var fieldName = Request.Form["columns[" + i.ToString() + "][data]"].FirstOrDefault();
@@ -586,7 +588,7 @@ namespace SEMB_ERP.Controllers
                         }
                         else if (fieldName == "gatepass")
                         {
-                            mstData = mstData.Where(m => m.gatepass.ToString().Contains(searchColVal));
+                            mstData = mstData.Where(m => m.gatepass.Contains(searchColVal));
                         }
                     }
                 }
@@ -1620,6 +1622,25 @@ namespace SEMB_ERP.Controllers
             catch (Exception ex)
             {
                 throw;
+            }
+        }
+        [HttpGet]
+        public IActionResult ExportRequestDetail()
+        {
+            using (XLWorkbook wb = new XLWorkbook())
+            {
+
+                DateTime currentDateTime = DateTime.Now;
+                string formattedDateTime = currentDateTime.ToString("yyyyMMddHHmmss");
+
+                var db = new DatabaseAccessLayer();
+                System.Data.DataTable dt = db.GetExportRequestDetail().Tables[0];
+                wb.Worksheets.Add(dt);
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    wb.SaveAs(stream);
+                    return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Request Details.xlsx");
+                }
             }
         }
         [HttpPost]
