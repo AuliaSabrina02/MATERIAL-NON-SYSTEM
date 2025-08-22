@@ -1364,6 +1364,15 @@ namespace SEMB_ERP.Controllers
             ViewBag.userRoles = userRoles;
             return View(reqList);
         }
+        [HttpPost]
+        public IActionResult UpdatePickingMaterialQty(int id_det, double value_data)
+        {
+            int returnValue;
+            var db = new DatabaseAccessLayer();
+            string submit = db.UpdatePickingMaterialQty(id_det, value_data);
+
+            return Content(submit, "text/plain");
+        }
         [Authorize(Policy = "RequireReceiver")]
         public IActionResult ScanBin(int id_request, int id_det)
         {

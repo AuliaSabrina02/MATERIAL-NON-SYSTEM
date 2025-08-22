@@ -135,11 +135,28 @@
                                         {
                                             no++;
                                             <tr>
-                                                <td>@no</td>
-                                                <td>@req.partno</td>
-                                                <td>@req.qty</td>
-                                                <td>@req.picked_qty</td>
-                                                <td class="text-center">
+                                                <td width="1%">@no</td>
+                                                <td width="2%">@req.partno</td>
+
+                                                @if (req.status_pick == "OPEN")
+                                                {
+                                                    <td width="2%">
+                                                        <span style="float:left">
+                                                            <input id="input-@req.id_det" name="input_value" type="number" onwheel="this.blur()" class="form-control form-control-sm text-center font-weight-bold" value="@req.qty" disabled />
+                                                        </span>
+                                                        <span style="float:right">
+                                                            <button class="btn btn-warning btn-sm" onclick="open_input_value('@req.id_det')"><i class="fas fa-edit"></i> Edit</button>
+                                                            <button id="btn-save" class="btn btn-success btn-sm" onclick="save_data('@req.id_det')" disabled><i class="fas fa-save"></i> Save</button>
+                                                        </span>
+                                                    </td>
+                                                }
+                                                else {
+                                                    <td width="2%">@req.qty</td>
+                                                }
+                                                
+                                                <td width="2%">@req.picked_qty</td>
+
+                                                <td class="text-center" width="2%">
                                                     @if (req.status_pick == "OPEN")
                                                     {
                                                         open_material++;
@@ -216,6 +233,81 @@
             // }).fail(function(err){
             //     swal.fire("Error!", err, "error");
             // })
+        }
+
+        function open_input_value(id_det) {
+
+            $("#input-" + id_det).prop('disabled', false);
+            $("#btn-save").prop('disabled', false);
+        }
+
+        function save_data(id_det) {
+            //get_input()
+
+            //GET DYNAMIC INPUT VALUE BASED ON KPI ID
+            var input_value = $("#input-" + id_det).val();
+
+            // var input_value = $("#input_value").val();
+
+            //console.log(ems_id, kpi_id, kpi_name, uom, year_data, month_data_no, month_data)
+
+            if (input_value == "") {
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Please Input Value Data First (Do Not Let it Blank) !'
+                })
+
+            }
+            else {
+
+                // $.ajax({
+                //     type: "POST",
+                //     url: "@Url.Action("UpdatePickingMaterialQty")",
+                //     data: {
+                //         id_det: id_det,
+                //         value_data: input_value
+                //     },
+                //     dataType: "json",
+                //     success: function (returnValue) {
+
+                //         //console.log("UPDATED")
+                        
+                //         //$("#btn_apply").click()
+                //         //$("#input_value").val('');
+
+
+                //     }
+                // });
+
+                $.ajax({
+                    type: "POST",
+                    url: "@Url.Action("UpdatePickingMaterialQty")",
+                    data: {
+                        id_det: id_det,
+                        value_data: input_value
+                    }
+                }).done(function (res) {
+
+                    $("#input-" + id_det).prop('disabled', true);
+                    $("#btn-save").prop('disabled', true);
+
+                    let arr = res.split(";");
+                    if (arr[0] == "OK") {
+                        swal.fire("Success!", "", "success");
+                    }
+                    else if (arr[0] == "ERROR") {
+                        swal.fire("Failed!", arr[1], "warning");
+                    }
+                    else {
+                        swal.fire("Failed!", res, "warning");
+                    }
+                }).fail(function(err){
+                    swal.fire("Error!", err, "error");
+                })
+
+            }
         }
 
 

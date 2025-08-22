@@ -887,6 +887,10 @@
                 swal.fire("Failed!", "Request qty is more than stock qty!", "error");
                 return;
             }
+            else if(parseFloat(req_qty) == 0){
+                swal.fire("Failed!", "Request qty can't 0!", "error");
+                return;
+            }
             else {
                 // console.log(formData);
                 Swal.fire({

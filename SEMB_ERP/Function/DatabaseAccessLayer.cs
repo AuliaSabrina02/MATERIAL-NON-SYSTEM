@@ -1158,6 +1158,42 @@ namespace SEMB_ERP.Function
                 return $"General Error: {ex.Message}";
             }
         }
+        public string UpdatePickingMaterialQty(int id_det, double value_data)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("UPDATE_PICKING_MATERIAL_QTY", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@id_det", id_det);
+                        cmd.Parameters.AddWithValue("@value_data", value_data);
+                        object result = cmd.ExecuteScalar();
+
+                        if (result != null)
+                        {
+                            return result.ToString() ?? "";
+                        }
+                        else
+                        {
+                            return "ERROR;No result returned from stored procedure.";
+                        }
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine($"SQL Error: {ex.Message}");
+                return $"SQL Error: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General Error: {ex.Message}");
+                return $"General Error: {ex.Message}";
+            }
+        }
         public string GetBinPicking(int id_request, int id_det, string sesa_id)
         {
             using (SqlConnection conn = new SqlConnection(ConnectionString))
