@@ -146,7 +146,7 @@
                                                         </span>
                                                         <span style="float:right">
                                                             <button class="btn btn-warning btn-sm" onclick="open_input_value('@req.id_det')"><i class="fas fa-edit"></i> Edit</button>
-                                                            <button id="btn-save" class="btn btn-success btn-sm" onclick="save_data('@req.id_det')" disabled><i class="fas fa-save"></i> Save</button>
+                                                            <button id="btn-save-@req.id_det" class="btn btn-success btn-sm" onclick="save_data('@req.id_det')" disabled><i class="fas fa-save"></i> Save</button>
                                                         </span>
                                                     </td>
                                                 }
@@ -238,7 +238,7 @@
         function open_input_value(id_det) {
 
             $("#input-" + id_det).prop('disabled', false);
-            $("#btn-save").prop('disabled', false);
+            $("#btn-save-" + id_det).prop('disabled', false);
         }
 
         function save_data(id_det) {
@@ -291,7 +291,7 @@
                 }).done(function (res) {
 
                     $("#input-" + id_det).prop('disabled', true);
-                    $("#btn-save").prop('disabled', true);
+                    $("#btn-save-" + id_det).prop('disabled', true);
 
                     let arr = res.split(";");
                     if (arr[0] == "OK") {
