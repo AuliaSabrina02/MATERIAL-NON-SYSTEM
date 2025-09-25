@@ -1030,7 +1030,7 @@ namespace SEMB_ERP.Controllers
             string submit = db.SubmitReqPicking(remark ?? "", sesa_id, plant);
             return Content(submit, "text/plain");
         }
-        [Authorize(Policy = "RequireRequestorReceiverAdmin")]
+        [Authorize(Policy = "RequireAny")]
         public IActionResult RequestList()
         {
             return this.CheckSession(() =>
@@ -1044,11 +1044,14 @@ namespace SEMB_ERP.Controllers
                 var db = new DatabaseAccessLayer();
                 List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
                 List<string> listStatus = db.GetStatusRequest();
+                List<string> listPrinter = db.GetPrinter();
                 string name = User.FindFirst("semb_erp_name")?.Value;
                 ViewBag.name = name;
                 ViewBag.sesa_id = sesa_id;
                 ViewBag.listStatus = listStatus;
                 ViewBag.userRoles = userRoles;
+                ViewBag.listPrinter = listPrinter;
+
                 return View(userDetail);
             });
         }
@@ -1102,6 +1105,7 @@ namespace SEMB_ERP.Controllers
                 int recordsTotal = 0;
                 var mstData = (from RequestList in _context.v_request
                                where RequestList.requested_by==sesa_id || user_roles.HasAnyRole("admin","receiver")
+                               orderby RequestList.status_request ascending
                                select
                                    new
                                    {
@@ -1162,8 +1166,10 @@ namespace SEMB_ERP.Controllers
             var reqInfo = JsonConvert.DeserializeObject<RequestListModel>(db.GetRequestInfo(id_request));
             List<RequestListModel> dataList = db.GetReqDetail(id_request);
             List<PickBoxModel> boxList = db.GetPickBox(id_request);
+            List<TcodeModel> tcodeList = db.GetTcodeHistory(id_request);
             ViewBag.reqInfo = reqInfo;
             ViewBag.boxList = boxList;
+            ViewBag.tcodeList = tcodeList;
             //return Content("Upload Success!!", "text/plain");
 
             return PartialView("_TableRequestDetail", dataList);
@@ -1906,6 +1912,7 @@ namespace SEMB_ERP.Controllers
                 status_desc = item.status_desc,
                 remark = item.remark,
                 record_date = item.record_date,
+                lead_time = item.lead_time,
                 requested_by = item.requested_by,
                 requested_by_name = item.requested_by_name,
                 department = item.department

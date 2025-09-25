@@ -246,6 +246,7 @@
                         request_no: item.request_no,
                         requested_by_name: item.requested_by_name,
                         record_date: item.record_date,
+                        lead_time: item.lead_time,
                         remark: item.remark,
                         status_desc: item.status_desc,
                         status_code: item.status_code
@@ -317,6 +318,9 @@
                                                     </tr>
                                                     <tr>
                                                         <td style="background-color: white; border: 1px solid black;">${details.record_date}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="background-color: white; border: 1px solid black;">${details.lead_time} Hours</td>
                                                     </tr>
                                                     <tr>
                                                         <td style="background-color: white; border: 1px solid black;">${details.remark}</td>

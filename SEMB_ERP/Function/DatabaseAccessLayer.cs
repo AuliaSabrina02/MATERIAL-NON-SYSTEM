@@ -1897,7 +1897,8 @@ namespace SEMB_ERP.Function
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
                 conn.Open();
-                SqlCommand cmd = new SqlCommand("SELECT DISTINCT department FROM mst_users WHERE department is not NULL and department != 'NULL' ", conn);
+                SqlCommand cmd = new SqlCommand("GET_DEPTS_LIST", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
                 //cmd.Parameters.AddWithValue("@box_id", box_id);
                 SqlDataReader reader = cmd.ExecuteReader();
 
@@ -1935,6 +1936,7 @@ namespace SEMB_ERP.Function
                             status_desc = reader["status_desc"].ToString(),
                             remark = reader["remark"].ToString(),
                             record_date = reader["record_date"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(reader["record_date"]) : null,
+                            lead_time = reader["lead_time"].ToString(),
                             requested_by = reader["requested_by"].ToString(),
                             requested_by_name = reader["name"].ToString(),
                             department = reader["department"].ToString(),
@@ -1968,6 +1970,31 @@ namespace SEMB_ERP.Function
                         picked_by_name = reader["picked_by_name"].ToString(),
                         pallet_no = reader["pallet_no"].ToString(),
                         record_date = Convert.ToDateTime(reader["record_date"])
+                    });
+                }
+            }
+
+            return dataList;
+        }
+        public List<TcodeModel> GetTcodeHistory(int id_request)
+        {
+            List<TcodeModel> dataList = new List<TcodeModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("GET_TCODE_HISTORY", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@id_request", id_request);
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    dataList.Add(new TcodeModel
+                    {
+                        status_request = reader["status_request"].ToString(),
+                        record_date = Convert.ToDateTime(reader["record_date"]),
+                        name = reader["name"].ToString(),
                     });
                 }
             }

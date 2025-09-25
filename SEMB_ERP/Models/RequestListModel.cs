@@ -21,5 +21,8 @@ namespace SEMB_ERP.Models
         public decimal? picked_qty { get; set; }
         public string? status_pick { get; set; }
         public string? department { get; set; }
+        public string? status_request { get; set; }
+        public string? lead_time { get; set; }
+
     }
 }
