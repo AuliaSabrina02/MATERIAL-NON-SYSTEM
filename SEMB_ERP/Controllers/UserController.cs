@@ -2168,6 +2168,139 @@ namespace SEMB_ERP.Controllers
             // Return the result directly
             return Content(Result, "text/plain");
         }
+
+        [Authorize(Policy = "RequireAny")]
+        public IActionResult AgingMovement()
+        {
+            return this.CheckSession(() =>
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> userRoles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                //sesa_id = "SESA126011";
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                List<string> listStatus = db.GetStatus();
+                List<string> listPrinter = db.GetPrinter();
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.listStatus = listStatus;
+                ViewBag.userRoles = userRoles;
+                ViewBag.listPrinter = listPrinter;
+                return View(userDetail);
+            });
+
+            return View();
+        }
+        public IActionResult GetAgingMovementList()
+        {
+            try
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> user_roles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                var user = userDetail.First();
+
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = Request.Form["start"].FirstOrDefault();
+                var length = Request.Form["length"].FirstOrDefault();
+                //var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][name]"].FirstOrDefault();
+                var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][data]"].FirstOrDefault();
+                var sortColumnDirection = Request.Form["order[0][dir]"].FirstOrDefault();
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                var column0Value = Request.Form["columns[0][search][value]"];
+                var column1Value = Request.Form["columns[1][search][value]"];
+                var column2Value = Request.Form["columns[2][search][value]"];
+                int pageSize = length != null ? Convert.ToInt32(length) : 0;
+                int skip = start != null ? Convert.ToInt32(start) : 0;
+                int recordsTotal = 0;
+
+                var departments = user.other_dept.Split(',').Select(d => d.Trim()).ToList();
+
+                var mstData = (from AgingMovement in _context.v_order_aging
+                               where user_roles.Contains("receiver") || user_roles.Contains("admin") || (user_roles.Contains("requestor"))
+                               select
+                                   new
+                                   {
+                                       AgingMovement.status_desc,
+                                       AgingMovement.material_type,
+                                       AgingMovement.partno,
+                                       AgingMovement.po_no,
+                                       AgingMovement.project_name,
+                                       AgingMovement.storage_requirement,
+                                       AgingMovement.supplier_name,
+                                       AgingMovement.pic_name,
+                                       AgingMovement.order_type,
+                                       AgingMovement.last_updated,
+                                       AgingMovement.aging,
+                                   });
+
+                //var mstData = (from temp in _context.mst_material_plant select temp);
+                if (!(string.IsNullOrEmpty(sortColumn) && string.IsNullOrEmpty(sortColumnDirection)))
+                {
+                    mstData = mstData.OrderBy(sortColumn + " " + sortColumnDirection);
+                }
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    mstData = mstData.Where(m => m.partno.Contains(searchValue));
+                }
+                for (int i = 0; i < 8; i++)
+                {
+                    var searchColVal = Request.Form["columns[" + i.ToString() + "][search][value]"];
+                    var fieldName = Request.Form["columns[" + i.ToString() + "][data]"].FirstOrDefault();
+                    if (!string.IsNullOrEmpty(searchColVal))
+                    {
+                        if (fieldName == "status_desc")
+                        {
+                            mstData = mstData.Where(m => m.status_desc.Contains(searchColVal));
+                        }
+                        else if (fieldName == "material_type")
+                        {
+                            mstData = mstData.Where(m => m.material_type.Contains(searchColVal));
+                        }
+                        else if (fieldName == "partno")
+                        {
+                            mstData = mstData.Where(m => m.partno.Contains(searchColVal));
+                        }
+                        else if (fieldName == "po_no")
+                        {
+                            mstData = mstData.Where(m => m.po_no.Contains(searchColVal));
+                        }
+                        else if (fieldName == "project_name")
+                        {
+                            mstData = mstData.Where(m => m.project_name.Contains(searchColVal));
+                        }
+                        else if (fieldName == "storage_requirement")
+                        {
+                            mstData = mstData.Where(m => m.storage_requirement.Contains(searchColVal));
+                        }
+                        else if (fieldName == "supplier_name")
+                        {
+                            mstData = mstData.Where(m => m.supplier_name.Contains(searchColVal));
+                        }
+                        else if (fieldName == "order_type")
+                        {
+                            mstData = mstData.Where(m => m.order_type.Contains(searchColVal));
+                        }
+                    }
+                }
+                recordsTotal = mstData.Count();
+                var data = mstData.Skip(skip).Take(pageSize).ToList();
+                var jsonData = new { draw = draw, recordsFiltered = recordsTotal, recordsTotal = recordsTotal, data = data };
+                return Ok(jsonData);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
     }
 }
     

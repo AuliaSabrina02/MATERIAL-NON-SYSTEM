@@ -148,6 +148,14 @@
                                         </p>
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a href="@Url.Action("AgingMovement", "User")" class="nav-link @Html.IsActive("User", "AgingMovement")">
+                                        <i class="nav-icon fas fa-hourglass-half"></i>
+                                        <p>
+                                            Aging Movement
+                                        </p>
+                                    </a>
+                                </li>
                             }
                             if (user_roles.HasAnyRole("receiver"))
                             {

@@ -1,0 +1,300 @@
+﻿@* @using System.Data; *@
+@model List<UserDetailModel>
+@using Microsoft.AspNetCore.Mvc.Rendering;
+@using Microsoft.AspNetCore.Http;
+@using SEMB_ERP.Function;
+@{
+    var user = Model.First();
+    string sesa_id = ViewBag.sesa_id;
+    string name = ViewBag.name;
+    List<string> listStatus = ViewBag.listStatus;
+    List<string> userRoles = ViewBag.userRoles;
+    List<string> listPrinter = ViewBag.listPrinter;
+}
+
+<style>
+    /* CSS untuk membuat modal berada di tengah layar */
+    #loadingSpinner {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5); /* Transparan hitam */
+    }
+
+        #loadingSpinner img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+    .box_form_input {
+        background-color: #fcfcfc;
+        border-radius: 5px;
+        box-shadow: 1px 2px 8px 2px rgba(152,152,152,0.7);
+    }
+
+    .modal {
+        overflow: auto !important
+    }
+
+    .smaller-input {
+        height: 25px; /* Adjust height as necessary */
+        padding: 5px; /* Adjust padding as necessary */
+        font-size: 10px; /* Optional: Adjust font size */
+        line-height: 1; /* Optional: Reset line height */
+    }
+
+    /* Customize the font size for DataTables elements */
+    .dataTables_info, .dataTables_paginate, .dataTables_filter {
+        font-size: 10pt; /* Adjust the value to your desired font size */
+    }
+
+    #table_order_filter.dataTables_filter {
+        display: none;
+    }
+
+    table#table_order tr > th {
+        padding: 5px;
+    }
+
+    table#table_order tr > td {
+        padding: 5px;
+    }
+
+    .btn-group-xs > .btn, .btn-xs {
+        padding: .25rem .4rem;
+        font-size: .875rem;
+        line-height: .5;
+        border-radius: .2rem;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .form-check-input.bigger-checkbox {
+        margin-left: 0.2px;
+        transform: scale(2); /* Adjust the scale as needed */
+    }
+
+</style>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 mt-3">
+                <div class="card card-success card-outline">
+                    @*                     <div class="card-header">
+                        <h3 class="text-center half-underline">
+                            <i class="fas fa-list"></i>
+                            Asset List
+                        </h3>
+                    </div> *@
+                    <div class="card-header">
+                        <h5>
+                            <i class="fas fa-list"></i>
+                            Aging Movement
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @* <div class="col-12 d-flex justify-content-end mb-2">
+                                <a href="@Url.Action("DOWNLOAD_ASSET_LIST", "Requestor")" id="btn_download_data" class="btn btn-dark">
+                                    <i class="fas fa-download"></i> Download Asset List
+                                </a>
+                            </div> *@
+                            @* <div class="col-12 text-right">
+                                <button class="btn btn-success" name="btn_gr"><i class="fas fa-boxes"></i> GR</button>
+                            </div> *@
+                            <div class="col-12 table-responsive">
+                                <table class="table table-bordered table-striped align-center nowrap" id="table_order" style="font-size:10pt;width:100%;">
+                                    <thead class="bg-info align-middle text-center">
+                                        <tr>
+                                            <th>Status</th>
+                                            <th>Material Type</th>
+                                            <th>Part No</th>
+                                            <th>PO NO</th>
+                                            <th>Project Name</th>
+                                            <th>Storage Requirement</th>
+                                            <th>Supplier Name</th>
+                                            <th>PIC</th>
+                                            <th>Order Type</th>
+                                            <th rowspan="2">Last<br />Update</th>
+                                            <th rowspan="2">Aging Movement<br />(Days)</th>
+                                        </tr>
+                                        <tr>
+                                            @for (int i = 0; i < 9; i++) // Adjusted the loop to 24 to exclude Img Tagging
+                                            {
+                                                if (i == 0)
+                                                {
+                                                    <td>
+                                                        <select class="form-control smaller-input filter_table" target="@i">
+                                                            <option value="">#ALL</option>
+                                                            @foreach (var status in listStatus)
+                                                            {
+                                                                <option value="@status">@status</option>
+                                                            }
+                                                        </select>
+                                                    </td>
+                                                }
+                                                else
+                                                {
+                                                    <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="@i" /></td>
+                                                }
+                                            }
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Element spinner -->
+            <div id="loadingSpinner" style="display: none;">
+                <img src="~/images/icon/loading.gif" alt="Loading..." />
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+
+    <script>
+        var table;
+        var loading = "<div class='text-center'><i class='fa fa-4x fa-spinner fa-spin'></i></div>";
+        var id_order_array = [];
+        var sesa_id = "@user.sesa_id".toUpperCase();
+        var user_roles = @Html.Raw(Json.Serialize(userRoles));
+        var list_printers = @Html.Raw(Json.Serialize(listPrinter));
+        const printInputOptions = list_printers.reduce((acc, text) => {
+            acc[text] = text;
+            return acc;
+        }, {});
+
+        $(document).ready(function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            })
+
+            var table = $("#table_order").DataTable({
+                // "searching": false,
+                // "scrollX": true,
+                // "fixedColumns": {
+                //     rightColumns: 1
+                // },
+                "orderCellsTop": true,
+                "processing": true,
+                "serverSide": true,
+                "filter": true,
+                "ajax": {
+                    "url": "@Url.Action("GetAgingMovementList")",
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                "columns": [
+                    { "data": "status_desc",
+                        "className": "align-middle",
+                        "render": function (data, type, row) {
+                            return data;
+                        }
+                    },
+                    { "data": "material_type", "className": "align-middle" },
+                    { "data": "partno", "className": "align-middle" },
+                    { "data": "po_no", "className": "align-middle" },
+                    { "data": "project_name", "className": "align-middle" },
+                    { "data": "storage_requirement", "className": "align-middle" },
+                    { "data": "supplier_name", "className": "align-middle" },
+                    { "data": "pic_name", "className": "align-middle" },
+                    { "data": "order_type", "className": "align-middle" },
+                    {
+                      data: "last_updated",
+                      className: "align-middle",
+                      render: function (data, type, row) {
+                        const date = new Date(data);
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const year = date.getFullYear();
+                        const hours = String(date.getHours()).padStart(2, '0');
+                        const minutes = String(date.getMinutes()).padStart(2, '0');
+                        const seconds = String(date.getSeconds()).padStart(2, '0');
+                        return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+                      }
+                    },
+                    { "data": "aging", "className": "align-middle" },
+                ],
+                "drawCallback": function (settings) {
+                    // Set the background color for the second column (index 1)
+                    this.api().rows().every(function () {
+                        var rowNode = this.node();
+                        let status_desc = $(rowNode).find('td:eq(0)').html();
+                        status_desc = status_desc.toLowerCase();
+                        let bg_color = "";
+                        if(status_desc=="submission"){
+                            bg_color = "bg-warning";
+                        }
+                        else if(status_desc=="received"){
+                            bg_color = "bg-success";
+                        }
+                        else if (status_desc=="putaway") {
+                            bg_color = "bg-info";
+                        }
+                        else if (status_desc=="partially picked") {
+                            bg_color = "bg-info";
+                        }
+                        else if (status_desc=="closed") {
+                            bg_color = "bg-secondary";
+                        }
+                        $(rowNode).find('td').css("background-color", "#edfcf1")
+                        $(rowNode).find('td:eq(0)').addClass(bg_color);
+
+
+                    });
+                    // Initialize tooltips
+                    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                        return new bootstrap.Tooltip(tooltipTriggerEl);
+                    });
+
+                },
+                "order": [[0, 'asc']]
+            });
+
+
+            $('input.filter_table, select.filter_table', this).on('keyup change', function () {
+                let trgt = $(this).attr('target');
+                // alert(trgt);
+                if (table.column(trgt).search() !== this.value) {
+                    table
+                        .column(trgt)
+                        .search(this.value)
+                        .draw();
+                }
+            });
+
+        })
+
+        
+        function showLoadingSpinner(msg = 'Please wait...') {
+            Swal.fire({
+                title: 'Processing',
+                html: msg,
+                allowOutsideClick: false,
+                onBeforeOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        }
+
+    </script>
+}
