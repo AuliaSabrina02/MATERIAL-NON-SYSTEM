@@ -2301,6 +2301,14 @@ namespace SEMB_ERP.Controllers
                 throw;
             }
         }
+
+        public IActionResult GetAgingMovementChart()
+        {
+            var db = new DatabaseAccessLayer();
+            List <ChartModel> result = db.GetAgingMovementChart();
+
+            return Json(result);
+        }
     }
 }
     

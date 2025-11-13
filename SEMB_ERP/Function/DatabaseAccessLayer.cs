@@ -1,12 +1,13 @@
-﻿using SEMB_ERP.Models;
-using System.Data.SqlClient;
-using System.Data;
+﻿using DocumentFormat.OpenXml.Drawing;
 using Microsoft.AspNetCore.Mvc;
-using System.Drawing.Drawing2D;
-using System.Drawing;
-using System.IO;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Ocsp;
+using SEMB_ERP.Models;
+using System.Data;
+using System.Data.SqlClient;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.IO;
 
 namespace SEMB_ERP.Function
 {
@@ -2327,6 +2328,33 @@ namespace SEMB_ERP.Function
 
             return ds;
 
+        }
+        public List<ChartModel> GetAgingMovementChart()
+        {
+            List<ChartModel> result = new List<ChartModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString)) 
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("GET_AGING_MOVEMENT_CHART", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                SqlDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    result.Add(new ChartModel()
+                    {
+                        label = reader["Label"].ToString(),
+                        value1 = reader.IsDBNull("<= 3 Months") ? 0 : Convert.ToDouble(reader["<= 3 Months"]),
+                        value2 = reader.IsDBNull("<= 6 Months") ? 0 : Convert.ToDouble(reader["<= 6 Months"]),
+                        value3 = reader.IsDBNull("<= 12 Months") ? 0 : Convert.ToDouble(reader["<= 12 Months"]),
+                        value4 = reader.IsDBNull("> 1 Year") ? 0 : Convert.ToDouble(reader["> 1 Year"])
+                    });
+                }
+
+                conn.Close();
+            }
+
+            return result;
         }
     }
 }

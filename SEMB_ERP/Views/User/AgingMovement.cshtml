@@ -92,12 +92,21 @@
         <div class="row">
             <div class="col-lg-12 mt-3">
                 <div class="card card-success card-outline">
-                    @*                     <div class="card-header">
-                        <h3 class="text-center half-underline">
-                            <i class="fas fa-list"></i>
-                            Asset List
-                        </h3>
-                    </div> *@
+                    <div class="card-header">
+                        <h5>
+                            <i class="fas fa-chart-line"></i>
+                            Aging Movement Chart
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div id="chart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12 mt-3">
+                <div class="card card-success card-outline">
                     <div class="card-header">
                         <h5>
                             <i class="fas fa-list"></i>
@@ -106,14 +115,6 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            @* <div class="col-12 d-flex justify-content-end mb-2">
-                                <a href="@Url.Action("DOWNLOAD_ASSET_LIST", "Requestor")" id="btn_download_data" class="btn btn-dark">
-                                    <i class="fas fa-download"></i> Download Asset List
-                                </a>
-                            </div> *@
-                            @* <div class="col-12 text-right">
-                                <button class="btn btn-success" name="btn_gr"><i class="fas fa-boxes"></i> GR</button>
-                            </div> *@
                             <div class="col-12 table-responsive">
                                 <table class="table table-bordered table-striped align-center nowrap" id="table_order" style="font-size:10pt;width:100%;">
                                     <thead class="bg-info align-middle text-center">
@@ -172,14 +173,6 @@
     <script>
         var table;
         var loading = "<div class='text-center'><i class='fa fa-4x fa-spinner fa-spin'></i></div>";
-        var id_order_array = [];
-        var sesa_id = "@user.sesa_id".toUpperCase();
-        var user_roles = @Html.Raw(Json.Serialize(userRoles));
-        var list_printers = @Html.Raw(Json.Serialize(listPrinter));
-        const printInputOptions = list_printers.reduce((acc, text) => {
-            acc[text] = text;
-            return acc;
-        }, {});
 
         $(document).ready(function () {
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
@@ -267,7 +260,7 @@
                     });
 
                 },
-                "order": [[0, 'asc']]
+                "order": [[10, 'desc']]
             });
 
 
@@ -282,6 +275,57 @@
                 }
             });
 
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetAgingMovementChart")",
+                success: function (res) {
+
+                    var categories = [];
+                    var series1 = [];
+                    var series2 = [];
+                    var series3 = [];
+                    var series4 = [];
+
+                    $.each(res, function (i, item) {
+                        categories.push(item.label);
+                        series1.push(item.value1);
+                        series2.push(item.value2);
+                        series3.push(item.value3);
+                        series4.push(item.value4);
+                    });
+
+                    Highcharts.chart('chart', {
+                        chart: { type: 'column' },
+                        title: { text: '' },
+                        xAxis: { categories: categories },
+                        yAxis: {
+                            min: 0,
+                            title: { text: 'Total' },
+                            stackLabels: { enabled: false }
+                        },
+                        legend: { align: 'center', verticalAlign: 'bottom' },
+
+                        tooltip: {
+                            headerFormat: '<b>{point.key}</b><br/>',
+                            pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+                        },
+
+                        plotOptions: {
+                            column: { stacking: 'normal', dataLabels: { enabled: true } }
+                        },
+                        series: [
+                            { name: '<= 3 Months', data: series1, color: '#bcff47' },
+                            { name: '<= 6 Months', data: series2, color: '#ff9147' },
+                            { name: '<= 12 Months', data: series3, color: '#ff478a' },
+                            { name: '> 1 Year', data: series4, color: '#c247ff' }
+                        ]
+                    });
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error("Error:", textStatus, errorThrown);
+                    alert("Something went wrong: " + errorThrown);
+                }
+            });
         })
 
         
