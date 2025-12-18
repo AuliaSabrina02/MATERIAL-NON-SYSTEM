@@ -2294,7 +2294,7 @@ namespace SEMB_ERP.Function
 
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
-                string query = "SELECT Status_Desc, Material_Type, Partno, PO_No, Storage_Bin, Qty, Picked_Qty, Available_Qty, UOM, Revision, Project_Name, Storage_Requirement, Supplier_Name, PIC, Order_Type, Unit_Price, Gatepass, Record_Date, Length_mm, Width_mm, Height_mm FROM v_order_sbin";
+                string query = "SELECT Status_Desc, Material_Type, Partno, PO_No, Storage_Bin, Box_ID, Qty, Picked_Qty, Available_Qty, UOM, Revision, Project_Name, Storage_Requirement, Supplier_Name, PIC_Name, Order_Type, Unit_Price, Gatepass, Record_Date, Length_mm, Width_mm, Height_mm FROM v_order_sbin";
                 using (SqlCommand cmd = new SqlCommand(query))
                 {
                     cmd.Connection = conn;

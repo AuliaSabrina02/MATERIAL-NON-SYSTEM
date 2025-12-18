@@ -112,6 +112,7 @@
                                             <th>Part No</th>
                                             <th>PO NO</th>
                                             <th>Storage Bin</th>
+                                            <th>Box ID</th>
                                             <th>Qty</th>
                                             <th>Pick.Qty</th>
                                             <th>Avai.Qty</th>
@@ -129,7 +130,7 @@
                                             <th class="align-middle" colspan="3">Dimension</th> <!-- Merged cell for File Tag -->
                                         </tr>
                                         <tr>
-                                            @for (int i = 0; i < 17; i++) // Adjusted the loop to 24 to exclude Img Tagging
+                                            @for (int i = 0; i < 18; i++) // Adjusted the loop to 24 to exclude Img Tagging
                                             {
                                                 if (i == 0)
                                                 {
@@ -361,6 +362,7 @@
                     { "data": "partno", "className": "align-middle" },
                     { "data": "po_no", "className": "align-middle" },
                     { "data": "storage_bin", "className": "align-middle" },
+                    { "data": "box_id", "className": "align-middle" },
                     { "data": "qty", "className": "align-middle" },
                     { "data": "picked_qty", "className": "align-middle" },
                     { "data": "available_qty", "className": "align-middle" },

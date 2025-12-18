@@ -10,6 +10,7 @@ namespace SEMB_ERP.Models
         public string? partno { get; set; }
         public string? po_no { get; set; }
         public string? storage_bin { get; set; }
+        public string? box_id { get; set; }
         public decimal? qty { get; set; }
         public decimal? picked_qty { get; set; }
         public decimal? available_qty { get; set; }

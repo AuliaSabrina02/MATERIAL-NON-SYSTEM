@@ -311,15 +311,15 @@ namespace SEMB_ERP.Controllers
                         {
                             mstData = mstData.Where(m => m.qty.ToString().Contains(searchColVal));
                         }
-                        else if (fieldName == "qty")
-                        {
-                            mstData = mstData.Where(m => m.qty.ToString().Contains(searchColVal));
-                        }
                         else if (fieldName == "picked_qty")
                         {
-                            mstData = mstData.Where(m => m.qty.ToString().Contains(searchColVal));
+                            mstData = mstData.Where(m => m.picked_qty.ToString().Contains(searchColVal));
                         }
                         else if (fieldName == "available_qty")
+                        {
+                            mstData = mstData.Where(m => m.available_qty.ToString().Contains(searchColVal));
+                        }
+                        else if (fieldName == "uom")
                         {
                             mstData = mstData.Where(m => m.uom.Contains(searchColVal));
                         }
@@ -339,9 +339,9 @@ namespace SEMB_ERP.Controllers
                         {
                             mstData = mstData.Where(m => m.supplier_name.Contains(searchColVal));
                         }
-                        else if (fieldName == "pic")
+                        else if (fieldName == "pic_name")
                         {
-                            mstData = mstData.Where(m => m.pic.Contains(searchColVal));
+                            mstData = mstData.Where(m => m.pic_name.Contains(searchColVal));
                         }
                         else if (fieldName == "order_type")
                         {
@@ -482,6 +482,7 @@ namespace SEMB_ERP.Controllers
                                        StoragebinList.partno,
                                        StoragebinList.po_no,
                                        StoragebinList.storage_bin,
+                                       StoragebinList.box_id,
                                        StoragebinList.qty,
                                        StoragebinList.picked_qty,
                                        StoragebinList.available_qty,
@@ -516,7 +517,7 @@ namespace SEMB_ERP.Controllers
                     mstData = mstData.Where(m => m.partno.Contains(searchValue)
                                                 || m.pic.Contains(searchValue));
                 }
-                for (int i = 0; i < 17; i++)
+                for (int i = 0; i < 18; i++)
                 {
                     var searchColVal = Request.Form["columns[" + i.ToString() + "][search][value]"];
                     var fieldName = Request.Form["columns[" + i.ToString() + "][data]"].FirstOrDefault();
@@ -542,9 +543,9 @@ namespace SEMB_ERP.Controllers
                         {
                             mstData = mstData.Where(m => m.storage_bin.Contains(searchColVal));
                         }
-                        else if (fieldName == "qty")
+                        else if (fieldName == "box_id")
                         {
-                            mstData = mstData.Where(m => m.qty.ToString().Contains(searchColVal));
+                            mstData = mstData.Where(m => m.box_id.Contains(searchColVal));
                         }
                         else if (fieldName == "qty")
                         {
@@ -552,9 +553,13 @@ namespace SEMB_ERP.Controllers
                         }
                         else if (fieldName == "picked_qty")
                         {
-                            mstData = mstData.Where(m => m.qty.ToString().Contains(searchColVal));
+                            mstData = mstData.Where(m => m.picked_qty.ToString().Contains(searchColVal));
                         }
                         else if (fieldName == "available_qty")
+                        {
+                            mstData = mstData.Where(m => m.available_qty.ToString().Contains(searchColVal));
+                        }
+                        else if (fieldName == "uom")
                         {
                             mstData = mstData.Where(m => m.uom.Contains(searchColVal));
                         }
@@ -574,9 +579,9 @@ namespace SEMB_ERP.Controllers
                         {
                             mstData = mstData.Where(m => m.supplier_name.Contains(searchColVal));
                         }
-                        else if (fieldName == "pic")
+                        else if (fieldName == "pic_name")
                         {
-                            mstData = mstData.Where(m => m.pic.Contains(searchColVal));
+                            mstData = mstData.Where(m => m.pic_name.Contains(searchColVal));
                         }
                         else if (fieldName == "order_type")
                         {
