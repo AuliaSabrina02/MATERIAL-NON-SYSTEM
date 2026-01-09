@@ -114,6 +114,9 @@
                             @* <div class="col-12 text-right">
                                 <button class="btn btn-success" name="btn_gr"><i class="fas fa-boxes"></i> GR</button>
                             </div> *@
+                            <div class="col col-2 mb-2">
+                                <button class="btn btn-sm btn-success" onclick="download()"> <i class="fas fa-file-excel"></i> Download</button>
+                            </div>
                             <div class="col-12 table-responsive">
                                 <table class="table table-bordered table-striped align-center nowrap" id="table_req" style="font-size:12pt;width:100%;">
                                     <thead class="bg-warning align-middle text-center">
@@ -312,6 +315,10 @@
                     // $("#loading_modal").modal('show');
                 }
             })
+        }
+
+        function download() {
+            window.location.href = "@Url.Action("ExportRequestList", "User")";
         }
 
     </script>

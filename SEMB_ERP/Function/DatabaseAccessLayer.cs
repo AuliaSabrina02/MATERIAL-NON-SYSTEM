@@ -943,6 +943,47 @@ namespace SEMB_ERP.Function
 
             return tempList;
         }
+        public DataSet GetExportOrderList()
+        {
+            DataSet ds = new DataSet();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                string query = "SELECT status_desc, material_type, partno, po_no, qty, picked_qty, available_qty, uom, revision, project_name, storage_requirement, supplier_name, pic_name, order_type, unit_price, gatepass, record_date as order_date, length_mm, width_mm, height_mm " +
+                    "from v_order WHERE status_desc = 'Putaway'";
+                using (SqlCommand cmd = new SqlCommand(query))
+                {
+                    cmd.Connection = conn;
+                    using (SqlDataAdapter sda = new SqlDataAdapter(cmd))
+                    {
+                        sda.Fill(ds);
+                    }
+                }
+            }
+
+            return ds;
+
+        }
+        public DataSet GetExportRequestList()
+        {
+            DataSet ds = new DataSet();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                string query = "SELECT Request_No, Status_Desc, Requested_By, Partno, Qty, Picked_Qty, UoM, Material_Type, Status_Picking, Request_Date, Done_Picking_Date FROM v_request_download ORDER BY status_request";
+                using (SqlCommand cmd = new SqlCommand(query))
+                {
+                    cmd.Connection = conn;
+                    using (SqlDataAdapter sda = new SqlDataAdapter(cmd))
+                    {
+                        sda.Fill(ds);
+                    }
+                }
+            }
+
+            return ds;
+
+        }
 
         public string GetRequestInfo(int id_request)
         {

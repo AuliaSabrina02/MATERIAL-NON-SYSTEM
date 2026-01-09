@@ -367,6 +367,25 @@ namespace SEMB_ERP.Controllers
                 throw;
             }
         }
+        [HttpGet]
+        public IActionResult ExportOrderList()
+        {
+            using (XLWorkbook wb = new XLWorkbook())
+            {
+
+                DateTime currentDateTime = DateTime.Now;
+                string formattedDateTime = currentDateTime.ToString("yyyyMMddHHmmss");
+
+                var db = new DatabaseAccessLayer();
+                System.Data.DataTable dt = db.GetExportOrderList().Tables[0];
+                wb.Worksheets.Add(dt);
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    wb.SaveAs(stream);
+                    return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Putaway Order.xlsx");
+                }
+            }
+        }
         public IActionResult GetDataGR(string id_order_string)
         {
             string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -1178,6 +1197,25 @@ namespace SEMB_ERP.Controllers
             //return Content("Upload Success!!", "text/plain");
 
             return PartialView("_TableRequestDetail", dataList);
+        }
+        [HttpGet]
+        public IActionResult ExportRequestList()
+        {
+            using (XLWorkbook wb = new XLWorkbook())
+            {
+
+                DateTime currentDateTime = DateTime.Now;
+                string formattedDateTime = currentDateTime.ToString("yyyyMMddHHmmss");
+
+                var db = new DatabaseAccessLayer();
+                System.Data.DataTable dt = db.GetExportRequestList().Tables[0];
+                wb.Worksheets.Add(dt);
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    wb.SaveAs(stream);
+                    return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Request List Details.xlsx");
+                }
+            }
         }
         [Authorize(Policy = "RequireReceiverAdmin")]
         public IActionResult BlockBin()
