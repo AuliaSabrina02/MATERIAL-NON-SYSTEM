@@ -8,6 +8,13 @@
     int no_tcode = 0;
     int total_shortage = 0;
 }
+<style>
+    .nav-tabs .nav-link.active {
+        color: black;
+        background-color: #c5e5ff; /* hijau soft */
+        border-color: #4988C4 #4988C4 #fff;
+    }
+</style>
 <div class="row m-4">
     <div class="col-12">
         <table class="table table-borderless table-sm">
@@ -37,9 +44,9 @@
                 <a class="nav-link" data-bs-toggle="tab" href="#tcode">Tcode History</a>
             </li>
         </ul>
-        <div class="tab-content mt-3">
+        <div class="tab-content mt-5">
             <div id="mainmenu" class="tab-pane fade show active">
-                <table id="table_material" class="table table-bordered table-striped table-sm text-center">
+                <table id="table_material" class="table table-bordered  table-sm text-center">
                     <thead class="bg-secondary">
                         <tr>
                             <th>No.</th>
@@ -69,7 +76,7 @@
                 </table>
             </div>
             <div id="boxid" class="tab-pane fade">
-                <table id="table_box" class="table table-bordered table-striped table-sm text-center">
+                <table id="table_box" class="table table-bordered table-sm text-center">
                     <thead class="bg-secondary">
                         <tr>
                             <th>No.</th>
@@ -104,7 +111,7 @@
                 </table>
             </div>
             <div id="tcode" class="tab-pane fade">
-                <table id="table_tcode" class="table table-bordered table-striped table-sm text-center">
+                <table id="table_tcode" class="table table-bordered  table-sm text-center">
                     <thead class="bg-secondary">
                         <tr>
                             <th>No.</th>

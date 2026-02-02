@@ -85,39 +85,90 @@
         transform: scale(2); /* Adjust the scale as needed */
     }
 
+    #table_order tbody tr.row_body:hover {
+        background-color: #95db72;
+        color: white;
+    }
+
+    #table_order {
+        border-radius: 0.35rem; /* sudut tumpul */
+        overflow: hidden; /* supaya border-radius bekerja */
+    }
+
+        #table_order td {
+            border-bottom: 0.5px solid #FBF8EF !important;
+            border-left: none !important;
+            font-size: 10px;
+        }
+
+        #table_order thead th {
+            border: none !important;
+            font-size: 12px;
+        }
+
 </style>
 
+<section id="hero1" class="hero bg-dark position-relative">
+    <div class="inner d-flex justify-content-between align-items-center px-3 py-2 w-100">
+
+        <!-- Kiri (kosong / placeholder) -->
+        <div class="extract-info">
+        </div>
+
+        <!-- Tengah: Judul (absolutely centered) -->
+        <div class="position-absolute top-50 start-50 translate-middle text-center">
+            <h3 class="text-white mb-0">
+                <i class="fas fa-hourglass-half text-success"></i>
+                <b> Aging Movement</b>
+            </h3>
+        </div>
+
+        <!-- Kanan: Breadcrumb -->
+        <nav aria-label="breadcrumb" class="text-end ms-auto breadcrumb-sm">
+            <ol class="breadcrumb mb-0 d-inline-flex flex-nowrap align-items-center bg-transparent">
+                <ul class="navbar-nav ml-auto">
+                    <div class="dropdown" style="flex-shrink: 0;">
+                        <button class="btn btn-sm btn-danger dropdown-toggle" type="button" id="wiDropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-file-pdf"></i> Work Instructions
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="wiDropdownMenuButton">
+                            <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Requestor.pdf">JBS Non System Apps - Section Requestor</a></li>
+                            <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Warehouse Plant (English).pdf">JBS Non System Apps - Section Warehouse Plant (English)</a></li>
+                            <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Warehouse Plant (Bahasa).pdf">JBS Non System Apps - Section Warehouse Plant (Bahasa)</a></li>
+                        </ul>
+                    </div>
+                </ul>
+        </nav>
+    </div>
+</section>
 <div class="content">
     <div class="container-fluid">
         <div class="row">
-            <div class="col-lg-12 mt-3">
-                <div class="card card-success card-outline">
-                    <div class="card-header">
-                        <h5>
-                            <i class="fas fa-chart-line"></i>
-                            Aging Movement Chart
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div id="chart"></div>
-                        </div>
-                    </div>
-                </div>
+            <div class="d-flex justify-content-center mt-3">
+                <ul class="nav nav-pills mb-2" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="detail-tab" data-bs-toggle="tab" data-bs-target="#detail" type="button" role="tab" aria-controls="detail" aria-selected="true">
+                            <i class="fas fa-chart-pie"></i> Aging Movement Chart
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="false">
+                            <i class="fas fa-list"></i> Aging Movement Table
+                        </button>
+                    </li>
+                    
+                </ul>
             </div>
             <div class="col-lg-12 mt-3">
-                <div class="card card-success card-outline">
-                    <div class="card-header">
-                        <h5>
-                            <i class="fas fa-list"></i>
-                            Aging Movement
-                        </h5>
-                    </div>
+                <div class="tab-content mt-2" id="myTabContent">
+                    <div class="tab-pane fade" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                        <div class="row">
+                            <div class="card">
                     <div class="card-body">
                         <div class="row">
                             <div class="col-12 table-responsive">
                                 <table class="table table-bordered table-striped align-center nowrap" id="table_order" style="font-size:10pt;width:100%;">
-                                    <thead class="bg-info align-middle text-center">
+                                    <thead class="bg-navy-custom align-middle text-center">
                                         <tr>
                                             <th>Status</th>
                                             <th>Material Type</th>
@@ -158,11 +209,30 @@
                         </div>
                     </div>
                 </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade show active" id="detail" role="tabpanel" aria-labelledby="detail-tab">
+                        <div class="row">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div id="chart"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                
             </div>
+
             <!-- Element spinner -->
             <div id="loadingSpinner" style="display: none;">
                 <img src="~/images/icon/loading.gif" alt="Loading..." />
-            </div>
+            </div
+            <div id="loading" style="display:none; text-align:center;">
+  
         </div>
     </div>
 </div>
@@ -248,7 +318,7 @@
                         else if (status_desc=="closed") {
                             bg_color = "bg-secondary";
                         }
-                        $(rowNode).find('td').css("background-color", "#edfcf1")
+                        $(rowNode).find('td').css("background-color", "#F3F4F4")
                         $(rowNode).find('td:eq(0)').addClass(bg_color);
 
 
