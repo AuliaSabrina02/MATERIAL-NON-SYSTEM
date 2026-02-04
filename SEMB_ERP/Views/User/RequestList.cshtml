@@ -9,6 +9,7 @@
     string name = ViewBag.name;
     List<string> listStatus = ViewBag.listStatus;
     List<string> userRoles = ViewBag.userRoles;
+    List<string> listPrinter = ViewBag.listPrinter;
 }
 
 <style>
@@ -84,25 +85,108 @@
         transform: scale(2); /* Adjust the scale as needed */
     }
 
-</style>
 
+    #table_material tbody tr.row_body:hover {
+            background-color: #95db72;
+            color: white;
+        }
+
+    #table_material {
+        border-radius: 0.35rem; /* sudut tumpul */
+        overflow: hidden; /* supaya border-radius bekerja */
+    }
+
+        #table_material td {
+            border-bottom: 0.5px solid #FBF8EF !important; /* garis horizontal bawah */
+            border-left: none !important; /* hilangkan garis vertikal kiri */
+            /*  border: none !important; /* hilangkan garis vertikal kiri */ */ font-size: 10px;
+        }
+
+        #table_material thead th {
+            border: none !important;
+            font-size: 12px;
+        }
+
+    #table_box tbody tr.row_body:hover {
+            background-color: #95db72;
+            color: white;
+        }
+
+    #table_box {
+        border-radius: 0.35rem; /* sudut tumpul */
+        overflow: hidden; /* supaya border-radius bekerja */
+    }
+
+        #table_box td {
+            border-bottom: 0.5px solid #FBF8EF !important; /* garis horizontal bawah */
+            border-left: none !important; /* hilangkan garis vertikal kiri */
+            /*  border: none !important; /* hilangkan garis vertikal kiri */ */ font-size: 10px;
+        }
+
+        #table_box thead th {
+            border: none !important;
+            font-size: 12px;
+        }
+
+        #table_tcode tbody tr.row_body:hover {
+            background-color: #95db72;
+            color: white;
+        }
+
+    #table_tcode {
+        border-radius: 0.35rem; /* sudut tumpul */
+        overflow: hidden; /* supaya border-radius bekerja */
+    }
+
+        #table_tcode td {
+            border-bottom: 0.5px solid #FBF8EF !important; /* garis horizontal bawah */
+            border-left: none !important; /* hilangkan garis vertikal kiri */
+            /*  border: none !important; /* hilangkan garis vertikal kiri */ */ font-size: 10px;
+        }
+
+        #table_tcode thead th {
+            border: none !important;
+            font-size: 12px;
+        }
+</style>
+<section id="hero1" class="hero bg-dark position-relative">
+    <div class="inner d-flex justify-content-between align-items-center px-3 py-2 w-100">
+
+        <!-- Kiri (kosong / placeholder) -->
+        <div class="extract-info">
+        </div>
+
+        <!-- Tengah: Judul (absolutely centered) -->
+        <div class="position-absolute top-50 start-50 translate-middle text-center">
+            <h3 class="text-white mb-0">
+                <i class="fas fa-list text-success"></i>
+                <b> Picking List</b>
+            </h3>
+        </div>
+
+        <!-- Kanan: Breadcrumb -->
+        <nav aria-label="breadcrumb" class="text-end ms-auto breadcrumb-sm">
+            <ol class="breadcrumb mb-0 d-inline-flex flex-nowrap align-items-center bg-transparent">
+                <ul class="navbar-nav ml-auto">
+                    <div class="dropdown" style="flex-shrink: 0;">
+                        <button class="btn btn-sm btn-danger dropdown-toggle" type="button" id="wiDropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-file-pdf"></i> Work Instructions
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="wiDropdownMenuButton">
+                            <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Requestor.pdf">JBS Non System Apps - Section Requestor</a></li>
+                            <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Warehouse Plant (English).pdf">JBS Non System Apps - Section Warehouse Plant (English)</a></li>
+                            <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Warehouse Plant (Bahasa).pdf">JBS Non System Apps - Section Warehouse Plant (Bahasa)</a></li>
+                        </ul>
+                    </div>
+                </ul>
+        </nav>
+    </div>
+</section>
 <div class="content">
     <div class="container-fluid">
         <div class="row">
             <div class="col-lg-12 mt-3">
-                <div class="card card-success card-outline">
-@*                     <div class="card-header">
-                        <h3 class="text-center half-underline">
-                            <i class="fas fa-list"></i>
-                            Asset List
-                        </h3>
-                    </div> *@
-                    <div class="card-header">
-                        <h5>
-                            <i class="fas fa-list"></i>
-                            Picking List
-                        </h5>
-                    </div>
+                <div class="card">
                     <div class="card-body">
                         <div class="row">
                             @* <div class="col-12 d-flex justify-content-end mb-2">
@@ -113,9 +197,12 @@
                             @* <div class="col-12 text-right">
                                 <button class="btn btn-success" name="btn_gr"><i class="fas fa-boxes"></i> GR</button>
                             </div> *@
+                            <div class="col col-2 mb-2">
+                                <button class="btn btn-sm btn-success" onclick="download()"> <i class="fas fa-file-excel"></i> Download</button>
+                            </div>
                             <div class="col-12 table-responsive">
                                 <table class="table table-bordered table-striped align-center nowrap" id="table_req" style="font-size:12pt;width:100%;">
-                                    <thead class="bg-warning align-middle text-center">
+                                    <thead class="bg-navy-custom align-middle text-center">
                                         <tr>
                                             <th>Req. No</th>
                                             <th>Status</th>
@@ -146,7 +233,7 @@
 <div id="modal_req_detail" class="modal fade">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <div class="modal-header bg-success text-white">
+            <div class="modal-header bg-secondary text-white">
                 <h5 class="modal-title"><i class="fas fa-list"></i> Request Detail</h5>
                 <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
@@ -176,6 +263,7 @@
                 "processing": true,
                 "serverSide": true,
                 "filter": true,
+                "order": [],
                 "ajax": {
                     "url": "@Url.Action("GetRequestList")",
                     "type": "POST",
@@ -190,7 +278,7 @@
                     },
                     { "data": "status_desc", "className": "align-middle" },
                     { "data": "requested_by_name", "className": "align-middle" },
-                    { "data": "record_date", "className": "align-middle" }
+                    { "data": "record_date", "className": "text-center" }
                 ],
                 "drawCallback": function (settings) {
                     // Set the background color for the second column (index 1)
@@ -260,6 +348,60 @@
             }).fail(function(err){
                 swal.fire("Error!", err, "error");
             })
+        }
+
+
+        var list_printers = @Html.Raw(Json.Serialize(listPrinter));
+        const printInputOptions = list_printers.reduce((acc, text) => {
+            acc[text] = text;
+            return acc;
+        }, {});
+
+
+        function print_pallet(pallet_no){
+            Swal.fire({
+                title: 'Confirm',
+                input: 'select',
+                inputOptions: printInputOptions,
+                text: 'Are you sure want to print this pallet ?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes!'
+            }).then((result) => {
+                if (result.value) {
+                    var print = result.value;
+                    // console.log(printer);
+                    if (print == '0') {
+                        swal.fire("Failed!", "Pilih printer terlebih dahulu!", "warning");
+                        // alert("pilih printer")
+                    }
+                    else{
+                        $.ajax({
+                            type: "GET",
+                            url: "https://warehouse.semb.se.com/wh_trans/Printlabel_project_pallet_Webservices.aspx",
+                            data: {
+                                print: print,
+                                pallet_no: pallet_no,
+                            }
+                        }).done(function (res) {
+                            swal.fire("Done!", "Print Succesfully", "success").then(function () {
+                                location.reload();
+                            })
+                        }).fail(function (err) {
+                            swal.fire("Done!", "Print Succesfully", "success").then(function () {
+                                location.reload();
+                            })
+                        })
+                    }
+                    // $("#loading_modal").modal('show');
+                }
+            })
+        }
+
+        function download() {
+            window.location.href = "@Url.Action("ExportRequestList", "User")";
         }
 
     </script>

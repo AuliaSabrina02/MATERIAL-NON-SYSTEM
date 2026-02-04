@@ -32,64 +32,120 @@
         box-shadow: 1px 2px 8px 2px rgba(152,152,152,0.7);
     }
 
-    /* .content {
-        font-family: Verdana
-    } */
+    #table_pallet tbody tr.row_body:hover {
+        background-color: #95db72;
+        color: white;
+    }
 
+    #table_pallet {
+        border-radius: 0.35rem; /* sudut tumpul */
+        overflow: hidden; /* supaya border-radius bekerja */
+    }
+
+        #table_pallet td {
+            border-bottom: 0.5px solid #FBF8EF !important; /* garis horizontal bawah */
+            border-left: none !important; /* hilangkan garis vertikal kiri */
+            /*  border: none !important; /* hilangkan garis vertikal kiri */ */ font-size: 10px;
+        }
+
+        #table_pallet thead th {
+            border: none !important;
+            font-size: 12px;
+        }
 </style>
+<section id="hero1" class="hero bg-dark position-relative">
+    <div class="inner d-flex justify-content-between align-items-center px-3 py-2 w-100">
 
+        <!-- Kiri (kosong / placeholder) -->
+        <div class="extract-info">
+        </div>
+
+        <!-- Tengah: Judul (absolutely centered) -->
+        <div class="position-absolute top-50 start-50 translate-middle text-center">
+            <h3 class="text-white mb-0">
+                <i class="fas fa-truck text-success"></i>
+                <b> Transfer</b>
+            </h3>
+        </div>
+
+        <!-- Kanan: Breadcrumb -->
+        <nav aria-label="breadcrumb" class="text-end ms-auto breadcrumb-sm">
+            <ol class="breadcrumb mb-0 d-inline-flex flex-nowrap align-items-center bg-transparent">
+                <ul class="navbar-nav ml-auto">
+                    <div class="dropdown" style="flex-shrink: 0;">
+                        <button class="btn btn-sm btn-danger dropdown-toggle" type="button" id="wiDropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-file-pdf"></i> Work Instructions
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="wiDropdownMenuButton">
+                            <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Requestor.pdf">JBS Non System Apps - Section Requestor</a></li>
+                            <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Warehouse Plant (English).pdf">JBS Non System Apps - Section Warehouse Plant (English)</a></li>
+                            <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Warehouse Plant (Bahasa).pdf">JBS Non System Apps - Section Warehouse Plant (Bahasa)</a></li>
+                        </ul>
+                    </div>
+                </ul>
+        </nav>
+    </div>
+</section>
 <div class="content">
     <div class="container-fluid">
         <div class="row pt-3">
             <div class="col-md-12">
-                <div class="card card-info card-outline">
-                    <div class="card-header bg-info">
-                        <h5 class="text-center"><i class="fas fa-truck"></i> Transfer</h5>
-                        @*<div class="card-tools">
-                        <a href="~/Template/TemplateUploadPallet.xlsx" class="btn btn-danger mr-1">
-                        <i class="fa fa-download"></i> Template
-                        </a>
-                        <button class="btn btn-success mr-1" name="btn_filter" data-bs-toggle="modal" data-bs-target="#ImportDataModel"><i class="fas fa-file-import"></i> Upload Pallet List</button>
-                        </div>*@
-                    </div>
+                <div class="card">
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-12">
-                                <div class="text-center"><label style="font-size:14pt"><i class="fas fa-qrcode"></i> Scan Pallet ID</label></div>
-                                <div class="form-group">
-                                    <input class="form-control" type="text" name="pallet_no" placeholder="Scan Pallet ID Here..." autocomplete="off" required />
+                            <div class="card-body px-4 py-5">
+
+                                <!-- Title -->
+                                <div class="row align-items-center justify-content-center">
+
+                                    <!-- LEFT : IMAGE -->
+                                    <div class="col-md-5 text-center mb-4 mb-md-0">
+                                        <img src="~/images/icon/SCANPALLET.svg" alt="Scan Box" style=" max-width: 320px; width: 100%; height: auto; " />
+                                    </div>
+                                    <!-- RIGHT : FORM -->
+                                    <div class="col-md-6 col-lg-5">
+                                        <div class="position-relative mb-4">
+                                            <input class="form-control form-control-lg text-center shadow-sm" type="text" name="pallet_no" placeholder="Scan Pallet ID Here..." autocomplete="off" required style=" border-radius:12px; font-size:16pt; letter-spacing:1px; padding:18px; border:1px solid #dcdcdc; " />
+                                        </div>
+                                    </div>
+
                                 </div>
-                                @* <div class="form-group text-center">
-                                    <button type="submit" class="btn btn-block btn-success mt-2" name="btn_proceed">Proceed <i class="fa fa-arrow-right"></i></button>
-                                </div> *@
-                            </div>
-                            <div class="col-12 mt-4">
-                                <table class="table table-sm table-striped table-bordered">
-                                    <tr>
-                                        <th>No.</th>
-                                        <th>Pallet No</th>
-                                        <th>Request No</th>
-                                        <th>Action</th>
-                                    </tr>
-                                    @foreach(var temp in Model)
+                                <div class="row mt-5">
+                                    <div class="col-12 mt-4">
+                                        <table class="table table-sm table-bordered" id="table_pallet">
+                                            <thead class="bg-navy-custom align-middle text-center">
+                                            <tr>
+                                                <th>No.</th>
+                                                <th>Pallet No</th>
+                                                <th>Request No</th>
+                                                <th>Action</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            @foreach (var temp in Model)
+                                            {
+                                                no = no + 1;
+                                                <tr>
+                                                    <td class="text-center">@no</td>
+                                                    <td>@temp.pallet_no</td>
+                                                    <td>@temp.request_no</td>
+                                                    <td class="text-center">
+                                                        <button class="btn btn-sm btn-danger" onclick="remove_box(@temp.id_temp)"><i class="fas fa-trash"></i> Remove</button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    @if (no > 0)
                                     {
-                                        no = no + 1;
-                                        <tr>
-                                            <td>@no</td>
-                                            <td>@temp.pallet_no</td>
-                                            <td>@temp.request_no</td>
-                                            <td>
-                                                <button class="btn btn-sm btn-danger" onclick="remove_box(@temp.id_temp)"><i class="fas fa-trash"></i> Remove</button>
-                                            </td>
-                                        </tr>
+                                        <div class="col-12 text-end mt-2">
+                                            <button class="btn btn-sm btn-success" name="btn_submit_transfer"><i class="fas fa-truck"></i> Submit Transfer</button>
+                                        </div>
                                     }
-                                </table>
-                            </div>
-                            @if(no>0){
-                                <div class="col-12 text-center mt-2">
-                                    <button class="btn btn-success" name="btn_submit_transfer"><i class="fas fa-truck"></i> Submit Transfer</button>
                                 </div>
-                            }
+                            </div>
+                            
                         </div>
                     </div>
                 </div>

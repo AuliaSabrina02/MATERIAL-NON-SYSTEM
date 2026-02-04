@@ -35,94 +35,129 @@
     } */
 
 </style>
+<section id="hero1" class="hero bg-dark position-relative">
+    <div class="inner d-flex justify-content-between align-items-center px-3 py-2 w-100">
 
+        <!-- Kiri (kosong / placeholder) -->
+        <div class="extract-info">
+        </div>
+
+        <!-- Tengah: Judul (absolutely centered) -->
+        <div class="position-absolute top-50 start-50 translate-middle text-center">
+            <h3 class="text-white mb-0">
+                <i class="fas fa-exclamation text-success"></i>
+                <b>Non Conformity</b>
+            </h3>
+        </div>
+
+        <!-- Kanan: Breadcrumb -->
+        <nav aria-label="breadcrumb" class="text-end ms-auto breadcrumb-sm">
+            <ol class="breadcrumb mb-0 d-inline-flex flex-nowrap align-items-center bg-transparent">
+                <ul class="navbar-nav ml-auto">
+                    <div class="dropdown" style="flex-shrink: 0;">
+                        <button class="btn btn-sm btn-danger dropdown-toggle" type="button" id="wiDropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-file-pdf"></i> Work Instructions
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="wiDropdownMenuButton">
+                            <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Requestor.pdf">JBS Non System Apps - Section Requestor</a></li>
+                            <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Warehouse Plant (English).pdf">JBS Non System Apps - Section Warehouse Plant (English)</a></li>
+                            <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Warehouse Plant (Bahasa).pdf">JBS Non System Apps - Section Warehouse Plant (Bahasa)</a></li>
+                        </ul>
+                    </div>
+                </ul>
+        </nav>
+    </div>
+</section>
 <div class="content">
     <div class="container-fluid">
         <div class="row pt-3">
             <div class="col-md-12">
-                <div class="card card-success card-outline">
-                    <div class="card-header bg-success">
-                        <h5 class="text-center"><i class="fas fa-exclamation"></i> Non Conformity</h5>
-                        @*<div class="card-tools">
-                        <a href="~/Template/TemplateUploadPallet.xlsx" class="btn btn-danger mr-1">
-                        <i class="fa fa-download"></i> Template
-                        </a>
-                        <button class="btn btn-success mr-1" name="btn_filter" data-bs-toggle="modal" data-bs-target="#ImportDataModel"><i class="fas fa-file-import"></i> Upload Pallet List</button>
-                        </div>*@
+                <div class="offset-1 col-10 py-4 px-5 mb-4" style="background: #f8f9fa; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
+                    <!-- HEADER -->
+                    <div class="text-center mb-4">
+                        <label class="badge bg-warning text-dark shadow-sm" style="font-size:18pt; border-radius:50px; padding:12px 30px; cursor: default;">
+                            <i class="fas fa-plus me-2"></i> Add Non Conformity
+                        </label>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="offset-1 col-10 pt-2 pb-2 pl-4 pr-4 box_form_input">
-                                <div class="text-center"><label class="badge bg-warning" style="font-size:16pt;border-radius:30px;padding:10px 20px"><i class="fas fa-plus"></i> Add Non Conformity</label></div>
-                                <form id="form_add_non_conf">
-                                    <div class="row">
-                                        <div class="offset-3 col-6 mb-4" style="border-top: 2px #e3e3e3 solid"></div>
-                                        <div class="col-6 pl-4 pr-4">
-                                            <div class="form-group">
-                                                <label>Material Type<span class="text-danger">*</span></label>
-                                                <select class="form-control" name="material_type" id="material_type" required>
-                                                    <option value="">-- SELECT TYPE --</option>
-                                                    <option value="RW">Raw Material (RW)</option>
-                                                    <option value="FG">Finish Goods (FG)</option>
-                                                    <option value="WIP">Work In Progress (WIP)</option>
-                                                </select>
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Part No<span class="text-danger">*</span></label>
-                                                <input class="form-control" type="text" name="partno" placeholder="Part Number" autocomplete="off" required />
-                                            </div>
-                                            <div class="form-group">
-                                                <label>PO No<span class="text-danger">*</span></label>
-                                                <input class="form-control" type="text" name="po_no" placeholder="PO Number" autocomplete="off" required />
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Qty<span class="text-danger">*</span></label>
-                                                <input class="form-control" type="number" name="qty" placeholder="Qty" autocomplete="off" required />
-                                            </div>
-                                            <div class="form-group">
-                                                <label>UOM<span class="text-danger">*</span></label>
-                                                <input class="form-control" type="text" name="uom" placeholder="PC, PALLET, ..." autocomplete="off" required />
-                                            </div>
-                                        </div>
-                                        <div class="col-6 pl-4 pr-4">
-                                            <div class="form-group">
-                                                <label>Supplier Name<span class="text-danger">*</span></label>
-                                                <input class="form-control" type="text" name="supplier_name" placeholder="Supplier" autocomplete="off" required />
-                                            </div>
-                                            <div class="form-group">
-                                                <label>PIC<span class="text-danger">*</span></label>
-                                                <select class="form-control" name="pic">
-                                                </select>
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Category Issue<span class="text-danger">*</span></label>
-                                                <select class="form-control" name="category_issue" id="category_issue" required>
-                                                    <option value="">-- SELECT CATEGORY ISSUE --</option>
-                                                    @foreach (var cat in catList)
-                                                    {
-                                                        <option value="@cat">@cat</option>
-                                                    }
-                                                </select>
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Detail Issue</label>
-                                                <textarea class="form-control" name="detail_issue" rows="2"></textarea>
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Supporting Documents (Optional)</label>
-                                                <input type="file" class="form-control" name="file_support">
-                                            </div>
-                                        </div>
-                                        <div class="col-12">
-                                            <div class="form-group text-center">
-                                                <button type="submit" class="btn btn-success mt-2" name="btn_submit">Submit <i class="fa fa-arrow-right"></i></button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
+
+                    <form id="form_add_non_conf">
+                        <div class="row g-4">
+
+                            <!-- LEFT COLUMN -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="material_type" class="form-label fw-semibold">Material Type <span class="text-danger">*</span></label>
+                                    <select class="form-select shadow-sm" name="material_type" id="material_type" required>
+                                        <option value="">-- SELECT TYPE --</option>
+                                        <option value="RW">Raw Material (RW)</option>
+                                        <option value="FG">Finish Goods (FG)</option>
+                                        <option value="WIP">Work In Progress (WIP)</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="partno" class="form-label fw-semibold">Part No <span class="text-danger">*</span></label>
+                                    <input class="form-control shadow-sm" type="text" name="partno" placeholder="Part Number" autocomplete="off" required />
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="po_no" class="form-label fw-semibold">PO No <span class="text-danger">*</span></label>
+                                    <input class="form-control shadow-sm" type="text" name="po_no" placeholder="PO Number" autocomplete="off" required />
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="qty" class="form-label fw-semibold">Qty <span class="text-danger">*</span></label>
+                                    <input class="form-control shadow-sm" type="number" name="qty" placeholder="Qty" autocomplete="off" required />
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="uom" class="form-label fw-semibold">UOM <span class="text-danger">*</span></label>
+                                    <input class="form-control shadow-sm" type="text" name="uom" placeholder="PC, PALLET, ..." autocomplete="off" required />
+                                </div>
+                            </div>
+
+                            <!-- RIGHT COLUMN -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="supplier_name" class="form-label fw-semibold">Supplier Name <span class="text-danger">*</span></label>
+                                    <input class="form-control shadow-sm" type="text" name="supplier_name" placeholder="Supplier" autocomplete="off" required />
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="pic" class="form-label fw-semibold">PIC <span class="text-danger">*</span></label>
+                                    <select class="form-select shadow-sm" name="pic"></select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="category_issue" class="form-label fw-semibold">Category Issue <span class="text-danger">*</span></label>
+                                    <select class="form-select shadow-sm" name="category_issue" id="category_issue" required>
+                                        <option value="">-- SELECT CATEGORY ISSUE --</option>
+                                        @foreach (var cat in catList)
+                                        {
+                                            <option value="@cat">@cat</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="detail_issue" class="form-label fw-semibold">Detail Issue</label>
+                                    <textarea class="form-control shadow-sm" name="detail_issue" rows="3" placeholder="Describe the issue..."></textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="file_support" class="form-label fw-semibold">Supporting Documents (Optional)</label>
+                                    <input type="file" class="form-control shadow-sm" name="file_support">
+                                </div>
+                            </div>
+
+                            <!-- SUBMIT BUTTON -->
+                            <div class="col-12 text-end mt-4">
+                                <button type="submit" class="btn btn-success btn-lg shadow-sm" name="btn_submit" style="border-radius:10px;">
+                                    Submit <i class="fa fa-arrow-right ms-2"></i>
+                                </button>
                             </div>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>

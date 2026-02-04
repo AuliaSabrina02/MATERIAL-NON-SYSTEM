@@ -2,10 +2,19 @@
 @{
     var reqInfo = ViewBag.reqInfo;
     List<PickBoxModel> boxList = ViewBag.boxList;
+    List<TcodeModel> tcodeList = ViewBag.tcodeList;
     int no = 0;
     int no_box = 0;
+    int no_tcode = 0;
     int total_shortage = 0;
 }
+<style>
+    .nav-tabs .nav-link.active {
+        color: black;
+        background-color: #c5e5ff; /* hijau soft */
+        border-color: #4988C4 #4988C4 #fff;
+    }
+</style>
 <div class="row m-4">
     <div class="col-12">
         <table class="table table-borderless table-sm">
@@ -31,10 +40,13 @@
             <li class="nav-item" role="presentation">
                 <a class="nav-link" data-bs-toggle="tab" href="#boxid">Picking Menu</a>
             </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" data-bs-toggle="tab" href="#tcode">Tcode History</a>
+            </li>
         </ul>
-        <div class="tab-content mt-3">
+        <div class="tab-content mt-5">
             <div id="mainmenu" class="tab-pane fade show active">
-                <table id="table_material" class="table table-bordered table-striped table-sm text-center">
+                <table id="table_material" class="table table-bordered  table-sm text-center">
                     <thead class="bg-secondary">
                         <tr>
                             <th>No.</th>
@@ -64,7 +76,7 @@
                 </table>
             </div>
             <div id="boxid" class="tab-pane fade">
-                <table id="table_box" class="table table-bordered table-striped table-sm text-center">
+                <table id="table_box" class="table table-bordered table-sm text-center">
                     <thead class="bg-secondary">
                         <tr>
                             <th>No.</th>
@@ -88,8 +100,35 @@
                                 <td>@box.qty</td>
                                 <td>@box.sbin</td>
                                 <td>@box.picked_by_name</td>
-                                <td>@box.pallet_no</td>
+                                <td>
+                                    @box.pallet_no
+                                    <button class='btn btn-sm btn-success' onclick="print_pallet('@box.pallet_no')"><i class='fas fa-print'></i></button>
+                                </td>
                                 <td>@box.record_date?.ToString("yyyy-MM-ddTHH:mm:ss.fff")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div id="tcode" class="tab-pane fade">
+                <table id="table_tcode" class="table table-bordered  table-sm text-center">
+                    <thead class="bg-secondary">
+                        <tr>
+                            <th>No.</th>
+                            <th>Status</th>
+                            <th>Record Date</th>
+                            <th>Name Person</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tcode in tcodeList)
+                        {
+                            no_tcode++;
+                            <tr>
+                                <td>@no_tcode</td>
+                                <td>@tcode.status_request</td>
+                                <td>@tcode.record_date?.ToString("yyyy-MM-ddTHH:mm:ss.fff")</td>
+                                <td>@tcode.name</td>
                             </tr>
                         }
                     </tbody>
@@ -102,5 +141,6 @@
     $(document).ready(function(){
         $("table#table_material").DataTable();
         $("table#table_box").DataTable();
+        $("table#table_tcode").DataTable();
     })
 </script>

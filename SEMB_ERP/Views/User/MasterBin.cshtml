@@ -11,27 +11,79 @@
     string plant = ViewBag.plant;
     string todayDate = DateTime.Today.ToString("yyyy-MM-dd");
 }
+<style>
+    #tbl_mst_bin tbody tr.row_body:hover {
+        background-color: #95db72;
+        color: white;
+    }
 
+    #tbl_mst_bin {
+        border-radius: 0.35rem; /* sudut tumpul */
+        overflow: hidden; /* supaya border-radius bekerja */
+    }
+
+        #tbl_mst_bin td {
+            border-bottom: 0.5px solid #FBF8EF !important; /* garis horizontal bawah */
+            border-left: none !important; /* hilangkan garis vertikal kiri */
+            border: none !important; /* hilangkan garis vertikal kiri */
+            font-size: 10px;
+        }
+
+        #tbl_mst_bin thead th {
+            border: none !important;
+            font-size: 12px;
+        }
+</style>
+<section id="hero1" class="hero bg-dark position-relative">
+    <div class="inner d-flex justify-content-between align-items-center px-3 py-2 w-100">
+
+        <!-- Kiri (kosong / placeholder) -->
+        <div class="extract-info">
+        </div>
+
+        <!-- Tengah: Judul (absolutely centered) -->
+        <div class="position-absolute top-50 start-50 translate-middle text-center">
+            <h3 class="text-white mb-0">
+                <i class="fas fa-box-open text-info"></i>
+                <b> Master Bin</b>
+            </h3>
+        </div>
+
+        <!-- Kanan: Breadcrumb -->
+        <nav aria-label="breadcrumb" class="text-end ms-auto breadcrumb-sm">
+            <ol class="breadcrumb mb-0 d-inline-flex flex-nowrap align-items-center bg-transparent">
+                <ul class="navbar-nav ml-auto">
+                    <div class="dropdown" style="flex-shrink: 0;">
+                        <button class="btn btn-sm btn-danger dropdown-toggle" type="button" id="wiDropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-file-pdf"></i> Work Instructions
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="wiDropdownMenuButton">
+                            <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Requestor.pdf">JBS Non System Apps - Section Requestor</a></li>
+                            <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Warehouse Plant (English).pdf">JBS Non System Apps - Section Warehouse Plant (English)</a></li>
+                            <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Warehouse Plant (Bahasa).pdf">JBS Non System Apps - Section Warehouse Plant (Bahasa)</a></li>
+                        </ul>
+                    </div>
+                </ul>
+        </nav>
+    </div>
+</section>
 <div class="content">
     <div class="container-fluid">
         <div class="row pt-3">
             <div class="col-md-12">
-                <div class="card card-info card-outline">
-                    <div class="card-header">
-                        <h5 class="text-left"><i class="fas fa-list mr-2"></i>Master Bin</h5>
-                        @*<div class="card-tools">
-                        <a href="~/Template/TemplateUploadPallet.xlsx" class="btn btn-danger mr-1">
-                        <i class="fa fa-download"></i> Template
-                        </a>
-                        <button class="btn btn-success mr-1" name="btn_filter" data-bs-toggle="modal" data-bs-target="#ImportDataModel"><i class="fas fa-file-import"></i> Upload Pallet List</button>
-                        </div>*@
-                    </div>
+                <div class="card">
                     <div class="card-body">                        
                         <div class="col-12 table-responsive">
-                            <table class="table table-bordered table-striped align-center nowrap" id="tbl_mst_bin" style="font-size:12pt;width:100%;">
+                            <table class="table table-bordered align-center nowrap" id="tbl_mst_bin" style="font-size:12pt;width:100%;">
                                 <thead class="bg-info align-middle text-center">
                                     <tr>
-                                        <th width="5%"><input type="checkbox" id="checkAll" /> Check All</th>
+                                        <th width="10%">
+                                            <div class="d-flex align-items-center justify-content-center">
+                                                <input type="checkbox" id="checkAll" style="margin-right: 4px; cursor: pointer;">
+                                                <label for="checkAll" class="m-0" style="cursor: pointer;">Check All</label>
+                                            </div>
+                                        </th>
+
                                         <th width="5%">Id</th>
                                         <th width="20%">Bin Name</th>
                                         <th width="15%">Length (mm)</th>
@@ -82,8 +134,8 @@
                                 <input class="form-control" type="number" name="bin_height" id="bin_height" autocomplete="off" required />
                             </div>                           
                         </div>
-                        <div class="col-12">
-                            <div class="form-group text-center">
+                        <div class="col-12  pl-4 pr-4">
+                            <div class="form-group text-end">
                                 <button type="submit" class="btn btn-success mt-2" name="btn_confirm_add">Add Bin <i class="fa fa-arrow-right"></i></button>
                             </div>
                         </div>
@@ -154,13 +206,13 @@
                                 Length: item.length.toFixed(2),
                                 Width: item.width.toFixed(2),
                                 Height: item.height.toFixed(2),
-                                Action: "<button type='button' class='btn btn-primary update-bin' data-binname='" + item.binName + "'><i class='fas fa-edit'></i></button> <button type='button' class='btn btn-danger delete-bin' data-binname='" + item.binName + "'><i class='fas fa-trash'></i></button>"
+                                Action: "<button type='button' class='btn btn-sm btn-primary update-bin' data-binname='" + item.binName + "'><i class='fas fa-edit'></i></button> <button type='button' class='btn btn-sm btn-danger delete-bin' data-binname='" + item.binName + "'><i class='fas fa-trash'></i></button>"
                             };
                         });
                     }
                 },
                 "columns": [
-                    { data: "CheckBox", title: "Check All <br /> <input type='checkbox' id='checkAll'/>", orderable: false },
+                    { data: "CheckBox", title: "<label for='checkAll' style='display:inline-flex; align-items:center; justify-content:center; gap:4px; cursor:pointer; margin:0;'> Check All <input type='checkbox' id='checkAll' /> </label>", orderable: false },
                     { data: "BinId", title: "Id" },
                     { data: "BinName", title: "Bin Name" },
                     { data: "Length", title: "Length (mm)" },
@@ -177,7 +229,7 @@
                 "buttons": [
 
                     {
-                        text: '<i class="fas fa-plus"></i> Add Data',
+                        text: '<i class="fas fa-plus"></i> Add Bin',
                         className: 'btn btn-primary btn-sm',
                         action: function (e, dt, node, config) {
                             $('#modal_add_bin').modal('show');

@@ -311,15 +311,15 @@ namespace SEMB_ERP.Controllers
                         {
                             mstData = mstData.Where(m => m.qty.ToString().Contains(searchColVal));
                         }
-                        else if (fieldName == "qty")
-                        {
-                            mstData = mstData.Where(m => m.qty.ToString().Contains(searchColVal));
-                        }
                         else if (fieldName == "picked_qty")
                         {
-                            mstData = mstData.Where(m => m.qty.ToString().Contains(searchColVal));
+                            mstData = mstData.Where(m => m.picked_qty.ToString().Contains(searchColVal));
                         }
                         else if (fieldName == "available_qty")
+                        {
+                            mstData = mstData.Where(m => m.available_qty.ToString().Contains(searchColVal));
+                        }
+                        else if (fieldName == "uom")
                         {
                             mstData = mstData.Where(m => m.uom.Contains(searchColVal));
                         }
@@ -339,9 +339,9 @@ namespace SEMB_ERP.Controllers
                         {
                             mstData = mstData.Where(m => m.supplier_name.Contains(searchColVal));
                         }
-                        else if (fieldName == "pic")
+                        else if (fieldName == "pic_name")
                         {
-                            mstData = mstData.Where(m => m.pic.Contains(searchColVal));
+                            mstData = mstData.Where(m => m.pic_name.Contains(searchColVal));
                         }
                         else if (fieldName == "order_type")
                         {
@@ -365,6 +365,25 @@ namespace SEMB_ERP.Controllers
             catch (Exception ex)
             {
                 throw;
+            }
+        }
+        [HttpGet]
+        public IActionResult ExportOrderList()
+        {
+            using (XLWorkbook wb = new XLWorkbook())
+            {
+
+                DateTime currentDateTime = DateTime.Now;
+                string formattedDateTime = currentDateTime.ToString("yyyyMMddHHmmss");
+
+                var db = new DatabaseAccessLayer();
+                System.Data.DataTable dt = db.GetExportOrderList().Tables[0];
+                wb.Worksheets.Add(dt);
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    wb.SaveAs(stream);
+                    return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Putaway Order.xlsx");
+                }
             }
         }
         public IActionResult GetDataGR(string id_order_string)
@@ -482,6 +501,7 @@ namespace SEMB_ERP.Controllers
                                        StoragebinList.partno,
                                        StoragebinList.po_no,
                                        StoragebinList.storage_bin,
+                                       StoragebinList.box_id,
                                        StoragebinList.qty,
                                        StoragebinList.picked_qty,
                                        StoragebinList.available_qty,
@@ -516,7 +536,7 @@ namespace SEMB_ERP.Controllers
                     mstData = mstData.Where(m => m.partno.Contains(searchValue)
                                                 || m.pic.Contains(searchValue));
                 }
-                for (int i = 0; i < 17; i++)
+                for (int i = 0; i < 18; i++)
                 {
                     var searchColVal = Request.Form["columns[" + i.ToString() + "][search][value]"];
                     var fieldName = Request.Form["columns[" + i.ToString() + "][data]"].FirstOrDefault();
@@ -542,9 +562,9 @@ namespace SEMB_ERP.Controllers
                         {
                             mstData = mstData.Where(m => m.storage_bin.Contains(searchColVal));
                         }
-                        else if (fieldName == "qty")
+                        else if (fieldName == "box_id")
                         {
-                            mstData = mstData.Where(m => m.qty.ToString().Contains(searchColVal));
+                            mstData = mstData.Where(m => m.box_id.Contains(searchColVal));
                         }
                         else if (fieldName == "qty")
                         {
@@ -552,9 +572,13 @@ namespace SEMB_ERP.Controllers
                         }
                         else if (fieldName == "picked_qty")
                         {
-                            mstData = mstData.Where(m => m.qty.ToString().Contains(searchColVal));
+                            mstData = mstData.Where(m => m.picked_qty.ToString().Contains(searchColVal));
                         }
                         else if (fieldName == "available_qty")
+                        {
+                            mstData = mstData.Where(m => m.available_qty.ToString().Contains(searchColVal));
+                        }
+                        else if (fieldName == "uom")
                         {
                             mstData = mstData.Where(m => m.uom.Contains(searchColVal));
                         }
@@ -574,9 +598,9 @@ namespace SEMB_ERP.Controllers
                         {
                             mstData = mstData.Where(m => m.supplier_name.Contains(searchColVal));
                         }
-                        else if (fieldName == "pic")
+                        else if (fieldName == "pic_name")
                         {
-                            mstData = mstData.Where(m => m.pic.Contains(searchColVal));
+                            mstData = mstData.Where(m => m.pic_name.Contains(searchColVal));
                         }
                         else if (fieldName == "order_type")
                         {
@@ -1030,7 +1054,7 @@ namespace SEMB_ERP.Controllers
             string submit = db.SubmitReqPicking(remark ?? "", sesa_id, plant);
             return Content(submit, "text/plain");
         }
-        [Authorize(Policy = "RequireRequestorReceiverAdmin")]
+        [Authorize(Policy = "RequireAny")]
         public IActionResult RequestList()
         {
             return this.CheckSession(() =>
@@ -1044,11 +1068,14 @@ namespace SEMB_ERP.Controllers
                 var db = new DatabaseAccessLayer();
                 List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
                 List<string> listStatus = db.GetStatusRequest();
+                List<string> listPrinter = db.GetPrinter();
                 string name = User.FindFirst("semb_erp_name")?.Value;
                 ViewBag.name = name;
                 ViewBag.sesa_id = sesa_id;
                 ViewBag.listStatus = listStatus;
                 ViewBag.userRoles = userRoles;
+                ViewBag.listPrinter = listPrinter;
+
                 return View(userDetail);
             });
         }
@@ -1102,6 +1129,7 @@ namespace SEMB_ERP.Controllers
                 int recordsTotal = 0;
                 var mstData = (from RequestList in _context.v_request
                                where RequestList.requested_by==sesa_id || user_roles.HasAnyRole("admin","receiver")
+                               orderby RequestList.status_request ascending
                                select
                                    new
                                    {
@@ -1162,11 +1190,32 @@ namespace SEMB_ERP.Controllers
             var reqInfo = JsonConvert.DeserializeObject<RequestListModel>(db.GetRequestInfo(id_request));
             List<RequestListModel> dataList = db.GetReqDetail(id_request);
             List<PickBoxModel> boxList = db.GetPickBox(id_request);
+            List<TcodeModel> tcodeList = db.GetTcodeHistory(id_request);
             ViewBag.reqInfo = reqInfo;
             ViewBag.boxList = boxList;
+            ViewBag.tcodeList = tcodeList;
             //return Content("Upload Success!!", "text/plain");
 
             return PartialView("_TableRequestDetail", dataList);
+        }
+        [HttpGet]
+        public IActionResult ExportRequestList()
+        {
+            using (XLWorkbook wb = new XLWorkbook())
+            {
+
+                DateTime currentDateTime = DateTime.Now;
+                string formattedDateTime = currentDateTime.ToString("yyyyMMddHHmmss");
+
+                var db = new DatabaseAccessLayer();
+                System.Data.DataTable dt = db.GetExportRequestList().Tables[0];
+                wb.Worksheets.Add(dt);
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    wb.SaveAs(stream);
+                    return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Request List Details.xlsx");
+                }
+            }
         }
         [Authorize(Policy = "RequireReceiverAdmin")]
         public IActionResult BlockBin()
@@ -1906,6 +1955,7 @@ namespace SEMB_ERP.Controllers
                 status_desc = item.status_desc,
                 remark = item.remark,
                 record_date = item.record_date,
+                lead_time = item.lead_time,
                 requested_by = item.requested_by,
                 requested_by_name = item.requested_by_name,
                 department = item.department
@@ -2160,6 +2210,147 @@ namespace SEMB_ERP.Controllers
 
             // Return the result directly
             return Content(Result, "text/plain");
+        }
+
+        [Authorize(Policy = "RequireAny")]
+        public IActionResult AgingMovement()
+        {
+            return this.CheckSession(() =>
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> userRoles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                //sesa_id = "SESA126011";
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                List<string> listStatus = db.GetStatus();
+                List<string> listPrinter = db.GetPrinter();
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.listStatus = listStatus;
+                ViewBag.userRoles = userRoles;
+                ViewBag.listPrinter = listPrinter;
+                return View(userDetail);
+            });
+
+            return View();
+        }
+        public IActionResult GetAgingMovementList()
+        {
+            try
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> user_roles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                var user = userDetail.First();
+
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = Request.Form["start"].FirstOrDefault();
+                var length = Request.Form["length"].FirstOrDefault();
+                //var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][name]"].FirstOrDefault();
+                var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][data]"].FirstOrDefault();
+                var sortColumnDirection = Request.Form["order[0][dir]"].FirstOrDefault();
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                var column0Value = Request.Form["columns[0][search][value]"];
+                var column1Value = Request.Form["columns[1][search][value]"];
+                var column2Value = Request.Form["columns[2][search][value]"];
+                int pageSize = length != null ? Convert.ToInt32(length) : 0;
+                int skip = start != null ? Convert.ToInt32(start) : 0;
+                int recordsTotal = 0;
+
+                var departments = user.other_dept.Split(',').Select(d => d.Trim()).ToList();
+
+                var mstData = (from AgingMovement in _context.v_order_aging
+                               where user_roles.Contains("receiver") || user_roles.Contains("admin") || (user_roles.Contains("requestor"))
+                               select
+                                   new
+                                   {
+                                       AgingMovement.status_desc,
+                                       AgingMovement.material_type,
+                                       AgingMovement.partno,
+                                       AgingMovement.po_no,
+                                       AgingMovement.project_name,
+                                       AgingMovement.storage_requirement,
+                                       AgingMovement.supplier_name,
+                                       AgingMovement.pic_name,
+                                       AgingMovement.order_type,
+                                       AgingMovement.last_updated,
+                                       AgingMovement.aging,
+                                   });
+
+                //var mstData = (from temp in _context.mst_material_plant select temp);
+                if (!(string.IsNullOrEmpty(sortColumn) && string.IsNullOrEmpty(sortColumnDirection)))
+                {
+                    mstData = mstData.OrderBy(sortColumn + " " + sortColumnDirection);
+                }
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    mstData = mstData.Where(m => m.partno.Contains(searchValue));
+                }
+                for (int i = 0; i < 8; i++)
+                {
+                    var searchColVal = Request.Form["columns[" + i.ToString() + "][search][value]"];
+                    var fieldName = Request.Form["columns[" + i.ToString() + "][data]"].FirstOrDefault();
+                    if (!string.IsNullOrEmpty(searchColVal))
+                    {
+                        if (fieldName == "status_desc")
+                        {
+                            mstData = mstData.Where(m => m.status_desc.Contains(searchColVal));
+                        }
+                        else if (fieldName == "material_type")
+                        {
+                            mstData = mstData.Where(m => m.material_type.Contains(searchColVal));
+                        }
+                        else if (fieldName == "partno")
+                        {
+                            mstData = mstData.Where(m => m.partno.Contains(searchColVal));
+                        }
+                        else if (fieldName == "po_no")
+                        {
+                            mstData = mstData.Where(m => m.po_no.Contains(searchColVal));
+                        }
+                        else if (fieldName == "project_name")
+                        {
+                            mstData = mstData.Where(m => m.project_name.Contains(searchColVal));
+                        }
+                        else if (fieldName == "storage_requirement")
+                        {
+                            mstData = mstData.Where(m => m.storage_requirement.Contains(searchColVal));
+                        }
+                        else if (fieldName == "supplier_name")
+                        {
+                            mstData = mstData.Where(m => m.supplier_name.Contains(searchColVal));
+                        }
+                        else if (fieldName == "order_type")
+                        {
+                            mstData = mstData.Where(m => m.order_type.Contains(searchColVal));
+                        }
+                    }
+                }
+                recordsTotal = mstData.Count();
+                var data = mstData.Skip(skip).Take(pageSize).ToList();
+                var jsonData = new { draw = draw, recordsFiltered = recordsTotal, recordsTotal = recordsTotal, data = data };
+                return Ok(jsonData);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public IActionResult GetAgingMovementChart()
+        {
+            var db = new DatabaseAccessLayer();
+            List <ChartModel> result = db.GetAgingMovementChart();
+
+            return Json(result);
         }
     }
 }

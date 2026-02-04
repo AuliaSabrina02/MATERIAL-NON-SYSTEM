@@ -1,12 +1,13 @@
-﻿using SEMB_ERP.Models;
-using System.Data.SqlClient;
-using System.Data;
+﻿using DocumentFormat.OpenXml.Drawing;
 using Microsoft.AspNetCore.Mvc;
-using System.Drawing.Drawing2D;
-using System.Drawing;
-using System.IO;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Ocsp;
+using SEMB_ERP.Models;
+using System.Data;
+using System.Data.SqlClient;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.IO;
 
 namespace SEMB_ERP.Function
 {
@@ -941,6 +942,47 @@ namespace SEMB_ERP.Function
             }
 
             return tempList;
+        }
+        public DataSet GetExportOrderList()
+        {
+            DataSet ds = new DataSet();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                string query = "SELECT status_desc, material_type, partno, po_no, qty, picked_qty, available_qty, uom, revision, project_name, storage_requirement, supplier_name, pic_name, order_type, unit_price, gatepass, record_date as order_date, length_mm, width_mm, height_mm " +
+                    "from v_order WHERE status_desc = 'Putaway'";
+                using (SqlCommand cmd = new SqlCommand(query))
+                {
+                    cmd.Connection = conn;
+                    using (SqlDataAdapter sda = new SqlDataAdapter(cmd))
+                    {
+                        sda.Fill(ds);
+                    }
+                }
+            }
+
+            return ds;
+
+        }
+        public DataSet GetExportRequestList()
+        {
+            DataSet ds = new DataSet();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                string query = "SELECT Request_No, Status_Desc, Requested_By, Partno, Qty, Picked_Qty, UoM, Material_Type, Status_Picking, Request_Date, Done_Picking_Date FROM v_request_download ORDER BY status_request";
+                using (SqlCommand cmd = new SqlCommand(query))
+                {
+                    cmd.Connection = conn;
+                    using (SqlDataAdapter sda = new SqlDataAdapter(cmd))
+                    {
+                        sda.Fill(ds);
+                    }
+                }
+            }
+
+            return ds;
+
         }
 
         public string GetRequestInfo(int id_request)
@@ -1897,7 +1939,8 @@ namespace SEMB_ERP.Function
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
                 conn.Open();
-                SqlCommand cmd = new SqlCommand("SELECT DISTINCT department FROM mst_users WHERE department is not NULL and department != 'NULL' ", conn);
+                SqlCommand cmd = new SqlCommand("GET_DEPTS_LIST", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
                 //cmd.Parameters.AddWithValue("@box_id", box_id);
                 SqlDataReader reader = cmd.ExecuteReader();
 
@@ -1935,6 +1978,7 @@ namespace SEMB_ERP.Function
                             status_desc = reader["status_desc"].ToString(),
                             remark = reader["remark"].ToString(),
                             record_date = reader["record_date"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(reader["record_date"]) : null,
+                            lead_time = reader["lead_time"].ToString(),
                             requested_by = reader["requested_by"].ToString(),
                             requested_by_name = reader["name"].ToString(),
                             department = reader["department"].ToString(),
@@ -1968,6 +2012,31 @@ namespace SEMB_ERP.Function
                         picked_by_name = reader["picked_by_name"].ToString(),
                         pallet_no = reader["pallet_no"].ToString(),
                         record_date = Convert.ToDateTime(reader["record_date"])
+                    });
+                }
+            }
+
+            return dataList;
+        }
+        public List<TcodeModel> GetTcodeHistory(int id_request)
+        {
+            List<TcodeModel> dataList = new List<TcodeModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("GET_TCODE_HISTORY", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@id_request", id_request);
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    dataList.Add(new TcodeModel
+                    {
+                        status_request = reader["status_request"].ToString(),
+                        record_date = Convert.ToDateTime(reader["record_date"]),
+                        name = reader["name"].ToString(),
                     });
                 }
             }
@@ -2266,7 +2335,7 @@ namespace SEMB_ERP.Function
 
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
-                string query = "SELECT Status_Desc, Material_Type, Partno, PO_No, Storage_Bin, Qty, Picked_Qty, Available_Qty, UOM, Revision, Project_Name, Storage_Requirement, Supplier_Name, PIC, Order_Type, Unit_Price, Gatepass, Record_Date, Length_mm, Width_mm, Height_mm FROM v_order_sbin";
+                string query = "SELECT Status_Desc, Material_Type, Partno, PO_No, Storage_Bin, Box_ID, Qty, Picked_Qty, Available_Qty, UOM, Revision, Project_Name, Storage_Requirement, Supplier_Name, PIC_Name, Order_Type, Unit_Price, Gatepass, Record_Date, Length_mm, Width_mm, Height_mm FROM v_order_sbin";
                 using (SqlCommand cmd = new SqlCommand(query))
                 {
                     cmd.Connection = conn;
@@ -2300,6 +2369,33 @@ namespace SEMB_ERP.Function
 
             return ds;
 
+        }
+        public List<ChartModel> GetAgingMovementChart()
+        {
+            List<ChartModel> result = new List<ChartModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString)) 
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("GET_AGING_MOVEMENT_CHART", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                SqlDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    result.Add(new ChartModel()
+                    {
+                        label = reader["Label"].ToString(),
+                        value1 = reader.IsDBNull("<= 3 Months") ? 0 : Convert.ToDouble(reader["<= 3 Months"]),
+                        value2 = reader.IsDBNull("<= 6 Months") ? 0 : Convert.ToDouble(reader["<= 6 Months"]),
+                        value3 = reader.IsDBNull("<= 12 Months") ? 0 : Convert.ToDouble(reader["<= 12 Months"]),
+                        value4 = reader.IsDBNull("> 1 Year") ? 0 : Convert.ToDouble(reader["> 1 Year"])
+                    });
+                }
+
+                conn.Close();
+            }
+
+            return result;
         }
     }
 }

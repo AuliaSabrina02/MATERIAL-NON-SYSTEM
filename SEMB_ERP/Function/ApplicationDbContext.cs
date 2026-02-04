@@ -17,6 +17,7 @@ namespace SEMB_ERP.Function
         public DbSet<BlockBinModel> v_block_bin { get; set; }
         public DbSet<VarianceModel> v_picking_variance { get; set; }
         public DbSet<PalletModel> v_pallet_header { get; set; }
+        public DbSet<AgingMovementModel> v_order_aging { get; set; }
 
     }
 }

@@ -1,0 +1,414 @@
+﻿@* @using System.Data; *@
+@model List<UserDetailModel>
+@using Microsoft.AspNetCore.Mvc.Rendering;
+@using Microsoft.AspNetCore.Http;
+@using SEMB_ERP.Function;
+@{
+    var user = Model.First();
+    string sesa_id = ViewBag.sesa_id;
+    string name = ViewBag.name;
+    List<string> listStatus = ViewBag.listStatus;
+    List<string> userRoles = ViewBag.userRoles;
+    List<string> listPrinter = ViewBag.listPrinter;
+}
+
+<style>
+    /* CSS untuk membuat modal berada di tengah layar */
+    #loadingSpinner {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5); /* Transparan hitam */
+    }
+
+        #loadingSpinner img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+    .box_form_input {
+        background-color: #fcfcfc;
+        border-radius: 5px;
+        box-shadow: 1px 2px 8px 2px rgba(152,152,152,0.7);
+    }
+
+    .modal {
+        overflow: auto !important
+    }
+
+    .smaller-input {
+        height: 25px; /* Adjust height as necessary */
+        padding: 5px; /* Adjust padding as necessary */
+        font-size: 10px; /* Optional: Adjust font size */
+        line-height: 1; /* Optional: Reset line height */
+    }
+
+    /* Customize the font size for DataTables elements */
+    .dataTables_info, .dataTables_paginate, .dataTables_filter {
+        font-size: 10pt; /* Adjust the value to your desired font size */
+    }
+
+    #table_order_filter.dataTables_filter {
+        display: none;
+    }
+
+    table#table_order tr > th {
+        padding: 5px;
+    }
+
+    table#table_order tr > td {
+        padding: 5px;
+    }
+
+    .btn-group-xs > .btn, .btn-xs {
+        padding: .25rem .4rem;
+        font-size: .875rem;
+        line-height: .5;
+        border-radius: .2rem;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .form-check-input.bigger-checkbox {
+        margin-left: 0.2px;
+        transform: scale(2); /* Adjust the scale as needed */
+    }
+
+    #table_order tbody tr.row_body:hover {
+        background-color: #95db72;
+        color: white;
+    }
+
+    #table_order {
+        border-radius: 0.35rem; /* sudut tumpul */
+        overflow: hidden; /* supaya border-radius bekerja */
+    }
+
+        #table_order td {
+            border-bottom: 0.5px solid #FBF8EF !important;
+            border-left: none !important;
+            font-size: 10px;
+        }
+
+        #table_order thead th {
+            border: none !important;
+            font-size: 12px;
+        }
+
+</style>
+
+<section id="hero1" class="hero bg-dark position-relative">
+    <div class="inner d-flex justify-content-between align-items-center px-3 py-2 w-100">
+
+        <!-- Kiri (kosong / placeholder) -->
+        <div class="extract-info">
+        </div>
+
+        <!-- Tengah: Judul (absolutely centered) -->
+        <div class="position-absolute top-50 start-50 translate-middle text-center">
+            <h3 class="text-white mb-0">
+                <i class="fas fa-hourglass-half text-success"></i>
+                <b> Aging Movement</b>
+            </h3>
+        </div>
+
+        <!-- Kanan: Breadcrumb -->
+        <nav aria-label="breadcrumb" class="text-end ms-auto breadcrumb-sm">
+            <ol class="breadcrumb mb-0 d-inline-flex flex-nowrap align-items-center bg-transparent">
+                <ul class="navbar-nav ml-auto">
+                    <div class="dropdown" style="flex-shrink: 0;">
+                        <button class="btn btn-sm btn-danger dropdown-toggle" type="button" id="wiDropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-file-pdf"></i> Work Instructions
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="wiDropdownMenuButton">
+                            <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Requestor.pdf">JBS Non System Apps - Section Requestor</a></li>
+                            <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Warehouse Plant (English).pdf">JBS Non System Apps - Section Warehouse Plant (English)</a></li>
+                            <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Warehouse Plant (Bahasa).pdf">JBS Non System Apps - Section Warehouse Plant (Bahasa)</a></li>
+                        </ul>
+                    </div>
+                </ul>
+        </nav>
+    </div>
+</section>
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="d-flex justify-content-center mt-3">
+                <ul class="nav nav-pills mb-2" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="detail-tab" data-bs-toggle="tab" data-bs-target="#detail" type="button" role="tab" aria-controls="detail" aria-selected="true">
+                            <i class="fas fa-chart-pie"></i> Aging Movement Chart
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="false">
+                            <i class="fas fa-list"></i> Aging Movement Table
+                        </button>
+                    </li>
+                    
+                </ul>
+            </div>
+            <div class="col-lg-12 mt-3">
+                <div class="tab-content mt-2" id="myTabContent">
+                    <div class="tab-pane fade" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                        <div class="row">
+                            <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 table-responsive">
+                                <table class="table table-bordered table-striped align-center nowrap" id="table_order" style="font-size:10pt;width:100%;">
+                                    <thead class="bg-navy-custom align-middle text-center">
+                                        <tr>
+                                            <th>Status</th>
+                                            <th>Material Type</th>
+                                            <th>Part No</th>
+                                            <th>PO NO</th>
+                                            <th>Project Name</th>
+                                            <th>Storage Requirement</th>
+                                            <th>Supplier Name</th>
+                                            <th>PIC</th>
+                                            <th>Order Type</th>
+                                            <th rowspan="2">Last<br />Update</th>
+                                            <th rowspan="2">Aging Movement<br />(Days)</th>
+                                        </tr>
+                                        <tr>
+                                            @for (int i = 0; i < 9; i++) // Adjusted the loop to 24 to exclude Img Tagging
+                                            {
+                                                if (i == 0)
+                                                {
+                                                    <td>
+                                                        <select class="form-control smaller-input filter_table" target="@i">
+                                                            <option value="">#ALL</option>
+                                                            @foreach (var status in listStatus)
+                                                            {
+                                                                <option value="@status">@status</option>
+                                                            }
+                                                        </select>
+                                                    </td>
+                                                }
+                                                else
+                                                {
+                                                    <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="@i" /></td>
+                                                }
+                                            }
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade show active" id="detail" role="tabpanel" aria-labelledby="detail-tab">
+                        <div class="row">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div id="chart"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                
+            </div>
+
+            <!-- Element spinner -->
+            <div id="loadingSpinner" style="display: none;">
+                <img src="~/images/icon/loading.gif" alt="Loading..." />
+            </div
+            <div id="loading" style="display:none; text-align:center;">
+  
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+
+    <script>
+        var table;
+        var loading = "<div class='text-center'><i class='fa fa-4x fa-spinner fa-spin'></i></div>";
+
+        $(document).ready(function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            })
+
+            var table = $("#table_order").DataTable({
+                // "searching": false,
+                // "scrollX": true,
+                // "fixedColumns": {
+                //     rightColumns: 1
+                // },
+                "orderCellsTop": true,
+                "processing": true,
+                "serverSide": true,
+                "filter": true,
+                "ajax": {
+                    "url": "@Url.Action("GetAgingMovementList")",
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                "columns": [
+                    { "data": "status_desc",
+                        "className": "align-middle",
+                        "render": function (data, type, row) {
+                            return data;
+                        }
+                    },
+                    { "data": "material_type", "className": "align-middle" },
+                    { "data": "partno", "className": "align-middle" },
+                    { "data": "po_no", "className": "align-middle" },
+                    { "data": "project_name", "className": "align-middle" },
+                    { "data": "storage_requirement", "className": "align-middle" },
+                    { "data": "supplier_name", "className": "align-middle" },
+                    { "data": "pic_name", "className": "align-middle" },
+                    { "data": "order_type", "className": "align-middle" },
+                    {
+                      data: "last_updated",
+                      className: "align-middle",
+                      render: function (data, type, row) {
+                        const date = new Date(data);
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const year = date.getFullYear();
+                        const hours = String(date.getHours()).padStart(2, '0');
+                        const minutes = String(date.getMinutes()).padStart(2, '0');
+                        const seconds = String(date.getSeconds()).padStart(2, '0');
+                        return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+                      }
+                    },
+                    { "data": "aging", "className": "align-middle" },
+                ],
+                "drawCallback": function (settings) {
+                    // Set the background color for the second column (index 1)
+                    this.api().rows().every(function () {
+                        var rowNode = this.node();
+                        let status_desc = $(rowNode).find('td:eq(0)').html();
+                        status_desc = status_desc.toLowerCase();
+                        let bg_color = "";
+                        if(status_desc=="submission"){
+                            bg_color = "bg-warning";
+                        }
+                        else if(status_desc=="received"){
+                            bg_color = "bg-success";
+                        }
+                        else if (status_desc=="putaway") {
+                            bg_color = "bg-info";
+                        }
+                        else if (status_desc=="partially picked") {
+                            bg_color = "bg-info";
+                        }
+                        else if (status_desc=="closed") {
+                            bg_color = "bg-secondary";
+                        }
+                        $(rowNode).find('td').css("background-color", "#F3F4F4")
+                        $(rowNode).find('td:eq(0)').addClass(bg_color);
+
+
+                    });
+                    // Initialize tooltips
+                    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                        return new bootstrap.Tooltip(tooltipTriggerEl);
+                    });
+
+                },
+                "order": [[10, 'desc']]
+            });
+
+
+            $('input.filter_table, select.filter_table', this).on('keyup change', function () {
+                let trgt = $(this).attr('target');
+                // alert(trgt);
+                if (table.column(trgt).search() !== this.value) {
+                    table
+                        .column(trgt)
+                        .search(this.value)
+                        .draw();
+                }
+            });
+
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetAgingMovementChart")",
+                success: function (res) {
+
+                    var categories = [];
+                    var series1 = [];
+                    var series2 = [];
+                    var series3 = [];
+                    var series4 = [];
+
+                    $.each(res, function (i, item) {
+                        categories.push(item.label);
+                        series1.push(item.value1);
+                        series2.push(item.value2);
+                        series3.push(item.value3);
+                        series4.push(item.value4);
+                    });
+
+                    Highcharts.chart('chart', {
+                        chart: { type: 'column' },
+                        title: { text: '' },
+                        xAxis: { categories: categories },
+                        yAxis: {
+                            min: 0,
+                            title: { text: 'Total' },
+                            stackLabels: { enabled: false }
+                        },
+                        legend: { align: 'center', verticalAlign: 'bottom' },
+
+                        tooltip: {
+                            headerFormat: '<b>{point.key}</b><br/>',
+                            pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+                        },
+
+                        plotOptions: {
+                            column: { stacking: 'normal', dataLabels: { enabled: true } }
+                        },
+                        series: [
+                            { name: '<= 3 Months', data: series1, color: '#bcff47' },
+                            { name: '<= 6 Months', data: series2, color: '#ff9147' },
+                            { name: '<= 12 Months', data: series3, color: '#ff478a' },
+                            { name: '> 1 Year', data: series4, color: '#c247ff' }
+                        ]
+                    });
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error("Error:", textStatus, errorThrown);
+                    alert("Something went wrong: " + errorThrown);
+                }
+            });
+        })
+
+        
+        function showLoadingSpinner(msg = 'Please wait...') {
+            Swal.fire({
+                title: 'Processing',
+                html: msg,
+                allowOutsideClick: false,
+                onBeforeOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        }
+
+    </script>
+}
