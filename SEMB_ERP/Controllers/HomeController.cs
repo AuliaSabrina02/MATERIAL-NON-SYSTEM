@@ -286,11 +286,11 @@ namespace SEMB_ERP.Controllers
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
 
-            HttpContext.Session.Clear();
-            foreach (var cookie in Request.Cookies.Keys)
-            {
-                Response.Cookies.Delete(cookie);
-            }
+            //HttpContext.Session.Clear();
+            //foreach (var cookie in Request.Cookies.Keys)
+            //{
+            //    Response.Cookies.Delete(cookie);
+            //}
             return RedirectToAction("Index", "Home");
         }
 
