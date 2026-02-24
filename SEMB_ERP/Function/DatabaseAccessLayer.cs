@@ -2397,5 +2397,233 @@ namespace SEMB_ERP.Function
 
             return result;
         }
+        public List<ShipmentTempModel> GetTempShipment(string id_upload, string sesa_id)
+        {
+            List<ShipmentTempModel> dataList = new List<ShipmentTempModel>();
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand("GET_TEMP_SHIPMENT", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@id_upload", id_upload);
+                    cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                    using SqlDataReader reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            ShipmentTempModel row = new ShipmentTempModel();
+                            row.project_name = reader["project_name"].ToString();
+                            row.project_name_msg = reader["project_name_msg"].ToString();
+                            row.stage_name = reader["stage_name"].ToString();
+                            row.stage_name_msg = reader["stage_name_msg"].ToString();
+                            row.wo_no = reader["wo_no"].ToString();
+                            row.wo_no_msg = reader["wo_no_msg"].ToString();
+                            row.partno = reader["partno"].ToString();
+                            row.partno_msg = reader["partno_msg"].ToString();
+                            row.revision = reader["revision"].ToString();
+                            row.revision_msg = reader["revision_msg"].ToString();
+                            row.qty = reader["qty"].ToString();
+                            row.qty_msg = reader["qty_msg"].ToString();
+                            row.is_coated = reader["is_coated"].ToString();
+                            row.is_coated_msg = reader["is_coated_msg"].ToString();
+                            row.ship_date = reader["ship_date"].ToString();
+                            row.ship_date_msg = reader["ship_date_msg"].ToString();
+                            row.is_error = Convert.ToInt32(reader["is_error"]);
+                            dataList.Add(row);
+                        }
+                    }
+                }
+
+                conn.Close();
+            }
+            return dataList;
+        }
+        public string SubmitUploadShipment(string id_upload, string sesa_id)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand("SUBMIT_UPLOAD_SHIPMENT", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@id_upload", id_upload);
+                    cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                    cmd.ExecuteNonQuery();
+                    //cmd.ExecuteScalar();
+                    return "success";
+                }
+            }
+        }
+
+        public string ReceiveShipment(string id_shipment, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("RECEIVE_SHIPMENT", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@id_shipment", id_shipment);
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+
+                        SqlParameter returnValue = new SqlParameter();
+                        returnValue.Direction = ParameterDirection.ReturnValue;
+                        cmd.Parameters.Add(returnValue);
+
+                        cmd.ExecuteNonQuery();
+
+                        int result = (int)returnValue.Value;
+                        if (result == 0)
+                        {
+                            return "success;Shipment(s) received successfully!";
+                        }
+                        else
+                        {
+                            return "error;Failed to receive shipment(s). Please try again.";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return $"error;Failed to receive shipment(s): {ex.Message}";
+            }
+        }
+
+        public string BinningShipment(string id_shipment, string storage_dest, string gatepass_no, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("BINNING_SHIPMENT", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@id_shipment", id_shipment);
+                        cmd.Parameters.AddWithValue("@storage_dest", storage_dest);
+                        cmd.Parameters.AddWithValue("@gatepass_no", gatepass_no ?? (object)DBNull.Value);
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+
+                        SqlParameter returnValue = new SqlParameter();
+                        returnValue.Direction = ParameterDirection.ReturnValue;
+                        cmd.Parameters.Add(returnValue);
+
+                        cmd.ExecuteNonQuery();
+
+                        int result = (int)returnValue.Value;
+                        if (result == 0)
+                        {
+                            return $"success;Shipment(s) assigned to {storage_dest} successfully!";
+                        }
+                        else
+                        {
+                            return "error;Failed to assign storage destination. Please try again.";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return $"error;Failed to assign storage destination: {ex.Message}";
+            }
+        }
+
+        public string InsertShipmentManual(string id_upload, string project_name, string stage_name, string wo_no, string partno, 
+            string revision, decimal qty, string is_coated, DateTime ship_date, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("INSERT_SHIPMENT_MANUAL", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@id_upload", id_upload);
+                        cmd.Parameters.AddWithValue("@project_name", project_name);
+                        cmd.Parameters.AddWithValue("@stage_name", stage_name);
+                        cmd.Parameters.AddWithValue("@wo_no", wo_no);
+                        cmd.Parameters.AddWithValue("@partno", partno);
+                        cmd.Parameters.AddWithValue("@revision", revision);
+                        cmd.Parameters.AddWithValue("@qty", qty);
+                        cmd.Parameters.AddWithValue("@is_coated", is_coated);
+                        cmd.Parameters.AddWithValue("@ship_date", ship_date);
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+
+                        SqlParameter returnValue = new SqlParameter
+                        {
+                            Direction = ParameterDirection.ReturnValue
+                        };
+                        cmd.Parameters.Add(returnValue);
+
+                        cmd.ExecuteNonQuery();
+
+                        int result = (int)returnValue.Value;
+                        if (result == 0)
+                        {
+                            return "success;Shipment added successfully!";
+                        }
+                        else
+                        {
+                            return "error;Failed to add shipment. Please try again.";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return $"error;Failed to add shipment: {ex.Message}";
+            }
+        }
+
+        public string DeleteShipment(string id_shipment, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("DELETE_SHIPMENT", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@id_shipment", id_shipment);
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+
+                        SqlParameter returnValue = new SqlParameter
+                        {
+                            Direction = ParameterDirection.ReturnValue
+                        };
+                        cmd.Parameters.Add(returnValue);
+
+                        cmd.ExecuteNonQuery();
+
+                        int result = (int)returnValue.Value;
+                        if (result == 0)
+                        {
+                            // Count how many were deleted
+                            string[] ids = id_shipment.Split(';');
+                            return $"success;Successfully deleted {ids.Length} shipment(s)!";
+                        }
+                        else if (result == 1)
+                        {
+                            return "error;Cannot delete shipment that has been received. Please contact administrator.";
+                        }
+                        else
+                        {
+                            return "error;Failed to delete shipment. Please try again.";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return $"error;Failed to delete shipment: {ex.Message}";
+            }
+        }
     }
 }

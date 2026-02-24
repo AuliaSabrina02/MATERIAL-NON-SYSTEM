@@ -1,0 +1,1155 @@
+﻿@* @using System.Data; *@
+@model List<UserDetailModel>
+@using Microsoft.AspNetCore.Mvc.Rendering;
+@using Microsoft.AspNetCore.Http;
+@using SEMB_ERP.Function;
+@{
+    string sesa_id = ViewBag.sesa_id;
+    string name = ViewBag.name;
+    List<string> catList = ViewBag.catList;
+    List<string> userRoles = ViewBag.userRoles;
+}
+
+<style>
+    /* CSS untuk membuat modal berada di tengah layar */
+    #loadingSpinner {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5); /* Transparan hitam */
+    }
+
+    #loadingSpinner img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    }
+
+    .box_form_input {
+    background-color: #fcfcfc;
+    border-radius: 5px;
+    box-shadow: 1px 2px 8px 2px rgba(152,152,152,0.7);
+    }
+
+    .modal {
+    overflow: auto !important;
+    }
+
+    .smaller-input {
+    height: 25px; /* Adjust height as necessary */
+    padding: 5px; /* Adjust padding as necessary */
+    font-size: 10px; /* Optional: Adjust font size */
+    line-height: 1; /* Optional: Reset line height */
+    }
+
+    /* Customize the font size for DataTables elements */
+    .dataTables_info, .dataTables_paginate, .dataTables_filter {
+    font-size: 10pt; /* Adjust the value to your desired font size */
+    }
+
+    .dataTables_filter {
+    display: none; /* Hides just the input field */
+    }
+
+    table#table_non_conf tr > th,
+    table#table_non_conf tr > td {
+    padding: 5px;
+    vertical-align: middle;
+    }
+
+    .btn-group-xs > .btn, .btn-xs {
+    padding: .25rem .4rem;
+    font-size: .875rem;
+    line-height: .5;
+    border-radius: .2rem;
+    }
+
+    .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    }
+
+    #tbl_shipment_open tbody tr.row_body:hover {
+        background-color: #95db72;
+        color: white;
+    }
+
+    #tbl_shipment_open, #tbl_shipment_close {
+        border-radius: 0.35rem; /* sudut tumpul */
+        overflow: hidden; /* supaya border-radius bekerja */
+    }
+
+        #tbl_shipment_open td, #tbl_shipment_close td {
+            border-bottom: 0.5px solid #FBF8EF !important; /* garis horizontal bawah */
+            border-left: none !important; /* hilangkan garis vertikal kiri */
+            border: none !important; /* hilangkan garis vertikal kiri */
+            font-size: 10px;
+        }
+
+        #tbl_shipment_open thead th, #tbl_shipment_close thead th {
+            border: none !important;
+            font-size: 12px;
+        }
+
+    /* Tab styling */
+    .nav-tabs .nav-link {
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #28a745;
+        font-weight: bold;
+        border-bottom: 3px solid #28a745;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: #28a745;
+    }
+</style>
+<section id="hero1" class="hero bg-dark position-relative">
+    <div class="inner d-flex justify-content-between align-items-center px-3 py-2 w-100">
+
+        <!-- Kiri (kosong / placeholder) -->
+        <div class="extract-info">
+        </div>
+
+        <!-- Tengah: Judul (absolutely centered) -->
+        <div class="position-absolute top-50 start-50 translate-middle text-center">
+            <h3 class="text-white mb-0">
+                <i class="fas fa-table text-success"></i>
+                <b>Shipment Tracker List</b>
+            </h3>
+        </div>
+
+        <!-- Kanan: Breadcrumb -->
+        <nav aria-label="breadcrumb" class="text-end ms-auto breadcrumb-sm">
+            <ol class="breadcrumb mb-0 d-inline-flex flex-nowrap align-items-center bg-transparent">
+                <ul class="navbar-nav ml-auto">
+                    <div class="dropdown" style="flex-shrink: 0;">
+                        <button class="btn btn-sm btn-danger dropdown-toggle" type="button" id="wiDropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-file-pdf"></i> Work Instructions
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="wiDropdownMenuButton">
+                            <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Requestor.pdf">JBS Non System Apps - Section Requestor</a></li>
+                            <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Warehouse Plant (English).pdf">JBS Non System Apps - Section Warehouse Plant (English)</a></li>
+                            <li><a class="dropdown-item" target="_blank" href="../WI/JBS Non System Apps - Section Warehouse Plant (Bahasa).pdf">JBS Non System Apps - Section Warehouse Plant (Bahasa)</a></li>
+                        </ul>
+                    </div>
+                </ul>
+        </nav>
+    </div>
+</section>
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 mt-3">
+                <div class="card">
+                    <div class="card-body">
+                        <!-- Tab Navigation -->
+                        <ul class="nav nav-tabs" id="shipmentTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="open-tab" data-bs-toggle="tab" data-bs-target="#open-content" type="button" role="tab" aria-controls="open-content" aria-selected="true">
+                                    <i class="fas fa-box-open"></i> OPEN
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="close-tab" data-bs-toggle="tab" data-bs-target="#close-content" type="button" role="tab" aria-controls="close-content" aria-selected="false">
+                                    <i class="fas fa-box"></i> CLOSE
+                                </button>
+                            </li>
+                        </ul>
+
+                        <!-- Tab Content -->
+                        <div class="tab-content" id="shipmentTabContent">
+                            <!-- OPEN Tab -->
+                            <div class="tab-pane fade show active" id="open-content" role="tabpanel" aria-labelledby="open-tab">
+                                <div class="row mb-2 mt-3">
+                                    <div class="col-12">
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-success btn-sm" id="btn_receive_selected" style="display:none;">
+                                                <i class="fas fa-check"></i> Receive Selected
+                                            </button>
+                                            <button type="button" class="btn btn-primary btn-sm" id="btn_binning_selected" style="display:none;">
+                                                <i class="fas fa-warehouse"></i> Binning Selected
+                                            </button>
+                                            <button type="button" class="btn btn-danger btn-sm" id="btn_delete_selected" style="display:none;">
+                                                <i class="fas fa-trash"></i> Delete Selected
+                                            </button>
+                                        </div>
+                                        <span id="selected_count" class="badge bg-info ms-2" style="display:none;"></span>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12 table-responsive">
+                                        <table class="table table-bordered table-sm table-striped align-center nowrap" id="tbl_shipment_open" style="font-size:10pt;width:100%">
+                                            <thead class="bg-secondary align-middle text-center">
+                                                <tr>
+                                                    <th class="align-middle text-center" rowspan="2"></th>
+                                                    <th class="align-middle text-center">Project<br />Name</th>
+                                                    <th class="align-middle text-center">Stage<br />Name</th>
+                                                    <th class="align-middle text-center">WO No</th>
+                                                    <th class="align-middle text-center">Part No</th>
+                                                    <th class="align-middle text-center">Revision</th>
+                                                    <th class="align-middle text-center">Qty</th>
+                                                    <th class="align-middle text-center">Is Coated</th>
+                                                    <th class="align-middle text-center">Ship Date</th>
+                                                    <th class="align-middle text-center">Status</th>
+                                                    <th class="align-middle text-center">Inserted By</th>
+                                                    <th class="align-middle text-center">Received Date</th>
+                                                    <th class="align-middle text-center">Received By</th>
+                                                    <th class="align-middle text-center">Storage Dest</th>
+                                                    <th class="align-middle text-center">Gatepass No</th>
+                                                    <th class="align-middle text-center" rowspan="2">Action</th>
+                                                </tr>
+                                                <tr class="align-middle text-center">
+                                                    @for (int i = 0; i < 14; i++)
+                                                    {
+                                                        if (i == 6) // is_coated
+                                                        {
+                                                            <td style="padding: 5px;">
+                                                                <select class="form-control smaller-input filter_table_open" target="@i">
+                                                                    <option value="">#ALL</option>
+                                                                    <option value="COATED">COATED</option>
+                                                                    <option value="NON COATED">NON COATED</option>
+                                                                </select>
+                                                            </td>
+                                                        }
+                                                        else if (i == 8) // status_shipment
+                                                        {
+                                                            <td style="padding: 5px;">
+                                                                <select class="form-control smaller-input filter_table_open" target="@i">
+                                                                    <option value="">#ALL</option>
+                                                                    <option value="SHIPPED">SHIPPED</option>
+                                                                    <option value="RECEIVED">RECEIVED</option>
+                                                                </select>
+                                                            </td>
+                                                        }
+                                                        else if (i == 12) // storage_dest
+                                                        {
+                                                            <td style="padding: 5px;">
+                                                                <select class="form-control smaller-input filter_table_open" target="@i">
+                                                                    <option value="">#ALL</option>
+                                                                    <option value="PEL">PEL</option>
+                                                                    <option value="BLP">BLP</option>
+                                                                </select>
+                                                            </td>
+                                                        }
+                                                        else
+                                                        {
+                                                            <td style="padding: 5px;"><input type="text" class="form-control smaller-input filter_table_open" placeholder="Filter..." target="@i" /></td>
+                                                        }
+                                                    }
+                                                </tr>
+                                            </thead>
+                                            <tbody class="align-middle text-center">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CLOSE Tab -->
+                            <div class="tab-pane fade" id="close-content" role="tabpanel" aria-labelledby="close-tab">
+                                <div class="row mt-3">
+                                    <div class="col-12 table-responsive">
+                                        <table class="table table-bordered table-sm table-striped align-center nowrap" id="tbl_shipment_close" style="font-size:10pt;width:100%">
+                                            <thead class="bg-secondary align-middle text-center">
+                                                <tr>
+                                                    <th class="align-middle text-center">Project<br />Name</th>
+                                                    <th class="align-middle text-center">Stage<br />Name</th>
+                                                    <th class="align-middle text-center">WO No</th>
+                                                    <th class="align-middle text-center">Part No</th>
+                                                    <th class="align-middle text-center">Revision</th>
+                                                    <th class="align-middle text-center">Qty</th>
+                                                    <th class="align-middle text-center">Is Coated</th>
+                                                    <th class="align-middle text-center">Ship Date</th>
+                                                    <th class="align-middle text-center">Status</th>
+                                                    <th class="align-middle text-center">Inserted By</th>
+                                                    <th class="align-middle text-center">Received Date</th>
+                                                    <th class="align-middle text-center">Received By</th>
+                                                    <th class="align-middle text-center">Storage Dest</th>
+                                                    <th class="align-middle text-center">Gatepass No</th>
+                                                    <th class="align-middle text-center">Close Date</th>
+                                                </tr>
+                                                <tr class="align-middle text-center">
+                                                    @for (int i = 0; i < 15; i++)
+                                                    {
+                                                        if (i == 6) // is_coated (adjusted index for close table)
+                                                        {
+                                                            <td style="padding: 5px;">
+                                                                <select class="form-control smaller-input filter_table_close" target="@i">
+                                                                    <option value="">#ALL</option>
+                                                                    <option value="COATED">COATED</option>
+                                                                    <option value="NON COATED">NON COATED</option>
+                                                                </select>
+                                                            </td>
+                                                        }
+                                                        else if (i == 12) // storage_dest (adjusted index)
+                                                        {
+                                                            <td style="padding: 5px;">
+                                                                <select class="form-control smaller-input filter_table_close" target="@i">
+                                                                    <option value="">#ALL</option>
+                                                                    <option value="PEL">PEL</option>
+                                                                    <option value="BLP">BLP</option>
+                                                                </select>
+                                                            </td>
+                                                        }
+                                                        else
+                                                        {
+                                                            <td style="padding: 5px;"><input type="text" class="form-control smaller-input filter_table_close" placeholder="Filter..." target="@i" /></td>
+                                                        }
+                                                    }
+                                                </tr>
+                                            </thead>
+                                            <tbody class="align-middle text-center">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Element spinner -->
+            <div id="loadingSpinner" style="display: none;">
+                <img src="~/images/icon/loading.gif" alt="Loading..." />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal_update_conf" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <h5 class="modal-title" id="chart_title"><i class="fas fa-edit"></i> Update Non Conformity</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="body_update_posting">
+                <form id="form_update_conf" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-6 pl-4 pr-4">
+                            <input class="form-control" type="hidden" name="id_non_conf" required />
+                            <div class="form-group">
+                                <label>Material Type<span class="text-danger">*</span></label>
+                                <select class="form-control" name="material_type" id="material_type" required>
+                                    <option value="">-- SELECT TYPE --</option>
+                                    <option value="RW">Raw Material (RW)</option>
+                                    <option value="FG">Finish Goods (FG)</option>
+                                    <option value="WIP">Work In Progress (WIP)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Part No<span class="text-danger">*</span></label>
+                                <input class="form-control" type="text" name="partno" placeholder="Part Number" autocomplete="off" required />
+                            </div>
+                            <div class="form-group">
+                                <label>PO No<span class="text-danger">*</span></label>
+                                <input class="form-control" type="text" name="po_no" placeholder="PO Number" autocomplete="off" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Qty<span class="text-danger">*</span></label>
+                                <input class="form-control" type="number" name="qty" placeholder="Qty" autocomplete="off" step="any" required />
+                            </div>
+                            <div class="form-group">
+                                <label>UOM<span class="text-danger">*</span></label>
+                                <input class="form-control" type="text" name="uom" placeholder="PC, PALLET, ..." autocomplete="off" required />
+                            </div>
+                        </div>
+                        <div class="col-6 pl-4 pr-4">
+                            <div class="form-group">
+                                <label>Supplier Name<span class="text-danger">*</span></label>
+                                <input class="form-control" type="text" name="supplier_name" placeholder="Supplier" autocomplete="off" required />
+                            </div>
+                            <div class="form-group">
+                                <label>PIC<span class="text-danger">*</span></label>
+                                <select class="form-control" name="pic">
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Category Issue<span class="text-danger">*</span></label>
+                                <select class="form-control" name="category_issue" id="category_issue" required>
+                                    <option value="">-- SELECT CATEGORY ISSUE --</option>
+@*                                     @foreach (var cat in catList)
+                                    {
+                                        <option value="@cat">@cat</option>
+                                    } *@
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Detail Issue</label>
+                                <textarea class="form-control" name="detail_issue" rows="2"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Supporting Documents (Optional)</label>
+                                <input type="file" class="form-control" name="file_support">
+                                <div id="file_preview" class="mt-2"></div> <!-- Add this line for file preview -->
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-group text-center">
+                                <button type="submit" class="btn btn-success mt-2" name="btn_submit">Update <i class="fa fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal_close_detail" class="modal fade">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-list"></i> Close Detail</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div>
+                <div class="row m-4">
+                    <div class="col-12">
+                        <table class="table table-borderless table-sm">
+                            <tr>
+                                <td>Close Date</td>
+                                <td id="close-date">:</td>
+                            </tr>
+                            <tr>
+                                <td>Closed By</td>
+                                <td id="closed-by">:</td>
+                            </tr>
+                            <tr>
+                                <td>Close Comment</td>
+                                <td>
+                                    <textarea id="close-comment" class="form-control" rows="4" readonly></textarea>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var tableOpen, tableClose;
+        var loading = "<div class='text-center'><i class='fa fa-4x fa-spinner fa-spin'></i></div>";
+        var sesa_id = "@sesa_id".toUpperCase();
+        var user_roles = @Html.Raw(Json.Serialize(userRoles));
+        var checkedShipments = {}; // Store checked state persistently
+
+        $(document).ready(function () {
+            // Initialize OPEN tab DataTable
+            tableOpen = $("#tbl_shipment_open").DataTable({
+                "orderCellsTop": true,
+                "processing": true,
+                "serverSide": true,
+                "searching": true,
+                "ajax": {
+                    "url": "@Url.Action("GET_SHIPMENT_LIST")",
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                "columns": [
+                    {
+                        "data": "id_shipment",
+                        "className": "align-middle text-center",
+                        "orderable": false,
+                        "render": function (data, type, row) {
+                            if (user_roles.includes("receiver")) {
+                                var checked = checkedShipments[row['id_shipment']] ? 'checked' : '';
+                                return `<input type="checkbox" class="shipment-checkbox" 
+                                        data-id="${row['id_shipment']}" 
+                                        data-status="${row['status_shipment']}" ${checked} />`;
+                            }
+                            return '';
+                        }
+                    },
+                    { "data": "project_name", "className": "align-middle" },
+                    { "data": "stage_name", "className": "align-middle" },
+                    { "data": "wo_no", "className": "align-middle" },
+                    { "data": "partno", "className": "align-middle" },
+                    { "data": "revision", "className": "align-middle" },
+                    { "data": "qty", "className": "align-middle text-center" },
+                    { "data": "is_coated", "className": "align-middle text-center" },
+                    { 
+                        "data": "ship_date", 
+                        "className": "align-middle text-center",
+                        "render": function (data, type, row) {
+                            if (data === null || data === "") {
+                                return "";
+                            }
+                            return new Date(data).toLocaleDateString();
+                        }
+                    },
+                    { 
+                        "data": "status_shipment", 
+                        "className": "align-middle text-center",
+                        "render": function (data, type, row) {
+                            // Apply background color based on status
+                            if (data === 'SHIPPED') {
+                                return `<span style="display: block; padding: 5px; background-color: #ffe5cc; font-weight: bold;">${data}</span>`;
+                            } else if (data === 'RECEIVED') {
+                                return `<span style="display: block; padding: 5px; background-color: #d4edda; font-weight: bold;">${data}</span>`;
+                            }
+                            return data;
+                        }
+                    },
+                    { "data": "inserted_by_name", "className": "align-middle" },
+                    { 
+                        "data": "received_date", 
+                        "className": "align-middle text-center",
+                        "render": function (data, type, row) {
+                            if (data === null || data === "") {
+                                return "";
+                            }
+                            return new Date(data).toLocaleDateString();
+                        }
+                    },
+                    { "data": "received_by_name", "className": "align-middle" },
+                    { "data": "storage_dest", "className": "align-middle" },
+                    { "data": "gatepass_no", "className": "align-middle" },
+                    {
+                        "data": "status_shipment",
+                        "className": "align-middle text-center",
+                        "render": function (data, type, row) {
+                            var buttons = '';
+                            if (data === "SHIPPED" && user_roles.includes("receiver")) {
+                                buttons += `<button class="btn btn-sm btn-success me-1" onclick="receive_shipment('${row['id_shipment']}')"><i class="fas fa-check"></i> Receive</button>`;
+                            } else if (data === "RECEIVED" && user_roles.includes("receiver")){
+                                buttons += `<button class="btn btn-sm btn-primary me-1" onclick="binning_to('${row['id_shipment']}')"><i class="fas fa-warehouse"></i> Binning To</button>`;
+                            } else if (data === "RECEIVED"){
+                                buttons += `<span class="badge bg-success me-1">RECEIVED</span>`;
+                            } else {
+                                buttons += `<span class="badge bg-info me-1">${data}</span>`;
+                            }
+
+                            // Add delete button for requestor role or admin
+                            if (user_roles.includes("requestor") || user_roles.includes("admin")) {
+                                buttons += `<button class="btn btn-sm btn-danger" onclick="delete_shipment('${row['id_shipment']}')"><i class="fas fa-trash"></i></button>`;
+                            }
+
+                            return buttons;
+                        }
+                    }
+                ],
+                "drawCallback": function() {
+                    updateBatchButtons();
+                    updateSelectAllCheckbox();
+                }
+            });
+
+            // Initialize CLOSE tab DataTable (read-only)
+            tableClose = $("#tbl_shipment_close").DataTable({
+                "orderCellsTop": true,
+                "processing": true,
+                "serverSide": true,
+                "searching": true,
+                "ajax": {
+                    "url": "@Url.Action("GET_SHIPMENT_LIST_CLOSE")",
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                "columns": [
+                    { "data": "project_name", "className": "align-middle" },
+                    { "data": "stage_name", "className": "align-middle" },
+                    { "data": "wo_no", "className": "align-middle" },
+                    { "data": "partno", "className": "align-middle" },
+                    { "data": "revision", "className": "align-middle" },
+                    { "data": "qty", "className": "align-middle text-center" },
+                    { "data": "is_coated", "className": "align-middle text-center" },
+                    { 
+                        "data": "ship_date", 
+                        "className": "align-middle text-center",
+                        "render": function (data, type, row) {
+                            if (data === null || data === "") {
+                                return "";
+                            }
+                            return new Date(data).toLocaleDateString();
+                        }
+                    },
+                    { 
+                        "data": "status_shipment", 
+                        "className": "align-middle text-center",
+                        "render": function (data, type, row) {
+                            return `<span class="badge bg-secondary">${data}</span>`;
+                        }
+                    },
+                    { "data": "inserted_by_name", "className": "align-middle" },
+                    { 
+                        "data": "received_date", 
+                        "className": "align-middle text-center",
+                        "render": function (data, type, row) {
+                            if (data === null || data === "") {
+                                return "";
+                            }
+                            return new Date(data).toLocaleDateString();
+                        }
+                    },
+                    { "data": "received_by_name", "className": "align-middle" },
+                    { "data": "storage_dest", "className": "align-middle" },
+                    { "data": "gatepass_no", "className": "align-middle" },
+                    { 
+                        "data": "closed_date",
+                        "className": "align-middle text-center",
+                        "render": function (data, type, row) {
+                            if (data === null || data === "") {
+                                return "";
+                            }
+                            return new Date(data).toLocaleDateString();
+                        }
+                    }
+                ]
+            });
+
+            // Filter for OPEN table
+            $('input.filter_table_open, select.filter_table_open').on('keyup change', function () {
+                let trgt = parseInt($(this).attr('target')) + 1; // +1 because of checkbox column
+                if (tableOpen.column(trgt).search() !== this.value) {
+                    tableOpen
+                        .column(trgt)
+                        .search(this.value)
+                        .draw();
+                }
+            });
+
+            // Filter for CLOSE table
+            $('input.filter_table_close, select.filter_table_close').on('keyup change', function () {
+                let trgt = parseInt($(this).attr('target'));
+                if (tableClose.column(trgt).search() !== this.value) {
+                    tableClose
+                        .column(trgt)
+                        .search(this.value)
+                        .draw();
+                }
+            });
+
+            // Tab switching - reload table data
+            $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+                var target = $(e.target).attr('data-bs-target');
+                if (target === '#close-content') {
+                    tableClose.ajax.reload();
+                } else {
+                    tableOpen.ajax.reload();
+                }
+            });
+
+            // Select All checkbox functionality
+            $('#select_all_shipments').on('change', function() {
+                var checked = this.checked;
+                $('.shipment-checkbox:visible').each(function() {
+                    var shipmentId = $(this).data('id');
+                    var status = $(this).data('status');
+                    $(this).prop('checked', checked);
+                    if (checked) {
+                        checkedShipments[shipmentId] = status;
+                    } else {
+                        delete checkedShipments[shipmentId];
+                    }
+                });
+                updateBatchButtons();
+            });
+
+            // Individual checkbox change
+            $(document).on('change', '.shipment-checkbox', function() {
+                var shipmentId = $(this).data('id');
+                var status = $(this).data('status');
+                if (this.checked) {
+                    checkedShipments[shipmentId] = status;
+                } else {
+                    delete checkedShipments[shipmentId];
+                }
+                updateBatchButtons();
+                updateSelectAllCheckbox();
+            });
+
+            // Batch Receive button
+            $('#btn_receive_selected').on('click', function() {
+                var selectedShipments = [];
+                for (var id in checkedShipments) {
+                    if (checkedShipments.hasOwnProperty(id)) {
+                        if (checkedShipments[id] === 'SHIPPED') {
+                            selectedShipments.push(id);
+                        }
+                    }
+                }
+
+                if (selectedShipments.length === 0) {
+                    Swal.fire('Warning!', 'Please select SHIPPED items to receive!', 'warning');
+                    return;
+                }
+
+                receive_shipments_batch(selectedShipments);
+            });
+
+            // Batch Binning button
+            $('#btn_binning_selected').on('click', function() {
+                var selectedShipments = [];
+                for (var id in checkedShipments) {
+                    if (checkedShipments.hasOwnProperty(id)) {
+                        if (checkedShipments[id] === 'RECEIVED') {
+                            selectedShipments.push(id);
+                        }
+                    }
+                }
+
+                if (selectedShipments.length === 0) {
+                    Swal.fire('Warning!', 'Please select RECEIVED items for binning!', 'warning');
+                    return;
+                }
+
+                binning_to_batch(selectedShipments);
+            });
+
+            // Batch Delete button
+            $('#btn_delete_selected').on('click', function() {
+                var selectedShipments = [];
+                for (var id in checkedShipments) {
+                    if (checkedShipments.hasOwnProperty(id)) {
+                        selectedShipments.push(id);
+                    }
+                }
+
+                if (selectedShipments.length === 0) {
+                    Swal.fire('Warning!', 'Please select items to delete!', 'warning');
+                    return;
+                }
+
+                delete_shipments_batch(selectedShipments);
+            });
+
+            $('select[name=pic]').select2({
+                dropdownParent: $("#modal_update_conf > .modal-dialog > .modal-content"),
+                placeholder: '-- SELECT PIC --',
+                width: '100%',
+                ajax: {
+                    url: "@Url.Action("GetPIC")",
+                    data: function (params) {
+                        return {
+                            search_value: params.term
+                        };
+                    },
+                    processResults: function (data) {
+                        //console.log(data);
+                        return {
+                            results: data.items
+                        }
+                    },
+                }
+            })
+
+            $('select[name=category_issue]').select2({
+                dropdownParent: $("#modal_update_conf > .modal-dialog > .modal-content"),
+                placeholder: '-- SELECT CATEGORY ISSUE --',
+                width: '100%',
+                ajax: {
+                    url: "@Url.Action("GetCatNonConf")",
+                    data: function (params) {
+                        return {
+                            search_value: params.term
+                        };
+                    },
+                    processResults: function (data) {
+                        //console.log(data);
+                        return {
+                            results: data.items
+                        }
+                    },
+                }
+            })
+
+        });
+
+        function updateSelectAllCheckbox() {
+            var totalCheckboxes = $('.shipment-checkbox:visible').length;
+            var checkedCheckboxes = $('.shipment-checkbox:visible:checked').length;
+            $('#select_all_shipments').prop('checked', totalCheckboxes > 0 && totalCheckboxes === checkedCheckboxes);
+        }
+
+        function receive_shipment(id_shipment) {
+            Swal.fire({
+                title: 'Confirmation!!',
+                text: "Mark this shipment as received?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Yes, Receive!',
+                cancelButtonText: 'Cancel',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve, reject) {
+                        $.ajax({
+                            url: "@Url.Action("ReceiveShipment")",
+                            type: 'POST',
+                            data: { id_shipment: id_shipment }
+                        }).done(function (msg) {
+                            let arr = msg.split(";");
+                            if (arr[0] == "success") {
+                                delete checkedShipments[id_shipment];
+                                swal.fire("Success!", arr[1], "success").then(function () {
+                                    location.reload();
+                                })
+                            }
+                            else {
+                                swal.fire("Failed!", msg, "error");
+                            }
+                        })
+                    })
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            })
+        }
+
+        function binning_to(id_shipment) {
+            Swal.fire({
+                title: 'Binning To',
+                text: 'Select destination for binning',
+                input: 'select',
+                inputOptions: {
+                    '': 'Select Destination',
+                    'PEL': 'PEL',
+                    'BLP': 'BLP'
+                },
+                inputPlaceholder: 'Select destination',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Continue',
+                cancelButtonText: 'Cancel',
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'Please select a destination!'
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var storage_dest = result.value;
+
+                    if (storage_dest === 'BLP') {
+                        // BLP selected - ask for gatepass number
+                        Swal.fire({
+                            title: 'BLP Binning',
+                            text: 'Please enter Gatepass Number',
+                            input: 'text',
+                            inputPlaceholder: 'Enter Gatepass Number',
+                            showCancelButton: true,
+                            confirmButtonColor: '#28a745',
+                            cancelButtonColor: '#dc3545',
+                            confirmButtonText: 'Submit',
+                            inputValidator: (value) => {
+                                if (!value) {
+                                    return 'Gatepass Number is required for BLP!'
+                                }
+                            }
+                        }).then((gatepassResult) => {
+                            if (gatepassResult.isConfirmed) {
+                                send_binning_request(id_shipment, 'BLP', gatepassResult.value);
+                            }
+                        });
+                    } else if (storage_dest === 'PEL') {
+                        // PEL selected - send immediately
+                        send_binning_request(id_shipment, 'PEL', null);
+                    }
+                }
+            });
+        }
+
+        function send_binning_request(id_shipment, storage_dest, gatepass_no) {
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Please wait',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            $.ajax({
+                url: "@Url.Action("BinningShipment")",
+                type: 'POST',
+                data: { 
+                    id_shipment: id_shipment,
+                    storage_dest: storage_dest,
+                    gatepass_no: gatepass_no
+                }
+            }).done(function (msg) {
+                let arr = msg.split(";");
+                if (arr[0] == "success") {
+                    delete checkedShipments[id_shipment];
+                    Swal.fire("Success!", arr[1], "success").then(function () {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire("Failed!", msg, "error");
+                }
+            }).fail(function () {
+                Swal.fire("Error!", "An error occurred while processing your request", "error");
+            });
+        }
+
+        // Update batch action buttons visibility
+        function updateBatchButtons() {
+            var checkedCount = Object.keys(checkedShipments).length;
+            var shippedCount = 0;
+            var receivedCount = 0;
+
+            // Count by status
+            for (var id in checkedShipments) {
+                if (checkedShipments.hasOwnProperty(id)) {
+                    var status = checkedShipments[id];
+                    if (status === 'SHIPPED') shippedCount++;
+                    if (status === 'RECEIVED') receivedCount++;
+                }
+            }
+
+            if (checkedCount > 0) {
+                $('#selected_count').show().text(checkedCount + ' selected');
+
+                if (shippedCount > 0) {
+                    $('#btn_receive_selected').show();
+                } else {
+                    $('#btn_receive_selected').hide();
+                }
+
+                if (receivedCount > 0) {
+                    $('#btn_binning_selected').show();
+                } else {
+                    $('#btn_binning_selected').hide();
+                }
+
+                // Show delete button if user has permission
+                if (user_roles.includes('requestor') || user_roles.includes('admin')) {
+                    $('#btn_delete_selected').show();
+                } else {
+                    $('#btn_delete_selected').hide();
+                }
+            } else {
+                $('#selected_count').hide();
+                $('#btn_receive_selected').hide();
+                $('#btn_binning_selected').hide();
+                $('#btn_delete_selected').hide();
+            }
+        }
+
+        // Batch receive shipments
+        function receive_shipments_batch(shipmentIds) {
+            var id_shipment = shipmentIds.join(';'); // Format as "ID1;ID2;ID3"
+
+            Swal.fire({
+                title: 'Confirmation!!',
+                text: `Mark ${shipmentIds.length} shipment(s) as received?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Yes, Receive!',
+                cancelButtonText: 'Cancel',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve, reject) {
+                        $.ajax({
+                            url: "@Url.Action("ReceiveShipment")",
+                            type: 'POST',
+                            data: { id_shipment: id_shipment }
+                        }).done(function (msg) {
+                            let arr = msg.split(";");
+                            if (arr[0] == "success") {
+                                checkedShipments = {};
+                                Swal.fire("Success!", arr[1], "success").then(function () {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire("Failed!", msg, "error");
+                            }
+                        }).fail(function () {
+                            Swal.fire("Error!", "An error occurred while processing your request", "error");
+                        });
+                    });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            });
+        }
+
+        // Batch binning shipments
+        function binning_to_batch(shipmentIds) {
+            Swal.fire({
+                title: 'Binning To',
+                text: `Select destination for ${shipmentIds.length} shipment(s)`,
+                input: 'select',
+                inputOptions: {
+                    '': 'Select Destination',
+                    'PEL': 'PEL',
+                    'BLP': 'BLP'
+                },
+                inputPlaceholder: 'Select destination',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Continue',
+                cancelButtonText: 'Cancel',
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'Please select a destination!'
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var storage_dest = result.value;
+
+                    if (storage_dest === 'BLP') {
+                        // BLP selected - ask for gatepass number
+                        Swal.fire({
+                            title: 'BLP Binning',
+                            text: 'Please enter Gatepass Number',
+                            input: 'text',
+                            inputPlaceholder: 'Enter Gatepass Number',
+                            showCancelButton: true,
+                            confirmButtonColor: '#28a745',
+                            cancelButtonColor: '#dc3545',
+                            confirmButtonText: 'Submit',
+                            inputValidator: (value) => {
+                                if (!value) {
+                                    return 'Gatepass Number is required for BLP!';
+                                }
+                            }
+                        }).then((gatepassResult) => {
+                            if (gatepassResult.isConfirmed) {
+                                send_binning_batch_request(shipmentIds, 'BLP', gatepassResult.value);
+                            }
+                        });
+                    } else if (storage_dest === 'PEL') {
+                        // PEL selected - send immediately
+                        send_binning_batch_request(shipmentIds, 'PEL', null);
+                    }
+                }
+            });
+        }
+
+        // Send batch binning request
+        function send_binning_batch_request(shipmentIds, storage_dest, gatepass_no) {
+            var id_shipment = shipmentIds.join(';'); // Format as "ID1;ID2;ID3"
+
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Please wait',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            $.ajax({
+                url: "@Url.Action("BinningShipment")",
+                type: 'POST',
+                data: { 
+                    id_shipment: id_shipment,
+                    storage_dest: storage_dest,
+                    gatepass_no: gatepass_no
+                }
+            }).done(function (msg) {
+                let arr = msg.split(";");
+                if (arr[0] == "success") {
+                    checkedShipments = {};
+                    Swal.fire("Success!", arr[1], "success").then(function () {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire("Failed!", msg, "error");
+                }
+            }).fail(function () {
+                Swal.fire("Error!", "An error occurred while processing your request", "error");
+            });
+        }
+
+        // Delete single shipment
+        function delete_shipment(id_shipment) {
+            Swal.fire({
+                title: 'Confirmation!!',
+                text: "Are you sure you want to delete this shipment? This action cannot be undone.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Delete!',
+                cancelButtonText: 'Cancel',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve, reject) {
+                        $.ajax({
+                            url: "@Url.Action("DeleteShipment")",
+                            type: 'POST',
+                            data: { id_shipment: id_shipment }
+                        }).done(function (msg) {
+                            let arr = msg.split(";");
+                            if (arr[0] == "success") {
+                                delete checkedShipments[id_shipment];
+                                Swal.fire("Success!", arr[1], "success").then(function () {
+                                    tableOpen.ajax.reload();
+                                });
+                            } else {
+                                Swal.fire("Failed!", msg, "error");
+                            }
+                        }).fail(function () {
+                            Swal.fire("Error!", "An error occurred while processing your request", "error");
+                        });
+                    });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            });
+        }
+
+        // Batch delete shipments
+        function delete_shipments_batch(shipmentIds) {
+            var id_shipment = shipmentIds.join(';'); // Format as "ID1;ID2;ID3"
+
+            Swal.fire({
+                title: 'Confirmation!!',
+                text: `Are you sure you want to delete ${shipmentIds.length} shipment(s)? This action cannot be undone.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Delete!',
+                cancelButtonText: 'Cancel',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve, reject) {
+                        $.ajax({
+                            url: "@Url.Action("DeleteShipment")",
+                            type: 'POST',
+                            data: { id_shipment: id_shipment }
+                        }).done(function (msg) {
+                            let arr = msg.split(";");
+                            if (arr[0] == "success") {
+                                checkedShipments = {};
+                                Swal.fire("Success!", arr[1], "success").then(function () {
+                                    tableOpen.ajax.reload();
+                                });
+                            } else {
+                                Swal.fire("Failed!", msg, "error");
+                            }
+                        }).fail(function () {
+                            Swal.fire("Error!", "An error occurred while processing your request", "error");
+                        });
+                    });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            });
+        }
+
+    </script>
+
+}

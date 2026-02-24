@@ -1,21 +1,22 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Presentation;
+using DocumentFormat.OpenXml.Spreadsheet;
+using MailKit.Search;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using Org.BouncyCastle.Asn1.Ocsp;
+using Org.BouncyCastle.Bcpg;
 using SEMB_ERP.Function;
 using SEMB_ERP.Models;
 using SEMB_ERP.Service;
-using System.Security.Claims;
-using System.Linq.Dynamic.Core;
-using Microsoft.AspNetCore.Http;
-using System.Diagnostics;
-using Org.BouncyCastle.Asn1.Ocsp;
-using Newtonsoft.Json;
-using Microsoft.AspNetCore.Http.HttpResults;
-using MailKit.Search;
-using Org.BouncyCastle.Bcpg;
 using System.Data;
-using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Presentation;
+using System.Diagnostics;
+using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 
 namespace SEMB_ERP.Controllers
 {
@@ -2045,7 +2046,7 @@ namespace SEMB_ERP.Controllers
                                        Pallet.pallet_no,
                                        Pallet.status_pallet,
                                        Pallet.record_date,
-                                       Pallet.receive_date,
+                                       receive_date = Pallet.receive_date.HasValue ? Pallet.receive_date.Value : (DateTime?)null,
                                        Pallet.received_by,
                                        Pallet.received_by_name,
                                        Pallet.supply_date,
@@ -2352,6 +2353,433 @@ namespace SEMB_ERP.Controllers
 
             return Json(result);
         }
+
+        [Authorize(Policy = "RequireRequestor")]
+        public IActionResult AddNewShipment()
+        {
+            return this.CheckSession(() =>
+            {
+                var db = new DatabaseAccessLayer();
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                string plant = db.GetUserPlant(sesa_id);
+                //List<string> supplierList = db.GetSupplierList();
+                //ViewBag.supplierList = supplierList;
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.plant = plant;
+                return View();
+            });
+        }
+        [Authorize(Policy = "RequireRequestor")]
+        public IActionResult UploadShipment(IFormFile file_upload)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (sesa_id == "")
+            {
+                return Content("Session Timeout, Please relogin!!", "text/plain");
+            }
+            else
+            {
+                DateTime now = DateTime.Now;
+                string id_upload = now.ToString("yyMMddHHmmssfff");
+                _importexportFactory.ImportShipment(file_upload, id_upload, sesa_id);
+
+                var db = new DatabaseAccessLayer();
+                List<ShipmentTempModel> dataTemp = db.GetTempShipment(id_upload, sesa_id);
+                ViewBag.id_upload = id_upload;
+                //return Content("Upload Success!!", "text/plain");
+
+                return PartialView("_TableTempShipment", dataTemp);
+            }
+        }
+        [Authorize(Policy = "RequireRequestor")]
+        [HttpPost]
+        public async Task<IActionResult> SubmitUploadShipment(string id_upload)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (sesa_id == "")
+            {
+                return Content("Session Timeout, Please relogin!!", "text/plain");
+            }
+            else
+            {
+                var db = new DatabaseAccessLayer();
+                string submit = db.SubmitUploadShipment(id_upload, sesa_id);
+                return Content("success;Succesfully Submitted!", "text/plain");
+            }
+        }
+        public IActionResult ShipmentList()
+        {
+            return this.CheckSession(() =>
+            {
+                var db = new DatabaseAccessLayer();
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                string plant = db.GetUserPlant(sesa_id);
+                List<string> userRoles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                List<string> catList = db.GET_CAT_NON_CONF();
+                ViewBag.catList = catList;
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.plant = plant;
+                ViewBag.userRoles = userRoles;
+                return View();
+            });
+        }
+
+        public IActionResult GET_SHIPMENT_LIST()
+        {
+            try
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> user_roles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                var user = userDetail.First();
+
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = Request.Form["start"].FirstOrDefault();
+                var length = Request.Form["length"].FirstOrDefault();
+                //var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][name]"].FirstOrDefault();
+                var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][data]"].FirstOrDefault();
+                var sortColumnDirection = Request.Form["order[0][dir]"].FirstOrDefault();
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                var column0Value = Request.Form["columns[0][search][value]"];
+                var column1Value = Request.Form["columns[1][search][value]"];
+                var column2Value = Request.Form["columns[2][search][value]"];
+                int pageSize = length != null ? Convert.ToInt32(length) : 0;
+                int skip = start != null ? Convert.ToInt32(start) : 0;
+                int recordsTotal = 0;
+
+                // Filter for OPEN shipments only (status != CLOSED)
+                var mstData = (from ShipmentList in _context.v_shipment
+                               where ShipmentList.inserted_by == sesa_id && ShipmentList.status_shipment != "CLOSED"
+                               select
+                                   new
+                                   {
+                                       ShipmentList.id_shipment,
+                                       ShipmentList.id_upload,
+                                       ShipmentList.project_name,
+                                       ShipmentList.stage_name,
+                                       ShipmentList.wo_no,
+                                       ShipmentList.partno,
+                                       ShipmentList.revision,
+                                       ShipmentList.qty,
+                                       ShipmentList.is_coated,
+                                       ShipmentList.ship_date,
+                                       ShipmentList.status_shipment,
+                                       ShipmentList.inserted_by_name,
+                                       ShipmentList.pic_department,
+                                       received_date = ShipmentList.received_date.HasValue ? ShipmentList.received_date.Value : (DateTime?)null,
+                                       ShipmentList.received_by_name,
+                                       ShipmentList.storage_dest,
+                                       ShipmentList.gatepass_no
+                                   });
+
+                //var mstData = (from temp in _context.mst_material_plant select temp);
+                if (!(string.IsNullOrEmpty(sortColumn) && string.IsNullOrEmpty(sortColumnDirection)))
+                {
+                    mstData = mstData.OrderBy(sortColumn + " " + sortColumnDirection);
+                }
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    mstData = mstData.Where(m => m.partno.Contains(searchValue)
+                                                || m.project_name.Contains(searchValue)
+                                                || m.wo_no.Contains(searchValue));
+                }
+
+                for (int i = 0; i < 16; i++)
+                {
+                    var searchColVal = Request.Form["columns[" + i.ToString() + "][search][value]"];
+                    var fieldName = Request.Form["columns[" + i.ToString() + "][data]"].FirstOrDefault();
+                    if (!string.IsNullOrEmpty(searchColVal))
+                    {
+                        if (fieldName == "project_name")
+                        {
+                            mstData = mstData.Where(m => m.project_name.Contains(searchColVal));
+                        }
+                        else if (fieldName == "stage_name")
+                        {
+                            mstData = mstData.Where(m => m.stage_name.Contains(searchColVal));
+                        }
+                        else if (fieldName == "wo_no")
+                        {
+                            mstData = mstData.Where(m => m.wo_no.Contains(searchColVal));
+                        }
+                        else if (fieldName == "partno")
+                        {
+                            mstData = mstData.Where(m => m.partno.Contains(searchColVal));
+                        }
+                        else if (fieldName == "revision")
+                        {
+                            mstData = mstData.Where(m => m.revision.Contains(searchColVal));
+                        }
+                        else if (fieldName == "qty")
+                        {
+                            mstData = mstData.Where(m => m.qty.ToString().Contains(searchColVal));
+                        }
+                        else if (fieldName == "is_coated")
+                        {
+                            mstData = mstData.Where(m => m.is_coated.Contains(searchColVal));
+                        }
+                        else if (fieldName == "status_shipment")
+                        {
+                            mstData = mstData.Where(m => m.status_shipment.Contains(searchColVal));
+                        }
+                        else if (fieldName == "inserted_by_name")
+                        {
+                            mstData = mstData.Where(m => m.inserted_by_name.Contains(searchColVal));
+                        }
+                        else if (fieldName == "pic_department")
+                        {
+                            mstData = mstData.Where(m => m.pic_department.Contains(searchColVal));
+                        }
+                        else if (fieldName == "received_by_name")
+                        {
+                            mstData = mstData.Where(m => m.received_by_name.Contains(searchColVal));
+                        }
+                        else if (fieldName == "storage_dest")
+                        {
+                            mstData = mstData.Where(m => m.storage_dest.Contains(searchColVal));
+                        }
+                        else if (fieldName == "gatepass_no")
+                        {
+                            mstData = mstData.Where(m => m.gatepass_no.Contains(searchColVal));
+                        }
+                    }
+                }
+
+                recordsTotal = mstData.Count();
+                var data = mstData.Skip(skip).Take(pageSize).ToList();
+                var jsonData = new { draw = draw, recordsFiltered = recordsTotal, recordsTotal = recordsTotal, data = data };
+                return Ok(jsonData);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        [HttpPost]
+        public IActionResult ReceiveShipment(string id_shipment)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (sesa_id == "")
+            {
+                return Content("Session Timeout, Please relogin!!", "text/plain");
+            }
+            else
+            {
+                var db = new DatabaseAccessLayer();
+                string result = db.ReceiveShipment(id_shipment, sesa_id);
+                return Content(result, "text/plain");
+            }
+        }
+
+        public IActionResult GET_SHIPMENT_LIST_CLOSE()
+        {
+            try
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> user_roles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                var user = userDetail.First();
+
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = Request.Form["start"].FirstOrDefault();
+                var length = Request.Form["length"].FirstOrDefault();
+                //var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][name]"].FirstOrDefault();
+                var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][data]"].FirstOrDefault();
+                var sortColumnDirection = Request.Form["order[0][dir]"].FirstOrDefault();
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                var column0Value = Request.Form["columns[0][search][value]"];
+                var column1Value = Request.Form["columns[1][search][value]"];
+                var column2Value = Request.Form["columns[2][search][value]"];
+                int pageSize = length != null ? Convert.ToInt32(length) : 0;
+                int skip = start != null ? Convert.ToInt32(start) : 0;
+                int recordsTotal = 0;
+
+                // Filter for CLOSED shipments only
+                var mstData = (from ShipmentList in _context.v_shipment
+                               where ShipmentList.inserted_by == sesa_id && ShipmentList.status_shipment == "CLOSED"
+                               select
+                                   new
+                                   {
+                                       ShipmentList.project_name,
+                                       ShipmentList.stage_name,
+                                       ShipmentList.wo_no,
+                                       ShipmentList.partno,
+                                       ShipmentList.revision,
+                                       ShipmentList.qty,
+                                       ShipmentList.is_coated,
+                                       ShipmentList.ship_date,
+                                       ShipmentList.status_shipment,
+                                       ShipmentList.inserted_by_name,
+                                       received_date = ShipmentList.received_date.HasValue ? ShipmentList.received_date.Value : (DateTime?)null,
+                                       ShipmentList.received_by_name,
+                                       ShipmentList.storage_dest,
+                                       ShipmentList.gatepass_no,
+                                       closed_date = ShipmentList.closed_date.HasValue ? ShipmentList.closed_date.Value : (DateTime?)null
+                                   });
+
+                //var mstData = (from temp in _context.mst_material_plant select temp);
+                if (!(string.IsNullOrEmpty(sortColumn) && string.IsNullOrEmpty(sortColumnDirection)))
+                {
+                    mstData = mstData.OrderBy(sortColumn + " " + sortColumnDirection);
+                }
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    mstData = mstData.Where(m => m.partno.Contains(searchValue)
+                                                || m.project_name.Contains(searchValue)
+                                                || m.wo_no.Contains(searchValue));
+                }
+
+                for (int i = 0; i < 14; i++)
+                {
+                    var searchColVal = Request.Form["columns[" + i.ToString() + "][search][value]"];
+                    var fieldName = Request.Form["columns[" + i.ToString() + "][data]"].FirstOrDefault();
+                    if (!string.IsNullOrEmpty(searchColVal))
+                    {
+                        if (fieldName == "project_name")
+                        {
+                            mstData = mstData.Where(m => m.project_name.Contains(searchColVal));
+                        }
+                        else if (fieldName == "stage_name")
+                        {
+                            mstData = mstData.Where(m => m.stage_name.Contains(searchColVal));
+                        }
+                        else if (fieldName == "wo_no")
+                        {
+                            mstData = mstData.Where(m => m.wo_no.Contains(searchColVal));
+                        }
+                        else if (fieldName == "partno")
+                        {
+                            mstData = mstData.Where(m => m.partno.Contains(searchColVal));
+                        }
+                        else if (fieldName == "revision")
+                        {
+                            mstData = mstData.Where(m => m.revision.Contains(searchColVal));
+                        }
+                        else if (fieldName == "qty")
+                        {
+                            mstData = mstData.Where(m => m.qty.ToString().Contains(searchColVal));
+                        }
+                        else if (fieldName == "is_coated")
+                        {
+                            mstData = mstData.Where(m => m.is_coated.Contains(searchColVal));
+                        }
+                        else if (fieldName == "status_shipment")
+                        {
+                            mstData = mstData.Where(m => m.status_shipment.Contains(searchColVal));
+                        }
+                        else if (fieldName == "inserted_by_name")
+                        {
+                            mstData = mstData.Where(m => m.inserted_by_name.Contains(searchColVal));
+                        }
+                        else if (fieldName == "received_by_name")
+                        {
+                            mstData = mstData.Where(m => m.received_by_name.Contains(searchColVal));
+                        }
+                        else if (fieldName == "storage_dest")
+                        {
+                            mstData = mstData.Where(m => m.storage_dest.Contains(searchColVal));
+                        }
+                        else if (fieldName == "gatepass_no")
+                        {
+                            mstData = mstData.Where(m => m.gatepass_no.Contains(searchColVal));
+                        }
+                    }
+                }
+
+                recordsTotal = mstData.Count();
+                var data = mstData.Skip(skip).Take(pageSize).ToList();
+                var jsonData = new { draw = draw, recordsFiltered = recordsTotal, recordsTotal = recordsTotal, data = data };
+                return Ok(jsonData);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        [HttpPost]
+        public IActionResult BinningShipment(string id_shipment, string storage_dest, string gatepass_no)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (sesa_id == "")
+            {
+                return Content("Session Timeout, Please relogin!!", "text/plain");
+            }
+            else
+            {
+                var db = new DatabaseAccessLayer();
+                string result = db.BinningShipment(id_shipment, storage_dest, gatepass_no, sesa_id);
+                return Content(result, "text/plain");
+            }
+        }
+
+        [Authorize(Policy = "RequireRequestor")]
+        [HttpPost]
+        public IActionResult AddShipmentManual(string project_name, string stage_name, string wo_no, 
+            string partno, string revision, decimal qty, string is_coated, DateTime ship_date)
+        {
+            DateTime now = DateTime.Now;
+            string id_upload = now.ToString("yyMMddHHmmssfff");
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(sesa_id))
+            {
+                return Content("error;Session Timeout, Please relogin!!", "text/plain");
+            }
+            else
+            {
+                try
+                {
+                    var db = new DatabaseAccessLayer();
+                    string result = db.InsertShipmentManual(id_upload, project_name, stage_name, wo_no, partno, 
+                        revision, qty, is_coated, ship_date, sesa_id);
+                    return Content(result, "text/plain");
+                }
+                catch (Exception ex)
+                {
+                    return Content($"error;Failed to add shipment: {ex.Message}", "text/plain");
+                }
+            }
+        }
+
+        [Authorize(Policy = "RequireRequestorAdmin")]
+        [HttpPost]
+        public IActionResult DeleteShipment(string id_shipment)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(sesa_id))
+            {
+                return Content("error;Session Timeout, Please relogin!!", "text/plain");
+            }
+            else
+            {
+                try
+                {
+                    var db = new DatabaseAccessLayer();
+                    string result = db.DeleteShipment(id_shipment, sesa_id);
+                    return Content(result, "text/plain");
+                }
+                catch (Exception ex)
+                {
+                    return Content($"error;Failed to delete shipment: {ex.Message}", "text/plain");
+                }
+            }
+        }
     }
 }
-    
+

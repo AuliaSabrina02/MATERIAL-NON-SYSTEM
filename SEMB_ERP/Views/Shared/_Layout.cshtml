@@ -162,6 +162,33 @@
                         {
                             if (user_roles.HasAnyRole("requestor","admin"))
                             {
+                                string checkMenuShipment = Html.IsMenuopen("User", "AddNewShipment") + Html.IsMenuopen("User", "ShipmentList");
+                                string checkActiveShipment = Html.IsActive("User", "AddNewShipment") + Html.IsMenuopen("User", "ShipmentList"); ;
+                                <li class="nav-item has-treeview @checkMenuShipment">
+                                    <a href="#" class="nav-link @checkActiveShipment">
+                                        <i class="nav-icon fas fa-table"></i>
+                                        <p>
+                                            Shipment Data
+                                            <i class="right fas fa-angle-left"></i>
+                                        </p>
+                                    </a>
+                                    <ul class="nav nav-treeview ml-1">
+                                        <li class="nav-item">
+                                            <a href="@Url.Action("AddNewShipment", "User")" class="nav-link @Html.IsActive("User", "AddNewShipment")">
+                                                <i class="nav-icon fas fa-plus"></i>
+                                                <p>Add New Shipment</p>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    <ul class="nav nav-treeview ml-1">
+                                        <li class="nav-item">
+                                            <a href="@Url.Action("ShipmentList", "User")" class="nav-link @Html.IsActive("User", "ShipmentList")">
+                                                <i class="nav-icon fas fa-list"></i>
+                                                <p>Shipment List</p>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
                                 <li class="nav-item">
                                     <a href="@Url.Action("AddNewOrder", "User")" class="nav-link @Html.IsActive("User","AddNewOrder")">
                                         <i class="nav-icon fas fa-plus"></i>

@@ -1,0 +1,71 @@
+﻿@model List<ShipmentTempModel>
+@{
+    int totalUpload = 0;
+    int totalError = 0;
+    string id_upload = ViewBag.id_upload;
+}
+@functions {
+    public string msg_error(string error_msg)
+    {
+        string retValue = "";
+        if (error_msg != "OK")
+        {
+            retValue = "<i class='fas fa-exclamation-circle text-warning' data-bs-toggle='tooltip' data-bs-placement='top' title='"+error_msg+"'></i>";
+        }
+
+        return retValue;
+    }
+}
+@* <div class="text-center">
+    <label>SRT Detai</label>
+</div> *@
+<div class="table-responsive">
+    <table class="table table-sm table-bordered" id="table_temp_shipment" style="font-size:9pt;white-space:nowrap">
+        <thead class="bg-info text-center">
+            <tr>                
+                <th class="align-middle">Project Name<span class="text-danger">*</span></th>
+                <th class="align-middle">Stage Name<span class="text-danger">*</span></th>
+                <th class="align-middle">WO No<span class="text-danger">*</span></th>
+                <th class="align-middle">Part No<span class="text-danger">*</span></th>
+                <th class="align-middle">Revision<span class="text-danger">*</span></th>
+                <th class="align-middle">Qty<span class="text-danger">*</span></th>
+                <th class="align-middle">Is Coated<span class="text-danger">*</span></th>
+                <th class="align-middle">Ship Date<span class="text-danger">*</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                totalUpload++;
+                if (item.is_error == 1)
+                {
+                    totalError++;
+                }
+                <tr class="text-center @(item.is_error==1 ? "bg-danger" : "")">
+                    <td>@item.project_name @Html.Raw(msg_error(item.project_name_msg ?? ""))</td>
+                    <td>@item.stage_name @Html.Raw(msg_error(item.stage_name_msg ?? ""))</td>
+                    <td>@item.wo_no @Html.Raw(msg_error(item.wo_no_msg ?? ""))</td>
+                    <td>@item.partno @Html.Raw(msg_error(item.partno_msg ?? ""))</td>
+                    <td>@item.revision @Html.Raw(msg_error(item.revision_msg ?? ""))</td>
+                    <td>@item.qty @Html.Raw(msg_error(item.qty_msg ?? ""))</td>
+                    <td>@item.is_coated @Html.Raw(msg_error(item.is_coated_msg ?? ""))</td>
+                    <td>@item.ship_date @Html.Raw(msg_error(item.ship_date_msg ?? ""))</td>
+                </tr>
+            }
+        </tbody>
+
+    </table>
+    <input name="id_upload" value="@id_upload" hidden />
+    <input name="total_upload" value="@totalUpload" hidden />
+    <input name="total_error" value="@totalError" hidden />
+</div>
+<script>
+    $(document).ready(function () {
+        $("table#table_temp_shipment").DataTable();
+
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    })
+</script>

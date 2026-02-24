@@ -120,6 +120,70 @@ namespace SEMB_ERP.Service
             var uploadedFilePath = _fileManagement.UploadFileRename(file_doc, filename, subfolder);
             return uploadedFilePath;
         }
+        public void ImportShipment(IFormFile file, string id_login, string sesa_id)
+        {
+            string query = "DELETE FROM temp_shipment WHERE inserted_by='" + sesa_id + "'";
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                using (var cmd = new SqlCommand(query, conn))
+                {
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                    conn.Close();
+                }
+            }
+
+            var uploadedFilePath = _fileManagement.UploadFile(file);
+
+            if (uploadedFilePath == "Upload Fail")
+            {
+                return;
+            }
+            var fileInfo = new FileInfo(uploadedFilePath);
+
+            var dataTable = _excelService.Excel_To_DataTable(fileInfo);
+
+            BulkInsertShipment(dataTable, id_login, sesa_id);
+        }
+        public void BulkInsertShipment(DataTable tbl, string id_login, string sesa_id)
+        {
+            //string monthYear = month + "-" + year.Substring(year.Length - 2); // Jan-23
+            //string sesa_id = HttpContext.Session.GetString("sesa_id");
+            tbl.Columns.Add("id_upload", typeof(string));
+            tbl.Columns.Add("inserted_by", typeof(string));
+
+            // Set the value of the "Plant" column for each row in the DataTable
+            foreach (DataRow row in tbl.Rows)
+            {
+                row["id_upload"] = id_login;
+                row["inserted_by"] = sesa_id;
+            }
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                using (SqlBulkCopy sqlBulkCopy = new SqlBulkCopy(conn))
+                {
+                    //Set the database table name.
+                    sqlBulkCopy.DestinationTableName = "dbo.temp_shipment";
+
+                    // Map the Excel columns with that of the database table, this is optional but good if you do (you have to do for all columns)
+                    sqlBulkCopy.ColumnMappings.Add("Column 1", "project_name");
+                    sqlBulkCopy.ColumnMappings.Add("Column 2", "stage_name");
+                    sqlBulkCopy.ColumnMappings.Add("Column 3", "wo_no");
+                    sqlBulkCopy.ColumnMappings.Add("Column 4", "partno");
+                    sqlBulkCopy.ColumnMappings.Add("Column 5", "revision");
+                    sqlBulkCopy.ColumnMappings.Add("Column 6", "is_coated");
+                    sqlBulkCopy.ColumnMappings.Add("Column 7", "qty");
+                    sqlBulkCopy.ColumnMappings.Add("Column 8", "ship_date");
+                    sqlBulkCopy.ColumnMappings.Add("id_upload", "id_upload");
+                    sqlBulkCopy.ColumnMappings.Add("inserted_by", "inserted_by");
+
+                    conn.Open();
+                    sqlBulkCopy.WriteToServer(tbl);
+                    conn.Close();
+                }
+            }
+        }
 
     }
 }

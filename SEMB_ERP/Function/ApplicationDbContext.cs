@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SEMB_ERP.Models;
 
 namespace SEMB_ERP.Function
@@ -18,6 +20,9 @@ namespace SEMB_ERP.Function
         public DbSet<VarianceModel> v_picking_variance { get; set; }
         public DbSet<PalletModel> v_pallet_header { get; set; }
         public DbSet<AgingMovementModel> v_order_aging { get; set; }
+        public DbSet<ShipmentModel> v_shipment { get; set; }
 
     }
+
+  
 }
