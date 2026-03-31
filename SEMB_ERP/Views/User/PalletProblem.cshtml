@@ -1,0 +1,328 @@
+﻿@using SEMB_ERP.Models
+@using System.Globalization;
+@using Microsoft.AspNetCore.Http;
+@inject IHttpContextAccessor Accessor
+
+@{
+    string sesa_id = ViewBag.sesa_id;
+    string name = ViewBag.name;
+    string plant = ViewBag.plant;
+    string todayDate = DateTime.Today.ToString("yyyy-MM-dd");
+}
+
+<style>
+    /* Menyamakan gaya input filter dan font tabel dengan halaman Return */
+    .smaller-input {
+        height: 25px;
+        padding: 5px;
+        font-size: 10px;
+        line-height: 1;
+    }
+
+    .dataTables_info, .dataTables_paginate, .dataTables_filter {
+        font-size: 10pt;
+    }
+
+    /* Sembunyikan search default karena kita pakai baris filter */
+    #table_pallet_problem_filter.dataTables_filter {
+        display: none;
+    }
+
+    table#table_pallet_problem tr > th {
+        padding: 5px;
+    }
+
+    table#table_pallet_problem tr > td {
+        padding: 5px;
+    }
+
+    #table_pallet_problem {
+        border-radius: 0.35rem;
+        overflow: hidden;
+    }
+
+        #table_pallet_problem td {
+            border-bottom: 0.5px solid #FBF8EF !important;
+            border-left: none !important;
+            border-right: none !important;
+            border-top: none !important;
+            /* UBAH DI SINI: dari 10px menjadi 13px atau sesuai selera */
+            font-size: 13px;
+            font-weight: 500; /* Opsional: tambah ketebalan dikit agar lebih jelas */
+        }
+
+        #table_pallet_problem thead th {
+            border: none !important;
+            /* UBAH DI SINI: agar header tetap lebih besar dari isi (misal 14px) */
+            font-size: 14px;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        /* Background hijau muda untuk baris sel (sesuai drawCallback Return) */
+        #table_pallet_problem tbody tr td {
+            background-color: #edfcf1;
+        }
+</style>
+
+<section id="hero1" class="hero bg-dark position-relative">
+    <div class="inner d-flex justify-content-between align-items-center px-3 py-2 w-100">
+        <div class="extract-info"></div>
+        <div class="position-absolute top-50 start-50 translate-middle text-center">
+            <h3 class="text-white mb-0">
+                <i class="fas fa-pallet text-success"></i>
+                <b>Pallet Problem List</b>
+            </h3>
+        </div>
+        <nav aria-label="breadcrumb" class="text-end ms-auto breadcrumb-sm">
+            <ol class="breadcrumb mb-0 d-inline-flex flex-nowrap align-items-center bg-transparent"></ol>
+        </nav>
+    </div>
+</section>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row pt-3">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 mb-2">
+                                <button type="button" class="btn btn-sm btn-primary" id="btn_add_pallet_problem">
+                                    <i class="fa fa-plus-circle"></i> Add Pallet Problem
+                                </button>
+                            </div>
+
+                            <div class="col-12 table-responsive">
+                                <table id="table_pallet_problem" class="table table-bordered table-striped nowrap" style="width:100%">
+                                    <thead class="bg-navy-custom align-middle text-center">
+                                        <tr>
+                                            <th>No</th>
+                                            <th>Pallet No</th>
+                                            <th>Request No</th>
+                                            <th>Date</th>
+                                            <th>Issue</th>
+                                            <th>Action</th>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="1" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="2" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="3" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="4" /></td>
+                                            <td></td>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal_pallet_problem" class="modal fade">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h6 class="modal-title">
+                    <i class="fas fa-pallet"></i>
+                    <span id="modal_title">Form Pallet Problem</span>
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="form_pallet_problem" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="pallet_problem_id" />
+                    <input type="hidden" name="created_by" value="@sesa_id" />
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Pallet No <span class="text-danger">*</span></label>
+                                <input class="form-control" type="text" name="pallet_no" id="pallet_no" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Date <span class="text-danger">*</span></label>
+                                <input class="form-control" type="date" name="date" id="date" value="@todayDate" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Request No <span class="text-danger">*</span></label>
+                                <input class="form-control" type="text" name="req_no" id="req_no" required />
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Issue <span class="text-danger">*</span></label>
+                                <textarea class="form-control" name="issue" id="issue" rows="3" required></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-sm btn-success">Save Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        var Table;
+        var loading = "<i class='fa fa-4x fa-spinner fa-spin'></i>";
+
+        $(document).ready(function () {
+            Table = $("#table_pallet_problem").DataTable({
+                "orderCellsTop": true,
+                "processing": true,
+                "serverSide": true,
+                "filter": true,
+                "ajax": {
+                    "url": "@Url.Action("GetPalletProblems", "User")",
+                    "type": "POST"
+                },
+                "columns": [
+                    {
+                        "data": null,
+                        "className": "text-center align-middle",
+                        "orderable": false,
+                        "render": function (data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
+                    },
+                    { "data": "pallet_no", "className": "align-middle" },
+                    { "data": "req_no", "className": "align-middle" },
+                    {
+                        "data": "date",
+                        "className": "text-center align-middle",
+                        "render": function(data) {
+                            return data ? new Date(data).toLocaleDateString('en-GB') : '-';
+                        }
+                    },
+                    {
+                        "data": "issue",
+                        "className": "align-middle",
+                        "render": function(data) {
+                            return data.length > 50 ? data.substring(0, 50) + '...' : data;
+                        }
+                    },
+                    {
+                        "data": null,
+                        "className": "text-center align-middle",
+                        "orderable": false,
+                        "render": function (data, type, row) {
+                            return `
+                                <div class="btn-group">
+                                    <button class="btn btn-xs btn-warning btn-edit" data-id="${row.id}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-xs btn-danger btn-delete" data-id="${row.id}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            `;
+                        }
+                    }
+                ],
+                "order": [[1, 'asc']]
+            });
+
+            // Script Filter (Copy dari Return)
+            $('input.filter_table').on('keyup change', function () {
+                let trgt = $(this).attr('target');
+                if (Table.column(trgt).search() !== this.value) {
+                    Table.column(trgt).search(this.value).draw();
+                }
+            });
+
+            // Menangani klik Add
+            $("#btn_add_pallet_problem").click(function() {
+                $("#form_pallet_problem")[0].reset();
+                $("#pallet_problem_id").val("");
+                $("#modal_title").text("Create Pallet Problem");
+                $("#modal_pallet_problem").modal("show");
+            });
+
+            // Submit Form (Logika sama dengan sebelumnya namun UI disesuaikan)
+            $("#form_pallet_problem").submit(function(e) {
+                e.preventDefault();
+                let formData = new FormData(this);
+                let isEdit = $("#pallet_problem_id").val() !== "";
+
+                Swal.fire({
+                    title: 'Confirmation!!',
+                    text: "Are you sure?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    confirmButtonText: 'Yes!',
+                    cancelButtonText: 'No!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: isEdit ? "@Url.Action("UpdatePalletProblem", "User")" : "@Url.Action("AddPalletProblem", "User")",
+                            type: 'POST',
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            success: function(res) {
+                                let arr = res.split(";");
+                                if (arr[0] === "success" || res.trim().toUpperCase() === "OK") {
+                                    Swal.fire("Success!", "Data processed successfully.", "success");
+                                    $("#modal_pallet_problem").modal("hide");
+                                    Table.ajax.reload(null, false);
+                                } else {
+                                    Swal.fire("Failed!", res, "error");
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Edit & Delete Buttons (Gunakan event delegation)
+            $(document).on('click', '.btn-edit', function() {
+                let id = $(this).data('id');
+                $.get("@Url.Action("GetPalletProblemById", "User")", { id: id }, function(data) {
+                    $("#pallet_problem_id").val(data.id);
+                    $("#pallet_no").val(data.pallet_no);
+                    $("#req_no").val(data.req_no);
+                    $("#date").val(data.date.split('T')[0]);
+                    $("#issue").val(data.issue);
+                    $("#modal_title").text("Update Pallet Problem");
+                    $("#modal_pallet_problem").modal("show");
+                });
+            });
+
+            $(document).on('click', '.btn-delete', function() {
+                let id = $(this).data('id');
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.post("@Url.Action("DeletePalletProblem", "User")", { id: id }, function(res) {
+                            Table.ajax.reload(null, false);
+                            Swal.fire("Deleted!", "Record has been deleted.", "success");
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

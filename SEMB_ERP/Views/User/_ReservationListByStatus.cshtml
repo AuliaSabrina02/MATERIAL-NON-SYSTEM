@@ -1,0 +1,114 @@
+﻿@model List<MaterialReservationModel>
+
+@{
+    var status = ViewBag.Status as string;
+    var totalRecords = ViewBag.TotalRecords as int? ?? 0;
+    var errorMessage = ViewBag.ErrorMessage as string;
+}
+
+<div class="modal-body">
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Error:</strong> @errorMessage
+        </div>
+    }
+    else if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle"></i>
+            <p class="mb-0">No reservations found with status: <strong>@status</strong></p>
+        </div>
+    }
+    else
+    {
+        <div class="mb-3">
+            <h6>
+                <i class="fas fa-list"></i>
+                Showing <strong>@totalRecords</strong> reservation(s) with status: <strong>@status</strong>
+            </h6>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover table-sm" id="tbl_reservation_filtered">
+                <thead class="bg-info">
+                    <tr>
+                        <th>ID</th>
+                        <th>Material Type</th>
+                        <th>Part No</th>
+                        <th>PO No</th>
+                        <th>Reserved Qty</th>
+                        <th>Available Qty</th>
+                        <th>UOM</th>
+                        <th>Project Name</th>
+                        <th>Supplier</th>
+                        <th>PIC</th>
+                        <th>Priority</th>
+                        <th>Reservation Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        var statusBadgeClass = item.status_desc switch
+                        {
+                            "Submission" => "badge bg-secondary",
+                            "Approved" => "badge bg-success",
+                            "Cancelled" => "badge bg-danger",
+                            _ => "badge bg-info"
+                        };
+
+                        <tr>
+                            <td>@item.id_reservation</td>
+                            <td>@item.material_type</td>
+                            <td><strong>@item.partno</strong></td>
+                            <td>@item.po_no</td>
+                            <td class="text-right">@string.Format("{0:N2}", item.reserved_qty)</td>
+                            <td class="text-right">@string.Format("{0:N2}", item.available_qty)</td>
+                            <td>@item.uom</td>
+                            <td>@item.project_name</td>
+                            <td>@item.supplier_name</td>
+                            <td>@item.pic_name</td>
+                            <td>
+                                @if (item.priority_request == "High")
+                                {
+                                    <span class="badge bg-danger">High</span>
+                                }
+                                else if (item.priority_request == "Medium")
+                                {
+                                    <span class="badge bg-warning">Medium</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info">Low</span>
+                                }
+                            </td>
+                            <td>@string.Format("{0:yyyy-MM-dd HH:mm}", item.reservation_date)</td>
+                            <td><span class="@statusBadgeClass">@item.status_desc</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<script>
+    $(function () {
+        if ($.fn.DataTable.isDataTable('#tbl_reservation_filtered')) {
+            $('#tbl_reservation_filtered').DataTable().destroy();
+        }
+
+        $('#tbl_reservation_filtered').DataTable({
+            "paging": true,
+            "pageLength": 10,
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "autoWidth": false,
+            "responsive": true
+        });
+    });
+</script>

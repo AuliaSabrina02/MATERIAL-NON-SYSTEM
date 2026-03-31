@@ -1,0 +1,97 @@
+﻿@model List<PalletProblem>
+@{
+    var dateFilter = ViewBag.DateFilter;
+    var totalRecords = ViewBag.TotalRecords;
+}
+
+<div class="modal-body">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <h6>
+                <i class="fas fa-filter"></i> Filtered by Date:
+                <span class="badge bg-danger text-white">@dateFilter</span>
+            </h6>
+        </div>
+        <div class="col-md-6 text-end">
+            <h6>Total Records: <span class="badge bg-success">@totalRecords</span></h6>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped table-sm" id="tbl_filtered_pallets">
+            <thead class="bg-danger text-white text-center">
+                <tr>
+                    <th>No.</th>
+                    <th>Pallet No</th>
+                    <th>Request No</th>
+                    <th>Date</th>
+                    <th>Issue</th>
+                    <th>Status</th>
+                    <th>Created By</th>
+                    <th>Created Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Count > 0)
+                {
+                    int no = 0;
+                    foreach (var item in Model)
+                    {
+                        no++;
+
+                        var statusClass = "";
+                        var statusLower = (item.status ?? "").ToLower();
+                        if (statusLower == "open") statusClass = "bg-warning text-dark";
+                        else if (statusLower == "resolved") statusClass = "bg-success text-white";
+                        else if (statusLower == "closed") statusClass = "bg-secondary text-white";
+                        else statusClass = "bg-info text-white";
+
+                        <tr>
+                            <td class="text-center">@no</td>
+                            <td><strong>@(item.pallet_no ?? "-")</strong></td>
+                            <td>@(item.req_no ?? "-")</td>
+                            <td>@(item.date.ToString("dd-MM-yyyy"))</td>
+                            <td>@(item.issue ?? "-")</td>
+                            <td class="@statusClass text-center">@(item.status ?? "-")</td>
+                            <td>@(item.created_by ?? "-")</td>
+                            <td>@(item.created_date.ToString("dd-MM-yyyy HH:mm"))</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center text-muted">No pallet problems found for this date</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+        <i class="fas fa-times"></i> Close
+    </button>
+</div>
+
+<script>
+    $(document).ready(function () {
+        // ✅ Destroy dulu kalau ada, baru init
+        if ($.fn.DataTable.isDataTable('#tbl_filtered_pallets')) {
+            $('#tbl_filtered_pallets').DataTable().destroy();
+        }
+
+        // ✅ Hanya init DataTable kalau ada data (lebih dari 1 row)
+        // Row "No data..." tidak di-init DataTable karena bikin error
+        if (@totalRecords > 0)
+        {
+            $('#tbl_filtered_pallets').DataTable({
+                "pageLength": 10,
+                "ordering": true,
+                "searching": true,
+                "order": [[7, 'desc']]
+            });
+        }
+    });
+</script>

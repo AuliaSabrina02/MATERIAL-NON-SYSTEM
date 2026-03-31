@@ -36,5 +36,9 @@ namespace SEMB_ERP.Models
         public string? remark { get; set; }
         public string? gatepass { get; set; }
         public DateTime? record_date { get; set; }
+
+        public string? inserted_by { get; set; }
+
+        public string? priority_request { get; set; }
     }
 }

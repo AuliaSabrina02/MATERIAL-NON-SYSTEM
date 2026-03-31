@@ -1,0 +1,755 @@
+﻿@{
+    ViewData["Title"] = "Project Schedule";
+}
+
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+<style>
+    .btn-add-schedule {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+    }
+
+        .btn-add-schedule:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.5);
+        }
+
+        .btn-add-schedule i {
+            font-size: 16px;
+        }
+
+    .calendar-card {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        border: 1px solid #e3e6f0;
+    }
+
+    #calendar {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .fc {
+        border: none;
+    }
+
+        .fc .fc-toolbar {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 0;
+        }
+
+        .fc .fc-toolbar-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .fc .fc-button {
+            background-color: white;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            text-transform: capitalize;
+            padding: 8px 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+            .fc .fc-button:hover {
+                background-color: #28a745;
+                border-color: #28a745;
+                color: white;
+                transform: translateY(-1px);
+            }
+
+        .fc .fc-button-primary:not(:disabled).fc-button-active,
+        .fc .fc-button-primary:not(:disabled):active {
+            background-color: #28a745;
+            border-color: #28a745;
+            color: white;
+        }
+
+        .fc .fc-col-header-cell {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+            padding: 12px 0;
+            border-color: #dee2e6;
+        }
+
+        .fc .fc-daygrid-day {
+            border-color: #e3e6f0;
+        }
+
+        .fc .fc-daygrid-day-number {
+            padding: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .fc .fc-daygrid-day.fc-day-today {
+            background-color: #e8f5e9 !important;
+        }
+
+            .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+                background-color: #28a745;
+                color: white;
+                border-radius: 50%;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 4px;
+            }
+
+        .fc .fc-event {
+            background-color: #28a745;
+            color: white !important;
+            border: none;
+            border-radius: 5px;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+        }
+
+            .fc .fc-event:hover {
+                background-color: #218838;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(40, 167, 69, 0.4);
+            }
+
+        .fc .fc-daygrid-day:hover {
+            background-color: #f0f9f4;
+            cursor: pointer;
+        }
+
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        z-index: 1040;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        animation: fadeIn 0.3s ease;
+    }
+
+        .modal-overlay.show {
+            display: block;
+        }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    .modal-dialog {
+        display: none;
+        position: fixed;
+        z-index: 1050;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%) scale(0.9);
+        width: 550px;
+        max-width: 90%;
+        animation: modalSlideIn 0.3s ease forwards;
+    }
+
+        .modal-dialog.show {
+            display: block;
+        }
+
+    @@keyframes modalSlideIn {
+        from {
+            transform: translate(-50%, -50%) scale(0.9);
+            opacity: 0;
+        }
+
+        to {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+    }
+
+    .modal-content {
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        border: none;
+    }
+
+    .modal-header {
+        background-color: #28a745;
+        color: white;
+        padding: 20px 25px;
+        border-radius: 12px 12px 0 0;
+        border-bottom: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .modal-header .close {
+            color: white;
+            opacity: 0.9;
+            font-size: 28px;
+            font-weight: 300;
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+            line-height: 1;
+            transition: all 0.3s;
+        }
+
+            .modal-header .close:hover {
+                opacity: 1;
+                transform: rotate(90deg);
+            }
+
+    .modal-body {
+        padding: 25px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .form-group .required {
+            color: #dc3545;
+            margin-left: 2px;
+        }
+
+    .form-control {
+        width: 100%;
+        padding: 10px 14px;
+        border: 2px solid #e3e6f0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s;
+        font-family: inherit;
+    }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #28a745;
+            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: #a0aec0;
+        }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .custom-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 5px;
+        cursor: pointer;
+    }
+
+        .custom-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #28a745;
+        }
+
+        .custom-checkbox label {
+            margin: 0;
+            font-weight: 400;
+            cursor: pointer;
+            font-size: 14px;
+            color: #495057;
+        }
+
+    .modal-footer {
+        padding: 15px 25px 25px 25px;
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+    .btn {
+        padding: 10px 24px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-secondary {
+        background-color: #e9ecef;
+        color: #495057;
+        border: 1px solid #dee2e6;
+    }
+
+        .btn-secondary:hover {
+            background-color: #dee2e6;
+            transform: translateY(-1px);
+        }
+
+    .btn-primary {
+        background-color: #28a745;
+        color: white;
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+    }
+
+        .btn-primary:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.5);
+        }
+
+    /* Stats Row */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .stat-card {
+        /* background: white;  <-- Hapus ini agar tidak menimpa warna di bawah */
+        border-radius: 10px;
+        padding: 20px;
+        border: none; /* Menghapus semua border termasuk yang di ujung */
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        transition: all 0.3s;
+        color: white; /* Mengatur default teks jadi putih */
+    }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* Ikon diposisikan agak transparan di pojok agar modern */
+        .stat-card .stat-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+            opacity: 0.8;
+        }
+
+        .stat-card .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: white; /* Angka jadi putih */
+            margin-bottom: 5px;
+        }
+
+        .stat-card .stat-label {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.9); /* Putih halus */
+        }
+
+        /* --- DEFINISI WARNA FULL CARD --- */
+
+        .stat-card.stat-green {
+            background-color: #17a2b8; /* Full Hijau */
+        }
+        .stat-card.stat-blue {
+        background-color: #dc3545; /* Full Info/Biru (Info) */
+        }
+
+        .stat-card.stat-orange {
+        background-color: #28a745; /* Full Merah (Danger) sesuai permintaan sebelumnya */
+        }
+</style>
+
+<section id="hero1" class="hero bg-dark position-relative">
+    <div class="inner d-flex justify-content-between align-items-center px-3 py-2 w-100">
+        <div class="extract-info">
+            <small class="text-muted"><i class="fas fa-clock"></i> <span id="current-time"></span></small>
+        </div>
+        <div class="position-absolute top-50 start-50 translate-middle text-center">
+            <h3 class="text-white mb-0">
+                <i class="fas fa-calendar text-success"></i>
+                <b> Add Schedule Request</b>
+            </h3>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row pt-3">
+            <div class="col-md-12">
+                <div class="card card-success card-outline">
+                    <div class="card-header bg-success">
+                        <h5 class="text-center text-white">
+                            <i class="fa fa-calendar-alt"></i> Project Schedule
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="stats-row">
+                            <div class="stat-card stat-green">
+                                <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+                                <div class="stat-value" id="totalSchedules">0</div>
+                                <div class="stat-label">Total Schedules</div>
+                            </div>
+                            <div class="stat-card stat-blue">
+                                <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                                <div class="stat-value" id="upcomingSchedules">0</div>
+                                <div class="stat-label">Upcoming This Week</div>
+                            </div>
+                            <div class="stat-card stat-orange">
+                                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                                <div class="stat-value" id="completedSchedules">0</div>
+                                <div class="stat-label">Completed</div>
+                            </div>
+                        </div>
+
+                        <button class="btn-add-schedule" onclick="openModal()">
+                            <i class="fas fa-plus-circle"></i>
+                            Add Project Schedule
+                        </button>
+
+                        <div class="calendar-card">
+                            <div id='calendar'></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+
+<div class="modal-dialog" id="scheduleModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-calendar-plus"></i> Add Project Schedule</h3>
+            <button class="close" onclick="closeModal()">&times;</button>
+        </div>
+        <form id="scheduleForm">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="title">Title <span class="required">*</span></label>
+                    <input type="text" class="form-control" id="title" name="title"
+                           required placeholder="e.g., MCB 123 Project Review">
+                </div>
+                <div class="form-group">
+                    <label for="scheduleDate">Schedule Date & Time <span class="required">*</span></label>
+                    <input type="datetime-local" class="form-control" id="scheduleDate"
+                           name="scheduleDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea class="form-control" id="description" name="description"
+                              placeholder="Add additional details about this schedule..."></textarea>
+                </div>
+                <div class="form-group">
+                    <div class="custom-checkbox">
+                        <input type="checkbox" id="sendEmail" name="sendEmail" checked>
+                        <label for="sendEmail">
+                            <i class="fas fa-envelope"></i> Send email notification on scheduled date
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Schedule
+                </button>
+            </div>
+        </form>
+    </div>
+
+</section>
+
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    let calendar;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeCalendar();
+    });
+
+    function initializeCalendar() {
+        const calendarEl = document.getElementById('calendar');
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,listWeek'
+            },
+            themeSystem: 'bootstrap5',
+            height: 650,
+            eventClick: function(info) {
+                showEventDetails(info.event);
+            },
+            dateClick: function(info) {
+                openModal(info.dateStr);
+            }
+        });
+
+        calendar.render();
+
+        // ✅ LOAD SCHEDULES SETELAH CALENDAR SELESAI RENDER
+        loadSchedules();
+    }
+
+    function loadSchedules() {
+        console.log('🔄 Loading schedules...');
+
+        fetch('/User/GetSchedules')
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(res => {
+                console.log('📦 Server response:', res);
+
+                if (res.success && res.data) {
+                    console.log(`✅ Found ${res.data.length} schedules`);
+
+                    // Hapus semua events yang ada
+                    calendar.removeAllEventSources();
+                    calendar.getEvents().forEach(event => event.remove());
+
+                    // Map dan tambahkan events
+                    const events = res.data.map(item => {
+                        console.log(`  - ${item.title} at ${item.start}`);
+                        return {
+                            id: item.id,
+                            title: item.title,
+                            start: item.start,
+                            extendedProps: {
+                                description: item.description
+                            },
+                            backgroundColor: new Date(item.start) < new Date() ? '#6c757d' : '#28a745',
+                            borderColor: 'transparent'
+                        };
+                    });
+
+                    console.log('📅 Adding events to calendar:', events.length);
+
+                    // Tambahkan ke calendar
+                    calendar.addEventSource(events);
+
+                    // Update stats
+                    setTimeout(() => updateStats(), 500);
+
+                    console.log('✅ Calendar updated successfully!');
+                } else {
+                    console.warn('⚠️ No data or request failed');
+                }
+            })
+            .catch(err => {
+                console.error('❌ Fetch error:', err);
+            });
+    }
+
+    function updateStats() {
+        setTimeout(() => {
+            const events = calendar.getEvents();
+            const now = new Date();
+            const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+            document.getElementById('totalSchedules').textContent = events.length;
+
+            const upcoming = events.filter(e => e.start >= now && e.start <= nextWeek);
+            document.getElementById('upcomingSchedules').textContent = upcoming.length;
+
+            const completed = events.filter(e => e.start < now);
+            document.getElementById('completedSchedules').textContent = completed.length;
+        }, 300);
+    }
+
+    // ✅ FORM SUBMIT - SAVE SCHEDULE
+    document.getElementById('scheduleForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const payload = {
+            Title: document.getElementById('title').value,
+            ScheduledDate: document.getElementById('scheduleDate').value,
+            Description: document.getElementById('description').value
+        };
+
+        // Show loading
+        Swal.fire({
+            title: 'Saving...',
+            text: 'Please wait',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // ✅ Tambahkan flag send_email
+        const sendEmail = document.getElementById('sendEmail').checked;
+        const payloadWithEmail = {
+            ...payload,
+            SendEmail: sendEmail
+        };
+
+        fetch('/User/CreateSchedule', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payloadWithEmail)
+        })
+        .then(r => r.json())
+        .then(res => {
+            if(res.success) {
+                // Tutup modal dulu
+                closeModal();
+
+                // Show success message
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Saved!',
+                    text: 'Schedule added successfully.',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                // ✅ RELOAD SCHEDULES LANGSUNG TANPA REFRESH PAGE
+                loadSchedules();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: res.message
+                });
+            }
+        })
+        .catch(err => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to save schedule: ' + err.message
+            });
+        });
+    });
+
+    function openModal(date) {
+        document.getElementById('modalOverlay').classList.add('show');
+        document.getElementById('scheduleModal').classList.add('show');
+
+        if (date) {
+            document.getElementById('scheduleDate').value = date.includes('T') ? date : date + 'T09:00';
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('modalOverlay').classList.remove('show');
+        document.getElementById('scheduleModal').classList.remove('show');
+        document.getElementById('scheduleForm').reset();
+    }
+
+    function showEventDetails(event) {
+        const eventDate = new Date(event.start);
+        const isPast = eventDate < new Date();
+
+        Swal.fire({
+            title: event.title,
+            html: `
+                <div style="text-align: left; padding: 10px;">
+                    <p><strong> Date:</strong> ${eventDate.toLocaleString('en-GB')}</p>
+                    <p><strong>Description:</strong> ${event.extendedProps.description || 'No description'}</p>
+                    <p><strong>Status:</strong> <span style="color: ${isPast ? '#dc3545' : '#28a745'}; font-weight: bold;">${isPast ? 'Completed' : 'Upcoming'}</span></p>
+                </div>
+            `,
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonText: 'Mark as Done',
+            confirmButtonColor: '#28a745',
+            cancelButtonText: 'Close',
+            cancelButtonColor: '#6c757d'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                markScheduleCompleted(event.id);
+            }
+        });
+    }
+
+    function markScheduleCompleted(scheduleId) {
+        fetch('/User/MarkScheduleCompleted', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(scheduleId)
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Done!',
+                    text: 'Schedule marked as completed.',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                loadSchedules(); // Refresh calendar
+            } else {
+                Swal.fire('Error', res.message, 'error');
+            }
+        });
+    }
+</script>

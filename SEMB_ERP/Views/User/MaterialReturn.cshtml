@@ -1,0 +1,331 @@
+﻿@using System.Data;
+@model List<SEMB_ERP.Models.MaterialReturnModel>
+@using Microsoft.AspNetCore.Mvc.Rendering;
+@{
+    string sesa_id = ViewBag.sesa_id ?? "";
+    List<string> listStatus = (ViewBag.listStatus as List<string>) ?? new List<string> { "Sent", "Approved", "In Transit", "Returned" };
+}
+
+<style>
+    .smaller-input {
+        height: 25px;
+        padding: 5px;
+        font-size: 10px;
+        line-height: 1;
+    }
+
+    .dataTables_info, .dataTables_paginate, .dataTables_filter {
+        font-size: 10pt;
+    }
+
+    #table_return_filter.dataTables_filter {
+        display: none;
+    }
+
+    table#table_return tr > th {
+        padding: 5px;
+    }
+
+    table#table_return tr > td {
+        padding: 5px;
+    }
+
+    #table_return {
+        border-radius: 0.35rem;
+        overflow: hidden;
+    }
+
+        #table_return td {
+            border-bottom: 0.5px solid #FBF8EF !important;
+            border-left: none !important;
+            border: none !important;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        #table_return thead th {
+            border: none !important;
+            font-size: 14px;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+    #loadingSpinner {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+        #loadingSpinner img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+</style>
+
+<section id="hero1" class="hero bg-dark position-relative">
+    <div class="inner d-flex justify-content-between align-items-center px-3 py-2 w-100">
+        <div class="position-absolute top-50 start-50 translate-middle text-center">
+            <h3 class="text-white mb-0"><i class="fas fa-exchange-alt text-success"></i> <b>Material Return List</b></h3>
+        </div>
+    </div>
+</section>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 mt-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col col-12 mb-2">
+                                <button class="btn btn-sm btn-primary" onclick="open_modal_add()">
+                                    <i class="fas fa-plus-circle"></i> Create Return
+                                </button>
+                            </div>
+                            <div class="col-12 table-responsive">
+                                <table class="table table-bordered table-striped align-center nowrap" id="table_return" style="font-size:10pt;width:100%;">
+                                    <thead class="bg-navy-custom align-middle text-center">
+                                        <tr>
+                                            <th>Status</th>
+                                            <th>Request No</th>
+                                            <th>PO Number</th>
+                                            <th>Part Number</th>
+                                            <th>Qty</th>
+                                            <th>UOM</th>
+                                            <th>Condition</th>
+                                            <th>Remark</th>
+                                            <th>PIC</th>
+                                            <th>Return Date</th>
+                                            <th>Image</th>
+                                            <th>Action</th>
+                                        </tr>
+                                        <tr style="background-color: #3b6b85;">
+                                            <td>
+                                                <select class="form-control smaller-input filter_table" target="0">
+                                                    <option value="">#ALL</option>
+                                                    @foreach (var s in listStatus)
+                                                    {
+                                                        <option value="@s">@s</option>
+                                                    }
+                                                </select>
+                                            </td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="1" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="2" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="3" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="4" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="5" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="6" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="7" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="8" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="9" /></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal_return" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <h6 class="modal-title text-white" id="modalLabel"><i class="fas fa-exchange-alt"></i> Form Material Return</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="form_return" enctype="multipart/form-data" method="post" action="#">
+                <input type="hidden" name="id_return" id="id_return" />
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-2">
+                                <label>Request No</label>
+                                <input type="text" name="request_no" id="request_no" class="form-control" />
+                            </div>
+                            <div class="form-group mb-2">
+                                <label>PO Number <span class="text-danger">*</span></label>
+                                <input type="text" name="po_no" id="po_no" class="form-control" required />
+                            </div>
+                            <div class="form-group mb-2">
+                                <label>Part Number <span class="text-danger">*</span></label>
+                                <input type="text" name="partno" id="partno" class="form-control" required />
+                            </div>
+                            <div class="form-group mb-2">
+                                <label>Return Quantity <span class="text-danger">*</span></label>
+                                <input type="number" name="qty_return" id="qty_return" class="form-control" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-2">
+                                <label>UOM <span class="text-danger">*</span></label>
+                                <input type="text" name="uom" id="uom" class="form-control" required />
+                            </div>
+                            <div class="form-group mb-2">
+                                <label>Condition <span class="text-danger">*</span></label>
+                                <select name="condition" id="condition" class="form-control" required>
+                                    <option value="Good">Good</option>
+                                    <option value="Damaged">Damaged</option>
+                                    <option value="Incomplete">Incomplete</option>
+                                </select>
+                            </div>
+                            <div class="form-group mb-2">
+                                <label>Remark</label>
+                                <textarea name="reason_return" id="remark" class="form-control" rows="2"></textarea>
+                            </div>
+                            <div class="form-group mb-2">
+                                <label>Image Support</label>
+                                <input type="file" name="image_support_file" id="file_image" class="form-control" accept="image/*" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-sm btn-success">Save Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal_view_image" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header bg-navy-custom text-white py-2">
+                <h6 class="modal-title">Image Preview</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-1">
+                <img id="img_zoom" src="" style="width: 100%; height: auto; border-radius: 4px;" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var table;
+        $(document).ready(function () {
+            table = $("#table_return").DataTable({
+                "orderCellsTop": true,
+                "processing": true,
+                "serverSide": true,
+                "ajax": { "url": "@Url.Action("GetReturnList", "User")", "type": "POST" },
+                "columns": [
+                    { "data": "status_desc", "className": "align-middle" },
+                    { "data": "request_no", "className": "align-middle", "defaultContent": "" },
+                    { "data": "po_no", "className": "align-middle" },
+                    { "data": "partno", "className": "align-middle" },
+                    { "data": "qty_return", "className": "text-center align-middle" },
+                    { "data": "uom", "className": "text-center align-middle" },
+                    { "data": "condition", "className": "text-center align-middle" },
+             { "data": "reason_return", "className": "align-middle", "defaultContent": "" },
+                    { "data": "name", "className": "align-middle" },
+                    { "data": "return_date", "className": "text-center align-middle" },
+                    {
+                        "data": "image_support",
+                        "className": "text-center align-middle",
+                        "render": function(data) {
+                            return data ? `<a href="javascript:void(0)" class="text-primary fw-bold" onclick="view_image('${data}')">View</a>` : "-";
+                        }
+                    },
+                    {
+                        "data": null,
+                        "className": "text-center align-middle",
+                        "render": function (data, type, row) {
+                            return row.status_desc === "Sent" ? `<button class="btn btn-sm btn-warning" onclick='open_modal_edit(${JSON.stringify(row)})'><i class="fas fa-edit"></i></button>` : `<i class="fas fa-lock text-muted"></i>`;
+                        }
+                    }
+                ],
+                "drawCallback": function () {
+                    this.api().rows().every(function () {
+                        var status = (this.data().status_desc || "").toLowerCase().trim();
+                        var bg = status === "sent" ? "bg-warning" : status === "approved" ? "bg-success" : status === "in transit" ? "bg-info" : "bg-secondary";
+                        $(this.node()).find('td:eq(0)').addClass(bg);
+                    });
+                }
+            });
+
+            $('.filter_table').on('keyup change', function () {
+                table.column($(this).attr('target')).search(this.value).draw();
+            });
+
+            $("#form_return").submit(function (e) {
+                e.preventDefault();
+                var formData = new FormData(this); // Pakai FormData agar Image bisa upload
+                const url = $("#id_return").val() ? "@Url.Action("UpdateReturn", "User")" : "@Url.Action("CreateReturn", "User")";
+
+                Swal.fire({
+                    title: 'Confirmation!!',
+                    text: "Are you sure ?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    confirmButtonText: 'Yes!',
+                    showLoaderOnConfirm: true,
+                    preConfirm: () => {
+                        return $.ajax({
+                            url: url, type: 'POST', data: formData, contentType: false, processData: false
+                        }).done(function (msg) {
+                            if (msg.trim().toUpperCase() === "OK") {
+                                Swal.fire("Success!", "Data processed.", "success");
+                                $("#modal_return").modal("hide");
+                                table.ajax.reload(null, false);
+                            } else { Swal.fire("Failed!", msg, "error"); }
+                        });
+                    }
+                });
+            });
+        });
+
+        function open_modal_add() {
+            $("#form_return")[0].reset();
+            $("#id_return").val("");
+            $("#modalLabel").html('<i class="fas fa-plus-circle"></i> Create Material Return');
+            $("#modal_return").modal("show");
+        }
+
+                function open_modal_edit(data) {
+            $("#form_return")[0].reset();
+            $("#id_return").val(data.id_return);
+            $("#request_no").val(data.request_no);  // tambah
+            $("#po_no").val(data.po_no);
+            $("#partno").val(data.partno);
+            $("#qty_return").val(data.qty_return);
+            $("#uom").val(data.uom);
+            $("#condition").val(data.condition);
+            $("#remark").val(data.reason_return);   // fix: pakai reason_return
+            $("#modal_return").modal("show");
+        }
+
+               function view_image(file) {
+            var img = new Image();
+            var pathNew = "/Uploads/returns/" + file;
+            var pathOld = "/Uploads/" + file;
+
+            img.onload = function () {
+                $("#img_zoom").attr("src", pathNew);
+                $("#modal_view_image").modal("show");
+            };
+            img.onerror = function () {
+                $("#img_zoom").attr("src", pathOld);
+                $("#modal_view_image").modal("show");
+            };
+            img.src = pathNew;
+        }
+    </script>
+}

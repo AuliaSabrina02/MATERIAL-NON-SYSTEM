@@ -1,0 +1,127 @@
+﻿@model List<MaterialReturnModel>
+
+@{
+    var status = ViewBag.Status as string;
+    var totalRecords = ViewBag.TotalRecords as int? ?? 0;
+    var errorMessage = ViewBag.ErrorMessage as string;
+}
+
+<div class="modal-body">
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Error:</strong> @errorMessage
+        </div>
+    }
+    else if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle"></i>
+            <p class="mb-0">No returns found with status: <strong>@status</strong></p>
+        </div>
+    }
+    else
+    {
+        <div class="mb-3">
+            <h6>
+                <i class="fas fa-list"></i>
+                Showing <strong>@totalRecords</strong> return(s) with status: <strong>@status</strong>
+            </h6>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover table-sm" id="tbl_return_filtered">
+                <thead class="bg-info">
+                    <tr>
+                        <th>ID</th>
+                        <th>PO No</th>
+                        <th>Part No</th>
+                        <th>Qty Return</th>
+                        <th>UOM</th>
+                        <th>Condition</th>
+                        <th>PIC</th>
+                        <th>Return Date</th>
+                        <th>Update Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        var statusBadgeClass = item.status_desc switch
+                        {
+                            "Sent" => "badge bg-warning",
+                            "Approved" => "badge bg-success",
+                            "In Transit" => "badge bg-info",
+                            "Returned" => "badge bg-secondary",
+                            _ => "badge bg-light"
+                        };
+
+                        <tr>
+                            <td>@item.id_return</td>
+                            <td>@item.po_no</td>
+                            <td><strong>@item.partno</strong></td>
+                            <td class="text-right">@string.Format("{0:N2}", item.qty_return)</td>
+                            <td>@item.uom</td>
+                            <td>
+                                @if (item.condition == "Good")
+                                {
+                                    <span class="badge bg-success">Good</span>
+                                }
+                                else if (item.condition == "Damaged")
+                                {
+                                    <span class="badge bg-danger">Damaged</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning">@item.condition</span>
+                                }
+                            </td>
+                            <td>@item.name</td>
+                            <td>
+                                @if (item.return_date.HasValue)
+                                {
+                                    @string.Format("{0:yyyy-MM-dd HH:mm}", item.return_date.Value)
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                @if (item.update_date.HasValue)
+                                {
+                                    @string.Format("{0:yyyy-MM-dd HH:mm}", item.update_date.Value)
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td><span class="@statusBadgeClass">@item.status_desc</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<script>
+    $(function () {
+        if ($.fn.DataTable.isDataTable('#tbl_return_filtered')) {
+            $('#tbl_return_filtered').DataTable().destroy();
+        }
+
+        $('#tbl_return_filtered').DataTable({
+            "paging": true,
+            "pageLength": 10,
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "autoWidth": false,
+            "responsive": true
+        });
+    });
+</script>

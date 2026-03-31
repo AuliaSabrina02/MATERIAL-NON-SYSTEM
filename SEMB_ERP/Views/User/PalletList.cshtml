@@ -1,0 +1,226 @@
+﻿@using SEMB_ERP.Models
+@using System.Globalization;
+@using Microsoft.AspNetCore.Http;
+@inject IHttpContextAccessor Accessor
+
+@{
+    string sesa_id = ViewBag.sesa_id;
+    string name = ViewBag.name;
+    string plant = ViewBag.plant;
+}
+
+<style>
+    /* Sinkronisasi gaya dengan Pallet Problem */
+    .smaller-input {
+        height: 25px;
+        padding: 5px;
+        font-size: 10px;
+        line-height: 1;
+    }
+
+    .dataTables_info, .dataTables_paginate, .dataTables_filter {
+        font-size: 10pt;
+    }
+
+    /* Sembunyikan search default karena menggunakan baris filter */
+    #table_pallet_list_filter.dataTables_filter {
+        display: none;
+    }
+
+    table#table_pallet_list tr > th {
+        padding: 5px;
+    }
+
+    table#table_pallet_list tr > td {
+        padding: 5px;
+    }
+
+    #table_pallet_list {
+        border-radius: 0.35rem;
+        overflow: hidden;
+    }
+
+        #table_pallet_list td {
+            border-bottom: 0.5px solid #FBF8EF !important;
+            border-left: none !important;
+            border-right: none !important;
+            border-top: none !important;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        #table_pallet_list thead th {
+            border: none !important;
+            font-size: 14px;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        /* Background hijau muda untuk body tabel */
+        #table_pallet_list tbody tr td {
+            background-color: #edfcf1;
+        }
+
+    .bg-navy-custom {
+        background-color: #001f3f;
+        color: white;
+    }
+</style>
+
+<section id="hero1" class="hero bg-dark position-relative">
+    <div class="inner d-flex justify-content-between align-items-center px-3 py-2 w-100">
+        <div class="extract-info"></div>
+        <div class="position-absolute top-50 start-50 translate-middle text-center">
+            <h3 class="text-white mb-0">
+                <i class="fas fa-list text-success"></i>
+                <b>Pallet Problem List</b>
+            </h3>
+        </div>
+        <nav aria-label="breadcrumb" class="text-end ms-auto breadcrumb-sm">
+            <ol class="breadcrumb mb-0 d-inline-flex flex-nowrap align-items-center bg-transparent"></ol>
+        </nav>
+    </div>
+</section>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row pt-3">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 table-responsive">
+                                <table id="table_pallet_list" class="table table-bordered table-striped nowrap" style="width:100%">
+                                    <thead class="bg-navy-custom align-middle text-center">
+                                        <tr>
+                                            <th>No</th>
+                                            <th>Pallet No</th>
+                                            <th>Request No</th>
+                                            <th>Date</th>
+                                            <th>Issue</th>
+                                            <th>Action</th>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="1" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="2" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="3" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="4" /></td>
+                                            <td></td>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal_view_pallet" class="modal fade">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h6 class="modal-title">
+                    <i class="fas fa-eye"></i> Pallet Detail
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="detail_content">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        var Table;
+        var loading = "<i class='fa fa-4x fa-spinner fa-spin'></i>";
+
+        $(document).ready(function () {
+            Table = $("#table_pallet_list").DataTable({
+                "orderCellsTop": true,
+                "processing": true,
+                "serverSide": true,
+                "filter": true,
+                "ajax": {
+                    "url": "@Url.Action("GetPalletList", "User")",
+                    "type": "POST"
+                },
+                "columns": [
+                    {
+                        "data": null,
+                        "className": "text-center align-middle",
+                        "orderable": false,
+                        "render": function (data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
+                    },
+                    { "data": "pallet_no", "className": "align-middle" },
+                    { "data": "req_no", "className": "align-middle" },
+                    {
+                        "data": "date",
+                        "className": "text-center align-middle",
+                        "render": function(data) {
+                            return data ? new Date(data).toLocaleDateString('en-GB') : '-';
+                        }
+                    },
+                    {
+                        "data": "issue",
+                        "className": "align-middle",
+                        "render": function(data) {
+                            return data && data.length > 50 ? data.substring(0, 50) + '...' : (data || '-');
+                        }
+                    },
+                    {
+                        "data": null,
+                        "className": "text-center align-middle",
+                        "orderable": false,
+                        "render": function (data, type, row) {
+                            return `
+                                <button class="btn btn-xs btn-info btn-view" data-id="${row.id}" title="View Detail">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            `;
+                        }
+                    }
+                ],
+                "order": [[2, 'desc']]
+            });
+
+            // Script Filter
+            $('input.filter_table').on('keyup change', function () {
+                let trgt = $(this).attr('target');
+                if (Table.column(trgt).search() !== this.value) {
+                    Table.column(trgt).search(this.value).draw();
+                }
+            });
+
+            // View Detail Logic
+            $(document).on('click', '.btn-view', function() {
+                let id = $(this).data('id');
+                $("#detail_content").html("<div class='text-center'>" + loading + "</div>");
+                $("#modal_view_pallet").modal("show");
+
+                $.ajax({
+                    url: "@Url.Action("GetPalletListDetail", "User")",
+                    type: 'GET',
+                    data: { id: id },
+                    success: function(res) {
+                        $("#detail_content").html(res);
+                    },
+                    error: function() {
+                        $("#detail_content").html("<p class='text-danger'>Failed to load data</p>");
+                    }
+                });
+            });
+        });
+    </script>
+}

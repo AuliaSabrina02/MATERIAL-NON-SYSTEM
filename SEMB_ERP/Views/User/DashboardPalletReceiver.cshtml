@@ -1,0 +1,613 @@
+﻿@model List<UserDetailModel>
+@{
+    var user = Model.First();
+}
+
+<section id="hero1" class="hero bg-dark position-relative">
+    <div class="inner d-flex justify-content-between align-items-center px-3 py-2 w-100">
+
+        <div class="extract-info">
+            <small class="text-muted"><i class="fas fa-clock"></i> <span id="current-time"></span></small>
+        </div>
+
+        <div class="position-absolute top-50 start-50 translate-middle text-center">
+            <h3 class="text-white mb-0">
+                <i class="fas fa-chart-pie text-success"></i>
+                <b>Pallet Monitoring Dashboard</b>
+            </h3>
+        </div>
+
+        @* <nav aria-label="breadcrumb" class="text-end ms-auto breadcrumb-sm">
+            <ol class="breadcrumb mb-0 d-inline-flex flex-nowrap align-items-center bg-transparent">
+                <li class="breadcrumb-item small"><a href="#">Home</a></li>
+                <li class="breadcrumb-item small text-white active" aria-current="page">Dashboard</li>
+            </ol>
+        </nav> *@
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row pt-3">
+            <div class="col-lg-4 col-md-6">
+                <div class="small-box" style="background-color: #17a2b8; color: white; min-height: 85px;">
+                    <div class="inner" style="padding: 10px;">
+                        <h3 id="total-created" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0;">0</h3>
+                        <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin-top: 5px;">Pallet Created</p>
+                    </div>
+                    <div class="icon" style="top: 5px; right: 15px;">
+                        <i class="fas fa-box" style="font-size: 45px; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="small-box" style="background-color: #007bff; color: white; min-height: 85px;">
+                    <div class="inner" style="padding: 10px;">
+                        <h3 id="total-transferred" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0;">0</h3>
+                        <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin-top: 5px;">Pallet Transferred</p>
+                    </div>
+                    <div class="icon" style="top: 5px; right: 15px;">
+                        <i class="fas fa-dolly" style="font-size: 45px; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-12">
+                <div class="small-box" style="background-color: #28a745; color: white; min-height: 85px;">
+                    <div class="inner" style="padding: 10px;">
+                        <h3 id="total-supplied" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0;">0</h3>
+                        <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin-top: 5px;">Pallet Completed</p>
+                    </div>
+                    <div class="icon" style="top: 5px; right: 15px;">
+                        <i class="fas fa-check-double" style="font-size: 45px; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+            </div>
+
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card card-success card-outline">
+                    <div class="card-header">
+                        <h5><i class="fas fa-chart-bar mr-2"></i> Pallet Movement</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="pallet_main_chart" style="width:100%; height:300px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card card-success card-outline">
+                    <div class="card-header">
+                        <h5><i class="fas fa-exclamation-triangle mr-2"></i> Pallet Problem</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="pallet_problem_chart" style="width:100%; height:300px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+            <!-- ===== HISTORY TABLE ===== -->
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card card-primary card-outline">
+                        <div class="card-header">
+                            <h5><i class="fas fa-history mr-2"></i> Recent Pallet History</h5>
+                        </div>
+                        <div class="card-body table-responsive">
+                            <table id="table_history" class="table table-bordered table-striped nowrap" style="width:100%">
+                                <thead class="bg-warning text-center">
+                                    <tr>
+                                        <th>Pallet No</th>
+                                        <th>Req No</th>
+                                        <th>Status</th>
+                                        <th>Creation Date</th>
+                                        <th>Transfer Date</th>
+                                        <th>Supplied Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        <div class="modal fade" id="modal_pallet_container" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-xl" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-pallet"></i> Pallet Problem Detail
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div id="modal_content_detail">
+                        <div class="text-center p-5">
+                            <i class="fas fa-spinner fa-spin fa-3x"></i>
+                            <p class="mt-3">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        </div>
+    </section>
+
+    <!-- ===== MODAL DETAIL ===== -->
+    <div class="modal fade" id="modal_req_detail">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-list"></i> Pallet Detail</h5>
+                    <button type="button" class="close text-white" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="p-3">
+                    <div class="row">
+                        <div class="col-12">
+                            <table class="table table-borderless table-sm">
+                                <tr>
+                                    <td width="20%">Request No</td>
+                                    <td id="request-no">:</td>
+                                </tr>
+                                <tr>
+                                    <td>Pallet No</td>
+                                    <td id="pallet-no">:</td>
+                                </tr>
+                                <tr>
+                                    <td>Status</td>
+                                    <td id="pallet-status">:</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-12 table-responsive">
+                            <table class="table table-bordered table-striped align-center nowrap" id="tbl-detail" style="font-size:12pt;width:100%;">
+                                <thead class="bg-warning align-middle text-center">
+                                    <tr>
+                                        <th width="12%">Box Id</th>
+                                        <th width="12%">Part No</th>
+                                        <th width="12%">Quantity</th>
+                                        <th width="12%">S-Bin</th>
+                                        <th width="12%">Picked By</th>
+                                        <th width="12%">Record Date</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            <div class="modal fade" id="modal_pallet_container" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-xl" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-pallet"></i> Pallet Problem Detail
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div id="modal_content_detail">
+                            <div class="text-center p-5">
+                                <i class="fas fa-spinner fa-spin fa-3x"></i>
+                                <p class="mt-3">Loading...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+
+    <script>
+        var chartInstance; 
+
+        $(document).ready(function () {
+            loadSummary();
+            loadChartData();
+            initHistoryTable();
+            loadPalletProblemChart();
+            setInterval(function () {
+                loadSummary();
+                loadChartData();
+                $('#table_history').DataTable().ajax.reload(null, false);
+                                      loadPalletProblemChart();
+            }, 300000);
+        });
+
+        function loadSummary() {
+            $.ajax({
+                url: '@Url.Action("GetPalletSummary")',
+                type: 'POST',
+                dataType: 'json',
+                success: function (data) {
+                    $('#total-created').text(data.totalCreated);
+                    $('#total-transferred').text(data.totalTransferred);
+                    $('#total-supplied').text(data.totalSupplied);
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error loading summary:', error);
+                }
+            });
+        }
+
+        function loadChartData() {
+            $.ajax({
+                url: '@Url.Action("GetPalletStatusChartData")', // Pastikan arahkan ke method baru
+                type: 'POST',
+                dataType: 'json',
+                success: function (data) {
+                    renderStatusChart(data.categories, data.dataValues);
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error loading chart data:', error);
+                }
+            });
+        }
+
+
+                  function renderStatusChart(categories, dataValues) {
+            const colorMap = {
+                'CREATION': '#6c757d',
+                'TRANSFER': '#007bff',
+                'RECEIVED': '#17a2b8',
+                'SUPPLIED': '#28a745'
+            };
+
+            const seriesData = categories.map((cat, index) => {
+                return {
+                    name: cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase(),
+                    data: [dataValues[index]],
+                    color: colorMap[cat.toUpperCase()] || '#000',
+                    statusRaw: cat.toUpperCase() // Parameter status asli
+                };
+            });
+
+            Highcharts.chart('pallet_main_chart', {
+                chart: { type: 'column' },
+                title: { text: null },
+                credits: { enabled: false }, // Menghilangkan tulisan highcharts.com
+                xAxis: { visible: false },
+                yAxis: {
+                    min: 0,
+                    title: { text: 'Total Pallets' }
+                },
+                plotOptions: {
+                    column: {
+                        cursor: 'pointer',
+                        dataLabels: { enabled: true },
+                        point: {
+                            events: {
+                                click: function () {
+                                    // Ambil status dari batang yang diklik
+                                    var statusName = this.series.name.toUpperCase();
+                                    const status = this.series.options.statusRaw;
+                                    loadStatusModal(status);
+                                }
+                            }
+                        }
+                    }
+                },
+                series: seriesData
+            });
+        }
+
+             // Fungsi AJAX Loader
+        function loadStatusModal(status) {
+            // 1. Tampilkan modal container
+            $('#modal_pallet_container').modal('show');
+
+            // 2. Set judul modal secara dinamis
+            $('#modal_pallet_container .modal-title').html('<i class="fas fa-pallet"></i> Detail Status: ' + status);
+
+            // 3. Tampilkan loading spinner sementara data diambil
+            $('#modal_content_detail').html(`
+                <div class="text-center p-5">
+                    <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                    <p class="mt-3">Loading data ${status}...</p>
+                </div>
+            `);
+
+            // 4. Jalankan AJAX
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetPalletListByStatus", "User")",
+                data: { status: status },
+                success: function (response) {
+                    // Masukkan data partial view ke dalam modal
+                    $('#modal_content_detail').html(response);
+
+                    // Munculkan notifikasi SweetAlert2 (Data Loaded)
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Data Loaded',
+                        text: 'Showing pallet detail for ' + status,
+                        timer: 1500,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                },
+                error: function (xhr, status, error) {
+                    // Tampilkan pesan error di dalam modal jika request gagal
+                    $('#modal_content_detail').html(`
+                        <div class="modal-body">
+                            <div class="alert alert-danger m-3">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Error loading data: ${error}
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times"></i> Close
+                            </button>
+                        </div>
+                    `);
+                    console.error('Error:', error);
+                }
+            });
+        }
+
+
+        // Initialize/Update Chart
+        function initChart(categories, createdData, transferredData, suppliedData) {
+            if (chartInstance) {
+                // Update existing chart
+                chartInstance.xAxis[0].setCategories(categories);
+                chartInstance.series[0].setData(createdData);
+                chartInstance.series[1].setData(transferredData);
+                chartInstance.series[2].setData(suppliedData);
+            } else {
+                // Create new chart
+                chartInstance = Highcharts.chart('pallet_main_chart', {
+                    chart: { type: 'column' },
+                    title: { text: '' },
+                    xAxis: {
+                        categories: categories,
+                        crosshair: true
+                    },
+                    yAxis: {
+                        min: 0,
+                        title: { text: 'Total Pallets' }
+                    },
+                    tooltip: {
+                        headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                        pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                            '<td style="padding:0"><b>{point.y}</b></td></tr>',
+                        footerFormat: '</table>',
+                        shared: true,
+                        useHTML: true
+                    },
+                    plotOptions: {
+                        column: {
+                            pointPadding: 0.2,
+                            borderWidth: 0
+                        }
+                    },
+                    series: [
+                        { name: 'Created', data: createdData, color: '#6c757d' },
+                        { name: 'Transferred', data: transferredData, color: '#007bff' },
+                        { name: 'Supplied', data: suppliedData, color: '#28a745' }
+                    ]
+                });
+            }
+        }
+
+        // Initialize History Table
+        function initHistoryTable() {
+            $('#table_history').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: '@Url.Action("GetPalletHistoryList")',
+                    type: 'POST'
+                },
+                columns: [
+                    {
+                        data: 'pallet_no',
+                        className: 'text-center',
+                        render: function (data) {
+                            return '<b>' + data + '</b>';
+                        }
+                    },
+                    { data: 'request_no', className: 'text-center' },
+                    {
+                        data: 'status_pallet',
+                        className: 'text-center',
+                        render: function (data) {
+                            var badgeClass = 'secondary';
+                            if (data === 'SUPPLIED') badgeClass = 'success';
+                            else if (data === 'TRANSFER' || data === 'RECEIVED') badgeClass = 'primary';
+                            else if (data === 'CREATION') badgeClass = 'secondary';
+
+                            return '<span class="badge badge-' + badgeClass + '">' + data + '</span>';
+                        }
+                    },
+                    { data: 'record_date', className: 'text-center' },
+                    { data: 'transfer_date', className: 'text-center' },
+                    { data: 'supplied_date', className: 'text-center' },
+                    {
+                        data: 'id_pallet',
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            return '<button class="btn btn-xs btn-info" onclick="show_detail(' +
+                                data + ',\'' + row.pallet_no + '\',\'' + row.status_pallet +
+                                '\',\'' + row.request_no + '\')"><i class="fas fa-eye"></i> Detail</button>';
+                        }
+                    }
+                ],
+                order: [[3, 'desc']] // Sort by creation date descending
+            });
+        }
+
+
+                function filterPalletByDate(date) {
+            console.log('Loading pallet problems for date:', date);
+
+            $('#modal_pallet_container').modal('show');
+            $('#modal_content_detail').html(`
+                <div class="text-center p-5">
+                    <i class="fas fa-spinner fa-spin fa-3x text-danger"></i>
+                    <p class="mt-3">Loading pallet problems for <strong>${date}</strong>...</p>
+                </div>
+            `);
+
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetPalletProblemByDate", "User")",
+                data: { date: date },
+                success: function(response) {
+                    $('#modal_content_detail').html(response);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Data Loaded',
+                        text: 'Showing pallet problems for ' + date,
+                        timer: 1500,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                },
+                error: function(xhr, status, error) {
+                    $('#modal_content_detail').html(`
+                        <div class="modal-body">
+                            <div class="alert alert-danger m-3">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Error loading data: ${error}
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times"></i> Close
+                            </button>
+                        </div>
+                    `);
+                    console.error('Error:', error);
+                }
+            });
+        }
+
+                    function loadPalletProblemChart() {
+            $.post('@Url.Action("GetPalletProblems", "User")', {
+                draw: 1, start: 0, length: 1000
+            }, function (response) {
+                if (!response.data || response.data.length === 0) return;
+
+                const grouped = {};
+                response.data.forEach(x => {
+                    // ✅ PERBAIKAN: Ambil langsung dari string, jangan pakai new Date()
+                    // Format dari server: "2026-02-01T00:00:00" atau "2026-02-01"
+                    const d = x.date.split('T')[0]; // Langsung split, tanpa new Date()
+                    grouped[d] = (grouped[d] || 0) + 1;
+                });
+
+                // ✅ Sort tanggal ascending
+                const categories = Object.keys(grouped).sort();
+                const values = categories.map(k => grouped[k]);
+
+                Highcharts.chart('pallet_problem_chart', {
+                    chart: { type: 'column' },
+                    title: { text: null },
+                    credits: { enabled: false },
+                    xAxis: {
+                        categories: categories,
+                        labels: {
+                            style: { fontSize: '10px' },
+                            rotation: -45
+                        }
+                    },
+                    yAxis: {
+                        title: { text: 'Total Problems' },
+                        allowDecimals: false
+                    },
+                    tooltip: {
+                        pointFormat: '<b>{point.y}</b> problem(s)<br/><i>Click to view details</i>',
+                        style: { fontSize: '11px' }
+                    },
+                    plotOptions: {
+                        column: {
+                            cursor: 'pointer',
+                            borderRadius: 5,
+                            dataLabels: {
+                                enabled: true,
+                                style: {
+                                    fontWeight: 'bold',
+                                    fontSize: '11px'
+                                }
+                            },
+                            point: {
+                                events: {
+                                    click: function () {
+                                        // ✅ this.category sudah format yyyy-MM-dd dari categories array
+                                        filterPalletByDate(this.category);
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    series: [{
+                        name: 'Pallet Problem',
+                        data: values,
+                        color: '#dc3545',
+                        showInLegend: false
+                    }]
+                });
+            });
+        }
+        // Show Detail Modal
+        function show_detail(id_pallet, palletNo, status, requestNo) {
+            $('#request-no').text(': ' + requestNo);
+            $('#pallet-no').text(': ' + palletNo);
+            $('#pallet-status').text(': ' + status);
+
+            if ($.fn.dataTable.isDataTable('#tbl-detail')) {
+                $('#tbl-detail').DataTable().destroy();
+            }
+
+            var table2 = $('#tbl-detail').DataTable({
+                "ajax": {
+                    "url": "@Url.Action("GetPalletDetail")",
+                    "data": {
+                        plt_id: id_pallet
+                    },
+                    "dataSrc": function (json) {
+                        return json.map(function (item) {
+                            return {
+                                BoxId: item.box_id,
+                                PartNo: item.partno,
+                                Qty: item.qty,
+                                Bin: item.sbin,
+                                PickedBy: item.picked_by,
+                                RecordDate: item.record_date
+                            }
+                        });
+                    }
+                },
+                "columns": [
+                    { "data": "BoxId" },
+                    { "data": "PartNo" },
+                    { "data": "Qty" },
+                    { "data": "Bin" },
+                    { "data": "PickedBy" },
+                    { "data": "RecordDate" }
+                ]
+            });
+
+            $('#modal_req_detail').modal('show');
+        }
+    </script>
+    }

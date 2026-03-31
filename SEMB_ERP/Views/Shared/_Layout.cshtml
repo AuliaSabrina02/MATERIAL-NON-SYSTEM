@@ -37,7 +37,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/lib/DataTables-1.11.3/css/dataTables.bootstrap4.min.css" />
     <link rel="stylesheet" href="~/lib/DataTables-1.11.3/css/fixedColumns.dataTables.css" />
-    <link rel="stylesheet" href="~/lib/datepicker/datepicker3.css" />
+    <link rel="stylesheet" href="~/lib/datepicker/  picker3.css" />
     <link rel="stylesheet" href="~/lib/bootstrap-select/dist/css/bootstrap-select.css" />
     @* <link rel="stylesheet" href="~/lib/ajax-bootstrap-select/css/ajax-bootstrap-select.css" /> *@
     @*<link rel="stylesheet" href="~/lib/select2-4.1.0/select2.min.css" />*@
@@ -160,6 +160,39 @@
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
                         @if (user_level == "user")
                         {
+                            if (user_roles.HasAnyRole("requestor", "admin"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("DashboardRequestor", "User")" class="nav-link @Html.IsActive("User", "DashboardRequestor")">
+                                        <i class="nav-icon fas fa-tachometer-alt"></i>
+                                        <p>
+                                            Dashboard Requestor
+                                        </p>
+                                    </a>
+                                </li>
+                            }
+                            if (user_roles.HasAnyRole("receiver", "admin"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("DashboardReceiver", "User")" class="nav-link @Html.IsActive("User", "DashboardReceiver")">
+                                        <i class="nav-icon fas fa-tachometer-alt"></i>
+                                        <p>
+                                            Dashboard Receiver
+                                        </p>
+                                    </a>
+                                </li>
+                            }
+                            @if (user_roles.HasAnyRole("plant_receiver"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("DashboardPalletReceiver", "User")" class="nav-link @Html.IsActive("User", "DashboardPalletReceiver")">
+                                        <i class="nav-icon fas fa-tachometer-alt"></i>
+                                        <p>
+                                            Dashboard Plant Receiver
+                                        </p>
+                                    </a>
+                                </li>
+                            }
                             if (user_roles.HasAnyRole("requestor","admin"))
                             {
                                 string checkMenuShipment = Html.IsMenuopen("User", "AddNewShipment") + Html.IsMenuopen("User", "ShipmentList");
@@ -198,16 +231,29 @@
                                     </a>
                                 </li>
                             }
-                            if (user_roles.HasAnyRole("requestor", "receiver", "admin"))
+                            @if (user_roles.HasAnyRole("requestor", "receiver", "admin"))
                             {
-                                <li class="nav-item">
-                                    <a href="@Url.Action("OrderList", "User")" class="nav-link @Html.IsActive("User","OrderList")">
+                                <li class="nav-item" style="position: relative;">
+                                    <a href="@Url.Action("OrderList", "User")" class="nav-link @Html.IsActive("User", "OrderList")" style="position: relative;">
                                         <i class="nav-icon fas fa-table"></i>
                                         <p>
                                             Request List
                                         </p>
+                                        <span id="discussion-badge" class="badge badge-danger"
+                                              style="display:none;
+                                         position: absolute;
+                                         top: 10px;
+                                         right: 15px;
+                                         font-size: 0.65rem;
+                                         padding: 2px 4px;
+                                         border-radius: 50%;
+                                         z-index: 999;
+                                         border: 1px solid white;">
+                                            0
+                                        </span>
                                     </a>
                                 </li>
+
                                 <li class="nav-item">
                                     <a href="@Url.Action("StoragebinList", "User")" class="nav-link @Html.IsActive("User","StoragebinList")">
                                         <i class="nav-icon fas fa-table"></i>
@@ -291,6 +337,17 @@
                                     </a>
                                 </li>
                             }
+                            @if (user_roles.HasAnyRole("requestor", "admin"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("MaterialReturn", "User")" class="nav-link @Html.IsActive("User", "MaterialReturn")">
+                                        <i class="nav-icon fas fa-file-alt"></i>
+                                        <p>
+                                            Material Return
+                                        </p>
+                                    </a>
+                                </li>
+                            }
                             if (user_roles.HasAnyRole("receiver","admin"))
                             {
                                 <li class="nav-item">
@@ -302,6 +359,42 @@
                                     </a>
                                 </li>
                             }
+                            @if (user_roles.HasAnyRole("receiver", "admin"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("ReturnMaterialReceiver", "User")" class="nav-link @Html.IsActive("User", "ReturnMaterialReceiver")">
+                                        <i class="nav-icon fas fa-file-alt"></i>
+                                        <p>
+                                            Return List
+                                        </p>
+                                    </a>
+                                </li>
+                            }
+                               @if (user_roles.HasAnyRole("requestor", "admin"))
+                            {
+                                <li class="nav-item" style="position: relative;">
+                                    <a href="@Url.Action("RequestSchedule", "User")" class="nav-link @Html.IsActive("User", "RequestSchedule")" style="position: relative;">
+                                        <i class="nav-icon fas fa-calendar-alt"></i>    
+                                        <p>
+                                            Request Schedule
+                                        </p>
+
+                                        <span id="schedule-badge" class="badge badge-danger"
+                                              style="display:none;
+                                 position: absolute;
+                                 top: 0px;
+                                 right: 5px;
+                                 font-size: 0.65rem;
+                                 padding: 2px 4px;
+                                 border-radius: 50%;
+                                 z-index: 999;
+                                 border: 1px solid white;">
+                                            0
+                                        </span>
+                                    </a>
+                                </li>
+                            }
+          
                             if (user_roles.HasAnyRole("requestor", "receiver", "plant_receiver", "admin"))
                             {
                                 <li class="nav-item">
@@ -309,6 +402,17 @@
                                         <i class="nav-icon fas fa-eye"></i>
                                         <p>
                                             Request Monitoring
+                                        </p>
+                                    </a>
+                                </li>
+                            }
+                            @if (user_roles.HasAnyRole("requestor", "admin"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("TemplateList", "User")" class="nav-link @Html.IsActive("User", "TemplateList")">
+                                        <i class="nav-icon fas fa-file-alt"></i>
+                                        <p>
+                                            Template Order List
                                         </p>
                                     </a>
                                 </li>
@@ -369,6 +473,29 @@
                                         </p>
                                     </a>
                                 </li>
+
+                                @if (user_roles.HasAnyRole("receiver", "admin"))
+                                {
+                                    <li class="nav-item">
+                                        <a href="@Url.Action("PalletProblem", "User")" class="nav-link @Html.IsActive("User", "PalletProblem")">
+                                            <i class="nav-icon fas fa-exclamation-triangle"></i>
+                                            <p>
+                                                Pallet Problem
+                                            </p>
+                                        </a>
+                                    </li>
+                                }
+                                @if (user_roles.HasAnyRole("plant_receiver", "admin"))
+                                {
+                                    <li class="nav-item">
+                                        <a href="@Url.Action("PalletList", "User")" class="nav-link @Html.IsActive("User", "PalletList")">
+                                            <i class="nav-icon fas fa-list-alt"></i>
+                                            <p>
+                                                Pallet Problem List
+                                            </p>
+                                        </a>
+                                    </li>
+                                }
                                 <li class="nav-item">
                                     <a href="@Url.Action("PalletTransferHistory", "User")" class="nav-link @Html.IsActive("User","PalletTransferHistory")">
                                         <i class="nav-icon fas fa-pallet"></i>
@@ -419,7 +546,7 @@
     <script src="~/lib/datepicker/bootstrap-datepicker.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
     @*<script src="~/lib/select2-4.1.0/select2.min.js"></script>*@
-
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
 
     <script src="~/lib/adminlte/plugins/sweetalert2/sweetalert2.min.js"></script>
@@ -436,7 +563,6 @@
 
         $('body').on("click", function (e) {
             $(this).removeClass('sidebar-open');
-            //console.log("yes");
         });
 
         function number_to_k(n, precision = 2) {
@@ -453,38 +579,72 @@
             const imgOpen = '@Url.Content("~/images/icon/sewhite.svg")';
             const imgClosed = '@Url.Content("~/images/icon/icon_se.svg")';
 
-            // Fungsi update logo
             function updateSidebarLogo() {
                 if ($body.hasClass('sidebar-collapse') && !$body.hasClass('sidebar-open')) {
-                    // Sidebar sedang tertutup
                     $img.attr('src', imgClosed);
                 } else {
-                    // Sidebar terbuka, baik karena hover maupun klik
                     $img.attr('src', imgOpen);
                 }
             }
 
-            // Jalankan saat pertama kali load
             updateSidebarLogo();
 
-            // Saat klik tombol toggle (pushmenu)
             $(document).on('click', '[data-widget="pushmenu"]', function () {
                 setTimeout(updateSidebarLogo, 200);
             });
 
-            // Saat sidebar di-hover → ganti logo ke versi terbuka
             $sidebar.on('mouseenter', function () {
                 $img.attr('src', imgOpen);
             });
 
-            // Saat kursor keluar dari sidebar → balik ke versi tertutup (kalau sidebar memang collapse)
             $sidebar.on('mouseleave', function () {
                 if ($body.hasClass('sidebar-collapse') && !$body.hasClass('sidebar-open')) {
                     $img.attr('src', imgClosed);
                 }
             });
-        });
 
+            // ====== BADGE DISCUSSION ======
+            function fetch_discussion_badge() {
+                $.ajax({
+                    type: "GET",
+                    url: "@Url.Action("GetUnreadDiscussionCount", "User")",
+                }).done(function (res) {
+                    let count = parseInt(res);
+                    if (count > 0) {
+                        $("#discussion-badge").text(count).show();
+                    } else {
+                        $("#discussion-badge").hide();
+                    }
+                }).fail(function () {
+                    $("#discussion-badge").hide();
+                });
+            }
+
+            // ====== BADGE SCHEDULE ======
+            function fetch_schedule_badge() {
+                $.ajax({
+                    type: "GET",
+                    url: "@Url.Action("GetScheduleCount", "User")",
+                }).done(function (res) {
+                    let count = parseInt(res);
+                    if (count > 0) {
+                        $("#schedule-badge").text(count).show();
+                    } else {
+                        $("#schedule-badge").hide();
+                    }
+                }).fail(function () {
+                    $("#schedule-badge").hide();
+                });
+            }
+
+            // Panggil pertama kali saat halaman load
+            fetch_discussion_badge();
+            fetch_schedule_badge();
+
+            // Auto refresh setiap 30 detik
+            setInterval(fetch_discussion_badge, 30000);
+            setInterval(fetch_schedule_badge, 30000);
+        });
     </script>
     @RenderSection("Scripts", required: false)
 </body>

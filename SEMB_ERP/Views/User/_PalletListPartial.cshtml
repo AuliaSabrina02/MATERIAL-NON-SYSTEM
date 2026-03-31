@@ -1,0 +1,48 @@
+﻿@model IEnumerable<dynamic>
+
+<div class="modal-body">
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped" id="tbl_status_detail" style="width:100%">
+            <thead class="bg-dark text-white">
+                <tr>
+                    <th>Pallet No</th>
+                    <th>Request No</th>
+                    <th>Status</th>
+                    <th>Record Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null)
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="text-center"><b>@item.pallet_no</b></td>
+                            <td class="text-center">@item.request_no</td>
+                            <td class="text-center">
+                                <span class="badge badge-info">@item.status_pallet</span>
+                            </td>
+                            <td class="text-center">@(item.record_date != null ? item.record_date.ToString("dd-MMM-yyyy HH:mm") : "-")</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+</div>
+
+<script>
+    $(document).ready(function () {
+        if (!$.fn.DataTable.isDataTable('#tbl_status_detail')) {
+            $('#tbl_status_detail').DataTable({
+                "paging": true,
+                "ordering": true,
+                "info": true,
+                "pageLength": 10
+            });
+        }
+    });
+</script>

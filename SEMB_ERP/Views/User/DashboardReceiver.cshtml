@@ -1,0 +1,1381 @@
+﻿@model List<UserDetailModel>
+@{
+    ViewData["Title"] = "Dashboard Requestor";
+    var user = Model.First();
+}
+
+<style>
+    .status-badge {
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        font-weight: bold;
+    }
+
+    .table-sm td, .table-sm th {
+        font-size: 0.9rem;
+    }
+
+   
+</style>
+<section id="hero1" class="hero bg-dark position-relative">
+    <div class="inner d-flex justify-content-between align-items-center px-3 py-2 w-100">
+
+        <div class="extract-info">
+            <small class="text-muted"><i class="fas fa-clock"></i> <span id="current-time"></span></small>
+        </div>
+
+        <div class="position-absolute top-50 start-50 translate-middle text-center">
+            <h3 class="text-white mb-0">
+                <i class="fas fa-chart-pie text-success"></i>
+                <b> Dashboard Receiver</b>
+            </h3>
+        </div>
+
+        @* <nav aria-label="breadcrumb" class="text-end ms-auto breadcrumb-sm">
+            <ol class="breadcrumb mb-0 d-inline-flex flex-nowrap align-items-center bg-transparent">
+                <li class="breadcrumb-item small"><a href="#">Home</a></li>
+                <li class="breadcrumb-item small text-white active" aria-current="page">Dashboard</li>
+            </ol>
+        </nav> *@
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+
+        <!-- Small Boxes (Stats) -->
+        <div class="row pt-3">
+            <div class="col-lg col-md-4 col-6">
+                <div class="small-box bg-secondary" style="min-height: 85px;">
+                    <div class="inner" style="padding: 10px;">
+                        <h3 id="total-submission" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0;">0</h3>
+                        <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin-top: 5px;">Submission</p>
+                    </div>
+                    <div class="icon" style="top: 5px; right: 15px;">
+                        <i class="fas fa-file-import" style="font-size: 45px; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg col-md-4 col-6">
+                <div class="small-box bg-primary" style="min-height: 85px;">
+                    <div class="inner" style="padding: 10px;">
+                        <h3 id="total-received" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0;">0</h3>
+                        <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin-top: 5px;">Received</p>
+                    </div>
+                    <div class="icon" style="top: 5px; right: 15px;">
+                        <i class="fas fa-box-open" style="font-size: 45px; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg col-md-4 col-6">
+                <div class="small-box bg-warning" style="min-height: 85px;">
+                    <div class="inner" style="padding: 10px;">
+                        <h3 id="total-putaway" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0;">0</h3>
+                        <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin-top: 5px;">Putaway</p>
+                    </div>
+                    <div class="icon" style="top: 5px; right: 15px;">
+                        <i class="fas fa-warehouse" style="font-size: 45px; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg col-md-6 col-6">
+                <div class="small-box bg-orange" style="min-height: 85px;">
+                    <div class="inner" style="padding: 10px;">
+                        <h3 id="total-partially-picked" class="text-white" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0;">0</h3>
+                        <p class="text-white" style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin-top: 5px;">Partially Picked</p>
+                    </div>
+                    <div class="icon" style="top: 5px; right: 15px;">
+                        <i class="fas fa-tasks" style="font-size: 45px; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg col-md-6 col-12">
+                <div class="small-box bg-success" style="min-height: 85px;">
+                    <div class="inner" style="padding: 10px;">
+                        <h3 id="total-closed" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0;">0</h3>
+                        <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin-top: 5px;">Closed</p>
+                    </div>
+                    <div class="icon" style="top: 5px; right: 15px;">
+                        <i class="fas fa-check-circle" style="font-size: 45px; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Picking Volume & Percentage Charts -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card card-success card-outline">
+                    <div class="card-header">
+                        <h5>
+                            <i class="fas fa-chart-bar"></i>
+                            Request Status
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div id="bar_chart" style="width:100%; height:300px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card card-success card-outline">
+                    <div class="card-header">
+                        <h5>
+                            <i class="fas fa-chart-pie"></i>
+                            Picking Progress
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div id="pie_chart" style="width:100%; height:300px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Return Charts -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card card-success card-outline">
+                    <div class="card-header">
+                        <h5>
+                            <i class="fas fa-ban"></i>
+                            Block Bin Summary (Top 10 Part Numbers)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="block_bin_chart" style="width:100%; height:300px;"></div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="col-lg-6">
+                <div class="card card-success card-outline">
+                    <div class="card-header">
+                        <h5>
+                            <i class="fas fa-undo"></i>
+                            Return Status
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div id="return_chart" style="width:100%; height:280px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+
+            <div class="col-lg-6">
+                <div class="card card-success card-outline">
+                    <div class="card-header">
+                        <h5>
+                            <i class="fas fa-pallet"></i>
+                            Pallet Problem Trend
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="pallet_problem_chart" style="width:100%; height:300px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card card-success card-outline">
+                    <div class="card-header">
+                        <h5>
+                            <i class="fas fa-chart-line"></i>
+                            Aging Movement Chart
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="aging_chart" style="width:100%; height:300px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            </div>
+        </div>
+
+        <!-- Recent Picking & Non-Conf Tables -->
+        <div class="row"> <div class="col-lg-6">
+        <div class="card card-danger card-outline">
+            <div class="card-header">
+                <h5>
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Recent Variance History
+                </h5>
+                <div class="card-tools">
+                    <a href="@Url.Action("VarianceHistory", "User")" class="btn btn-tool btn-sm">View All</a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12 table-responsive">
+                        <table class="table table-striped table-valign-middle mb-0 table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Partno</th>
+                                    <th>Sbin</th>
+                                    <th>Qty</th>
+                                    <th>Req. No</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-variance-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> <div class="col-lg-6">
+        <div class="card card-success card-outline">
+            <div class="card-header">
+                <h5>
+                    <i class="fas fa-exclamation-circle"></i>
+                    Recent Non-Conf
+                </h5>
+                <div class="card-tools">
+                    <a href="@Url.Action("NonConfList", "User")" class="btn btn-tool btn-sm">View All</a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12 table-responsive">
+                        <table class="table table-striped table-valign-middle mb-0 table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Part No</th>
+                                    <th>Issue</th>
+                                    <th>Qty</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-nonconf-body">
+                                <tr><td colspan="4" class="text-center">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+                <!-- Modal untuk Filtered Orders -->
+                <div class="modal fade" id="modal_filtered_orders" tabindex="-1" aria-labelledby="modalFilteredOrdersLabel" aria-hidden="true">
+                <div class="modal-dialog modal-xl" style="max-width: 85%;">
+                        <div class="modal-content">
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title" id="modalFilteredOrdersLabel">
+                                    <i class="fas fa-list"></i> Order List by Status
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div id="body_filtered_orders">
+                                <div class="text-center p-5">
+                                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                                    <p class="mt-3">Loading...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <!-- Modal untuk Filtered Requests (Picking Status) -->
+                <div class="modal fade" id="modal_filtered_requests" tabindex="-1" aria-labelledby="modalFilteredRequestsLabel" aria-hidden="true">
+                <div class="modal-dialog modal-xl" style="max-width: 85%;">
+                        <div class="modal-content">
+                            <div class="modal-header bg-warning text-dark">
+                                <h5 class="modal-title" id="modalFilteredRequestsLabel">
+                                    <i class="fas fa-list"></i> Request List by Picking Status
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div id="body_filtered_requests">
+                                <div class="text-center p-5">
+                                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                                    <p class="mt-3">Loading...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="modal_req_detail_dashboard" tabindex="-1">
+                <div class="modal-dialog modal-xl" style="max-width: 85%;">
+                        <div class="modal-content">
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title"><i class="fas fa-list"></i> Request Detail</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div id="body_req_detail_dashboard">
+                                <div class="text-center p-5">
+                                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                                    <p class="mt-3">Loading...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal untuk Reservation Detail by Status -->
+                <div class="modal fade" id="modal_filtered_reservations" tabindex="-1" aria-labelledby="modalFilteredReservationsLabel" aria-hidden="true">
+                <div class="modal-dialog modal-xl" style="max-width: 85%;">
+                        <div class="modal-content">
+                            <div class="modal-header bg-info text-white">
+                                <h5 class="modal-title" id="modalFilteredReservationsLabel">
+                                    <i class="fas fa-box"></i> Reservation List by Status
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div id="body_filtered_reservations">
+                                <div class="text-center p-5">
+                                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                                    <p class="mt-3">Loading...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal untuk Return Detail by Status -->
+                <div class="modal fade" id="modal_filtered_returns" tabindex="-1" aria-labelledby="modalFilteredReturnsLabel" aria-hidden="true">
+                <div class="modal-dialog modal-xl" style="max-width: 85%;">
+                        <div class="modal-content">
+                            <div class="modal-header bg-warning text-dark">
+                                <h5 class="modal-title" id="modalFilteredReturnsLabel">
+                                    <i class="fas fa-undo"></i> Return List by Status
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div id="body_filtered_returns">
+                                <div class="text-center p-5">
+                                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                                    <p class="mt-3">Loading...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal untuk Block Bin Detail -->
+                <div class="modal fade" id="modal_filtered_blockbin" tabindex="-1" aria-labelledby="modalFilteredBlockBinLabel" aria-hidden="true">
+                <div class="modal-dialog modal-xl" style="max-width: 85%;">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title" id="modalFilteredBlockBinLabel">
+                                    <i class="fas fa-ban"></i> Block Bin Detail
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div id="body_filtered_blockbin">
+                                <div class="text-center p-5">
+                                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                                    <p class="mt-3">Loading...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="modal_pallet_container" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog modal-xl" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-pallet"></i> Pallet Problem Detail
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div id="modal_content_detail">
+                                <div class="text-center p-5">
+                                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                                    <p class="mt-3">Loading...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+</section>
+@section Scripts {
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/heatmap.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            loadData();
+            loadReserveReturnData();
+            loadNonConfData();
+            loadAgingMovementChart();
+            loadBlockBinChart();
+            loadPalletProblemChart();
+
+            setInterval(function() {
+                loadData();
+                loadReserveReturnData();
+                loadNonConfData();
+                loadAgingMovementChart();
+                loadBlockBinChart();
+                loadPalletProblemChart();
+            }, 300000);
+        });
+
+        // ✅ FUNGSI BARU: Filter dengan Modal + Partial View
+        function filterTableByStatus(statusName) {
+            const statusMapping = {
+                'Submission': 'SUBMISSION',
+                'Received': 'RECEIVED',
+                'Putaway': 'PUTAWAY',
+                'Partial': 'PARTIALLY PICKED',
+                'Closed': 'CLOSED'
+            };
+
+            const statusValue = statusMapping[statusName] || statusName;
+            console.log('Loading orders with status:', statusValue);
+
+            $('#modal_filtered_orders').modal('show');
+            $('#body_filtered_orders').html(`
+                <div class="text-center p-5">
+                    <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                    <p class="mt-3">Loading <strong>${statusName}</strong> orders...</p>
+                </div>
+            `);
+
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetOrderListByStatus", "User")",
+                data: { status: statusValue },
+                success: function(response) {
+                    $('#body_filtered_orders').html(response);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Data Loaded',
+                        text: 'Showing ' + statusName + ' orders',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                },
+                error: function(xhr, status, error) {
+                    $('#body_filtered_orders').html(`
+                        <div class="alert alert-danger m-3">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Error loading data: ${error}
+                        </div>
+                    `);
+                    console.error('Error:', error);
+                }
+            });
+        }
+
+        function filterRequestByPickingStatus(statusName) {
+            const statusMapping = {
+                'Request': 'REQUEST',
+                'Start Picking': 'START PICKING',
+                'Picking': 'PICKING',
+                'Consolidation': 'CONSOLIDATION',
+                'Transfering': 'TRANSFERING',
+                'Supplied': 'SUPPLIED'
+            };
+
+            const statusValue = statusMapping[statusName] || statusName;
+            console.log('Loading requests with status:', statusValue);
+
+            $('#modal_filtered_requests').modal('show');
+            $('#body_filtered_requests').html(`
+                <div class="text-center p-5">
+                    <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                    <p class="mt-3">Loading <strong>${statusName}</strong> requests...</p>
+                </div>
+            `);
+
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetRequestListByStatus", "User")",
+                data: { status: statusValue },
+                success: function(response) {
+                    $('#body_filtered_requests').html(response);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Data Loaded',
+                        text: 'Showing ' + statusName + ' requests',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                },
+                error: function(xhr, status, error) {
+                    $('#body_filtered_requests').html(`
+                        <div class="alert alert-danger m-3">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Error loading data: ${error}
+                        </div>
+                    `);
+                    console.error('Error:', error);
+                }
+            });
+        }
+
+            function loadData() {
+            $.post('@Url.Action("GetReceiverSummary", "User")', function (data) {
+                // Update Box Angka
+                $('#total-submission').text(data.submission);
+                $('#total-received').text(data.received);
+                $('#total-putaway').text(data.putaway);
+                $('#total-partially-picked').text(data.partiallyPicked);
+                $('#total-closed').text(data.closed);
+
+                // Update Charts
+                renderCharts(data);
+
+                // Update Tabel Variance
+                var html = '';
+                if (data.recentVariance && data.recentVariance.length > 0) {
+                    $.each(data.recentVariance, function(i, item) {
+                        html += `<tr>
+                            <td>${item.partno}</td>
+                            <td>${item.sbin}</td>
+                            <td><span class="badge badge-danger">${item.qty}</span></td>
+                            <td><b>${item.request_no}</b></td>
+                            <td><small>${item.record_date}</small></td>
+                        </tr>`;
+                    });
+                } else {
+                    html = '<tr><td colspan="5" class="text-center">No recent variance found</td></tr>';
+                }
+
+                $('#table-variance-body').html(html);
+
+            }).fail(function(xhr, status, error) {
+                console.error("❌ AJAX Error:", error);
+            });
+        }
+
+            function filterBlockBinByPartNo(partNo) {
+            console.log('Loading block bin detail for part:', partNo);
+
+            $('#modal_filtered_blockbin').modal('show');
+            $('#body_filtered_blockbin').html(`
+                <div class="text-center p-5">
+                    <i class="fas fa-spinner fa-spin fa-3x text-danger"></i>
+                    <p class="mt-3">Loading block bin detail for <strong>${partNo}</strong>...</p>
+                </div>
+            `);
+
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetBlockBinDetail", "User")",
+                data: { partno: partNo },
+                success: function(response) {
+                    $('#body_filtered_blockbin').html(response);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Data Loaded',
+                        text: 'Showing block bin detail for ' + partNo,
+                        timer: 1500,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                },
+                error: function(xhr, status, error) {
+                    $('#body_filtered_blockbin').html(`
+                        <div class="alert alert-danger m-3">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Error loading data: ${error}
+                        </div>
+                    `);
+                    console.error('Error:', error);
+                }
+            });
+        }
+
+        function loadBlockBinChart() {
+            $.post('@Url.Action("GetBlockBin", "User")', {
+                draw: 1,
+                start: 0,
+                length: 10,
+                'order[0][column]': 0,
+                'order[0][dir]': 'desc',
+                'columns[0][data]': 'partno'
+            }, function (response) {
+                if (response.data) {
+                    var categories = [];
+                    var dataValues = [];
+
+                    $.each(response.data, function (i, item) {
+                        categories.push(item.partno);
+                        dataValues.push(1);
+                    });
+
+                    Highcharts.chart('block_bin_chart', {
+                        chart: { type: 'bar' },
+                        title: { text: '' },
+                        xAxis: {
+                            categories: categories,
+                            title: { text: 'Part Number' }
+                        },
+                        yAxis: {
+                            min: 0,
+                            title: { text: 'Occurrence' }
+                        },
+                        credits: { enabled: false },
+                        tooltip: {
+                            pointFormat: '<b>{point.y}</b> occurrence(s)<br/><i>Click to view details</i>',
+                            style: { fontSize: '11px' }
+                        },
+                        plotOptions: {
+                            bar: {
+                                cursor: 'pointer', // ✅ Cursor pointer
+                                dataLabels: {
+                                    enabled: true,
+                                    style: {
+                                        fontWeight: 'bold',
+                                        fontSize: '11px'
+                                    }
+                                },
+                                point: {
+                                    events: {
+                                        click: function() {
+                                            // ✅ EVENT CLICK - Filter by part number
+                                            filterBlockBinByPartNo(this.category);
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        series: [{
+                            name: 'Blocked Item',
+                            data: dataValues,
+                            color: '#dc3545',
+                            showInLegend: false
+                        }]
+                    });
+                }
+            });
+        }
+
+
+                function filterPalletByDate(date) {
+            console.log('Loading pallet problems for date:', date);
+
+            $('#modal_pallet_container').modal('show');
+            $('#modal_content_detail').html(`
+                <div class="text-center p-5">
+                    <i class="fas fa-spinner fa-spin fa-3x text-danger"></i>
+                    <p class="mt-3">Loading pallet problems for <strong>${date}</strong>...</p>
+                </div>
+            `);
+
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetPalletProblemByDate", "User")",
+                data: { date: date },
+                success: function(response) {
+                    $('#modal_content_detail').html(response);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Data Loaded',
+                        text: 'Showing pallet problems for ' + date,
+                        timer: 1500,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                },
+                error: function(xhr, status, error) {
+                    $('#modal_content_detail').html(`
+                        <div class="modal-body">
+                            <div class="alert alert-danger m-3">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Error loading data: ${error}
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times"></i> Close
+                            </button>
+                        </div>
+                    `);
+                    console.error('Error:', error);
+                }
+            });
+        }
+
+                    function loadPalletProblemChart() {
+            $.post('@Url.Action("GetPalletProblems", "User")', {
+                draw: 1, start: 0, length: 1000
+            }, function (response) {
+                if (!response.data || response.data.length === 0) return;
+
+                const grouped = {};
+                response.data.forEach(x => {
+                    // ✅ PERBAIKAN: Ambil langsung dari string, jangan pakai new Date()
+                    // Format dari server: "2026-02-01T00:00:00" atau "2026-02-01"
+                    const d = x.date.split('T')[0]; // Langsung split, tanpa new Date()
+                    grouped[d] = (grouped[d] || 0) + 1;
+                });
+
+                // ✅ Sort tanggal ascending
+                const categories = Object.keys(grouped).sort();
+                const values = categories.map(k => grouped[k]);
+
+                Highcharts.chart('pallet_problem_chart', {
+                    chart: { type: 'column' },
+                    title: { text: null },
+                    credits: { enabled: false },
+                    xAxis: {
+                        categories: categories,
+                        labels: {
+                            style: { fontSize: '10px' },
+                            rotation: -45
+                        }
+                    },
+                    yAxis: {
+                        title: { text: 'Total Problems' },
+                        allowDecimals: false
+                    },
+                    tooltip: {
+                        pointFormat: '<b>{point.y}</b> problem(s)<br/><i>Click to view details</i>',
+                        style: { fontSize: '11px' }
+                    },
+                    plotOptions: {
+                        column: {
+                            cursor: 'pointer',
+                            borderRadius: 5,
+                            dataLabels: {
+                                enabled: true,
+                                style: {
+                                    fontWeight: 'bold',
+                                    fontSize: '11px'
+                                }
+                            },
+                            point: {
+                                events: {
+                                    click: function () {
+                                        // ✅ this.category sudah format yyyy-MM-dd dari categories array
+                                        filterPalletByDate(this.category);
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    series: [{
+                        name: 'Pallet Problem',
+                        data: values,
+                        color: '#dc3545',
+                        showInLegend: false
+                    }]
+                });
+            });
+        }
+
+        function loadPalletDetailModal(searchVal) {
+            // Ubah judul loading agar lebih umum
+            $('#modal_content_detail').html('<div class="p-5 text-center"><i class="fas fa-spinner fa-spin fa-2x"></i><br>Loading All Pallet Problems...</div>');
+            $('#modal_pallet_container').modal('show');
+
+            $.ajax({
+                url: '@Url.Action("GetPalletProblemDetail", "User")',
+                type: 'POST',
+                data: { date: searchVal }, // Mengirim string kosong
+                success: function (result) {
+                    $('#modal_content_detail').html(result);
+                }
+            });
+        }
+        function loadNonConfData() {
+            $.ajax({
+                url: '@Url.Action("GET_NON_CONF_LIST", "User")',
+                type: 'POST',
+                data: {
+                    draw: 1,
+                    start: 0,
+                    length: 5,
+                    'order[0][column]': 0,
+                    'order[0][dir]': 'desc',
+                    'columns[0][data]': 'material_type',
+                    'columns[0][searchable]': true,
+                    'columns[1][data]': 'partno',
+                    'columns[1][searchable]': true,
+                    'columns[2][data]': 'po_no',
+                    'columns[2][searchable]': true,
+                    'columns[3][data]': 'qty',
+                    'columns[3][searchable]': true,
+                    'columns[4][data]': 'uom',
+                    'columns[4][searchable]': true,
+                    'columns[5][data]': 'supplier_name',
+                    'columns[5][searchable]': true,
+                    'columns[6][data]': 'pic',
+                    'columns[6][searchable]': true,
+                    'columns[7][data]': 'category_issue',
+                    'columns[7][searchable]': true,
+                    'columns[8][data]': 'detail_issue',
+                    'columns[8][searchable]': true
+                },
+                success: function(response) {
+                    var html = '';
+                    if (response.data && response.data.length > 0) {
+                        $.each(response.data, function(i, item) {
+                            html += `<tr>
+                                <td><b>${item.partno || '-'}</b></td>
+                                <td>${item.category_issue || '-'}</td>
+                                <td class="text-center">${item.qty || 0} ${item.uom || ''}</td>
+                                <td class="text-center">
+                                    <button onclick="window.location.href='/User/NonConfMenu'" class="btn btn-xs btn-danger">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>`;
+                        });
+                    } else {
+                        html = '<tr><td colspan="4" class="text-center">No data available in table</td></tr>';
+                    }
+                    $('#table-nonconf-body').html(html);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading Non-Conf data:', error);
+                    $('#table-nonconf-body').html('<tr><td colspan="4" class="text-center text-danger">Error loading data</td></tr>');
+                }
+            });
+        }
+
+        function loadReserveReturnData() {
+            $.post('@Url.Action("GetReservationList", "User")', {
+                draw: 1,
+                start: 0,
+                length: 1000
+            }, function(response) {
+                if (response.data) {
+                    processReservationChart(response.data);
+                }
+            });
+
+            $.post('@Url.Action("GetReturnList", "User")', {
+                draw: 1,
+                start: 0,
+                length: 1000
+            }, function(response) {
+                if (response.data) {
+                    processReturnChart(response.data);
+                }
+            });
+        }
+
+        function loadAgingMovementChart() {
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetAgingMovementChart", "User")",
+                success: function (res) {
+                    var categories = [];
+                    var series1 = [];
+                    var series2 = [];
+                    var series3 = [];
+                    var series4 = [];
+
+                    $.each(res, function (i, item) {
+                        categories.push(item.label);
+                        series1.push(item.value1);
+                        series2.push(item.value2);
+                        series3.push(item.value3);
+                        series4.push(item.value4);
+                    });
+
+                    Highcharts.chart('aging_chart', {
+                        chart: { type: 'column' },
+                        title: { text: '' },
+                        credits: { enabled: false },
+                        xAxis: { categories: categories },
+                        yAxis: {
+                            min: 0,
+                            title: { text: 'Total' },
+                            stackLabels: { enabled: false }
+                        },
+                        legend: {
+                            align: 'center',
+                            verticalAlign: 'bottom',
+                            itemStyle: {
+                                fontSize: '11px',
+                                fontWeight: 'normal'
+                            }
+                        },
+                        tooltip: {
+                            headerFormat: '<b>{point.key}</b><br/>',
+                            pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+                        },
+                        plotOptions: {
+                            column: {
+                                stacking: 'normal',
+                                dataLabels: { enabled: true }
+                            }
+                        },
+                        series: [
+                            { name: '<= 3 Months', data: series1, color: '#bcff47' },
+                            { name: '<= 6 Months', data: series2, color: '#ff9147' },
+                            { name: '<= 12 Months', data: series3, color: '#ff478a' },
+                            { name: '> 1 Year', data: series4, color: '#c247ff' }
+                        ]
+                    });
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error("Error loading Aging Movement Chart:", textStatus, errorThrown);
+                }
+            });
+        }
+
+        function processReservationChart(data) {
+            let statusCount = {
+                submission: 0,
+                approved: 0,
+                cancelled: 0
+            };
+
+            data.forEach(function(item) {
+                let status = (item.status_desc || '').toLowerCase();
+                if (status.includes('submission')) {
+                    statusCount.submission++;
+                } else if (status.includes('approved')) {
+                    statusCount.approved++;
+                } else if (status.includes('cancelled')) {
+                    statusCount.cancelled++;
+                }
+            });
+
+            renderReservationChart(statusCount);
+        }
+
+        function processReturnChart(data) {
+            let statusCount = {
+                sent: 0,
+                approved: 0,
+                inTransit: 0,
+                returned: 0
+            };
+
+            data.forEach(function(item) {
+                let status = (item.status_desc || '').toLowerCase();
+                if (status.includes('sent')) {
+                    statusCount.sent++;
+                } else if (status.includes('approved')) {
+                    statusCount.approved++;
+                } else if (status.includes('transit')) {
+                    statusCount.inTransit++;
+                } else if (status.includes('returned')) {
+                    statusCount.returned++;
+                }
+            });
+
+            renderReturnChart(statusCount);
+        }
+
+                function filterReservationByStatus(statusName) {
+            const statusMapping = {
+                'Submission': 'Submission',
+                'Approved': 'Approved',
+                'Cancelled': 'Cancelled'
+            };
+
+            const statusValue = statusMapping[statusName] || statusName;
+            console.log('Loading reservations with status:', statusValue);
+
+            $('#modal_filtered_reservations').modal('show');
+            $('#body_filtered_reservations').html(`
+                <div class="text-center p-5">
+                    <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                    <p class="mt-3">Loading <strong>${statusName}</strong> reservations...</p>
+                </div>
+            `);
+
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetReservationListByStatus", "User")",
+                data: { status: statusValue },
+                success: function(response) {
+                    $('#body_filtered_reservations').html(response);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Data Loaded',
+                        text: 'Showing ' + statusName + ' reservations',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                },
+                error: function(xhr, status, error) {
+                    $('#body_filtered_reservations').html(`
+                        <div class="alert alert-danger m-3">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Error loading data: ${error}
+                        </div>
+                    `);
+                    console.error('Error:', error);
+                }
+            });
+        }
+
+
+           function renderReservationChart(statusCount) {
+        Highcharts.chart('reserve_chart', {
+            chart: { type: 'pie' },
+            title: { text: null },
+            credits: { enabled: false },
+            tooltip: {
+                pointFormat: '{series.name}: <b>{point.y}</b> ({point.percentage:.1f}%)<br/><i>Click to view details</i>',
+                style: { fontSize: '11px' }
+            },
+            legend: {
+                enabled: true,
+                align: 'center',
+                verticalAlign: 'bottom',
+                layout: 'horizontal',
+                itemStyle: {
+                    fontSize: '11px',
+                    fontWeight: 'normal'
+                },
+                symbolRadius: 6
+            },
+            plotOptions: {
+                pie: {
+                    innerSize: '60%', // Donut chart
+                    allowPointSelect: true,
+                    cursor: 'pointer', // ✅ Cursor pointer untuk indicate clickable
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b>: {point.y} ({point.percentage:.1f}%)',
+                        style: {
+                            fontSize: '11px',
+                            fontWeight: 'bold',
+                            textOutline: 'none'
+                        }
+                    },
+                    showInLegend: true,
+                    point: {
+                        events: {
+                            click: function() {
+                                // ✅ EVENT CLICK - Filter by reservation status
+                                filterReservationByStatus(this.name);
+                            }
+                        }
+                    }
+                }
+            },
+            series: [{
+                name: 'Reservations',
+                colorByPoint: true,
+                data: [
+                    { name: 'Submission', y: statusCount.submission, color: '#17a2b8' },
+                    { name: 'Approved', y: statusCount.approved, color: '#28a745' },
+                    { name: 'Cancelled', y: statusCount.cancelled, color: '#dc3545' }
+                ]
+            }]
+        });
+        }
+
+                function filterReturnByStatus(statusName) {
+            const statusMapping = {
+                'Sent': 'Sent',
+                'Approved': 'Approved',
+                'In Transit': 'In Transit',
+                'Returned': 'Returned'
+            };
+
+            const statusValue = statusMapping[statusName] || statusName;
+            console.log('Loading returns with status:', statusValue);
+
+            $('#modal_filtered_returns').modal('show');
+            $('#body_filtered_returns').html(`
+                <div class="text-center p-5">
+                    <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                    <p class="mt-3">Loading <strong>${statusName}</strong> returns...</p>
+                </div>
+            `);
+
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetReturnListByStatus", "User")",
+                data: { status: statusValue },
+                success: function(response) {
+                    $('#body_filtered_returns').html(response);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Data Loaded',
+                        text: 'Showing ' + statusName + ' returns',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                },
+                error: function(xhr, status, error) {
+                    $('#body_filtered_returns').html(`
+                        <div class="alert alert-danger m-3">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Error loading data: ${error}
+                        </div>
+                    `);
+                    console.error('Error:', error);
+                }
+            });
+        }
+
+
+              function renderReturnChart(statusCount) {
+            Highcharts.chart('return_chart', {
+                chart: { type: 'column' },
+                title: { text: null },
+                credits: { enabled: false },
+                xAxis: {
+                    categories: ['Return Status'],
+                    labels: {
+                        style: { fontSize: '11px', fontWeight: 'bold' }
+                    }
+                },
+                yAxis: {
+                    min: 0,
+                    title: { text: 'Total Returns' },
+                    stackLabels: {
+                        enabled: true,
+                        style: { fontWeight: 'bold' }
+                    }
+                },
+                legend: {
+                    align: 'center',
+                    verticalAlign: 'bottom',
+                    layout: 'horizontal',
+                    itemStyle: { fontSize: '11px' }
+                },
+                tooltip: {
+                    pointFormat: '<b>{series.name}</b>: {point.y}<br/>Total: {point.stackTotal}<br/><i>Click to view details</i>'
+                },
+                plotOptions: {
+                    column: {
+                        stacking: 'normal',
+                        cursor: 'pointer', // ✅ Cursor pointer
+                        dataLabels: { enabled: true },
+                        point: {
+                            events: {
+                                click: function() {
+                                    // ✅ EVENT CLICK - Filter by return status
+                                    filterReturnByStatus(this.series.name);
+                                }
+                            }
+                        }
+                    }
+                },
+                series: [
+                    {
+                        name: 'Sent',
+                        data: [statusCount.sent],
+                        color: '#ffc107'
+                    },
+                    {
+                        name: 'Approved',
+                        data: [statusCount.approved],
+                        color: '#28a745'
+                    },
+                    {
+                        name: 'In Transit',
+                        data: [statusCount.inTransit],
+                        color: '#007bff'
+                    },
+                    {
+                        name: 'Returned',
+                        data: [statusCount.returned],
+                        color: '#6c757d'
+                    }
+                ]
+            });
+        }
+
+        function getStatusBadge(status) {
+            status = status.toLowerCase();
+            if (status.includes('picking')) return `<span class="badge bg-warning text-dark">PICKING</span>`;
+            if (status.includes('close')) return `<span class="badge bg-secondary">CLOSED</span>`;
+            if (status.includes('done')) return `<span class="badge bg-success">DONE</span>`;
+            return `<span class="badge bg-info">${status.toUpperCase()}</span>`;
+        }
+
+        function renderCharts(data) {
+            // === DATA UNTUK BAR CHART ===
+            const barChartData = [
+                { name: 'Submission', y: data.submission, color: '#6c757d' },
+                { name: 'Received', y: data.received, color: '#007bff' },
+                { name: 'Putaway', y: data.putaway, color: '#ffc107' },
+                { name: 'Partial', y: data.partiallyPicked, color: '#fd7e14' },
+                { name: 'Closed', y: data.closed, color: '#28a745' }
+            ];
+
+            // === DATA UNTUK PIE CHART ===
+            const pickingColors = {
+                'REQUEST': '#6c757d',
+                'START PICKING': '#17a2b8',
+                'PICKING': '#ffc107',
+                'CONSOLIDATION': '#fd7e14',
+                'TRANSFERING': '#007bff',
+                'SUPPLIED': '#28a745'
+            };
+
+            const pieChartData = data.pickingStatusStats.map(item => {
+                let formattedName = item.label.toLowerCase().split(' ').map(word =>
+                    word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ');
+
+                return {
+                    name: formattedName,
+                    y: item.count,
+                    color: pickingColors[item.label.toUpperCase()] || '#dee2e6'
+                };
+            });
+
+            // === RENDER BAR CHART ===
+            Highcharts.chart('bar_chart', {
+            chart: { type: 'column' },
+            title: {
+                text: null,
+                style: { fontSize: '12px' }
+            },
+            subtitle: {
+                style: { fontSize: '10px', color: '#666' }
+            },
+            credits: { enabled: false },
+            xAxis: {
+                categories: barChartData.map(x => x.name),
+                labels: {
+                    style: { fontSize: '11px', fontWeight: 'bold' }
+                }
+            },
+            yAxis: {
+                title: { text: 'Total Requests', style: { fontSize: '11px' } }
+            },
+            tooltip: {
+                pointFormat: '<b>{point.y}</b> requests<br/><i>Click to view details</i>',
+                style: { fontSize: '11px' }
+            },
+            legend: {
+                enabled: true,
+                align: 'center',
+                verticalAlign: 'bottom',
+                layout: 'horizontal',
+                itemStyle: {
+                    fontSize: '11px',
+                    fontWeight: 'bold'
+                },
+                symbolRadius: 6
+            },
+            plotOptions: {
+                column: {
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        style: {
+                            fontWeight: 'bold',
+                            fontSize: '11px',
+                            textOutline: 'none'
+                        }
+                    }
+                }
+            },
+            series: barChartData.map(function (item) {
+                return {
+                    name: item.name,
+                    data: [item.y],
+                    color: item.color,
+                    showInLegend: true,
+                    dataLabels: {
+                        enabled: true,
+                        style: {
+                            fontWeight: 'bold',
+                            fontSize: '11px',
+                            textOutline: 'none'
+                        }
+                    },
+                    point: {
+                        events: {
+                            click: function () {
+                                filterTableByStatus(item.name);
+                            }
+                        }
+                    }
+                };
+            })
+        });
+            // === RENDER PIE CHART ===
+            Highcharts.chart('pie_chart', {
+                chart: { type: 'pie' },
+                title: { text: null },
+                credits: { enabled: false },
+                tooltip: {
+                    pointFormat: '{series.name}: <b>{point.y}</b><br/><i>Click to view details</i>',
+                    style: { fontSize: '11px' }
+                },
+                legend: {
+                    enabled: true,
+                    align: 'center',
+                    verticalAlign: 'bottom',
+                    layout: 'horizontal',
+                    itemStyle: {
+                        fontSize: '11px',
+                        fontWeight: 'bold'
+                    },
+                    symbolRadius: 6
+                },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                            enabled: true,
+                            format: '{point.name}: {point.y}',
+                            style: {
+                                fontWeight: 'bold',
+                                fontSize: '11px',
+                                textOutline: 'none'
+                            }
+                        },
+                        showInLegend: true,
+                        point: {
+                            events: {
+                                click: function() {
+                                    filterRequestByPickingStatus(this.name);
+                                }
+                            }
+                        }
+                    }
+                },
+                series: [{
+                    name: 'Status',
+                    colorByPoint: true,
+                    data: pieChartData
+                }]
+            });
+        } // ✅ INI PENUTUP FUNGSI renderCharts yang HILANG!
+    </script>
+}

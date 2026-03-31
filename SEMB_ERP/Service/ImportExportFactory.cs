@@ -57,14 +57,22 @@ namespace SEMB_ERP.Service
 
             BulkInsertAsset(dataTable, id_login, sesa_id);
         }
+
         public void BulkInsertAsset(DataTable tbl, string id_login, string sesa_id)
         {
-            //string monthYear = month + "-" + year.Substring(year.Length - 2); // Jan-23
-            //string sesa_id = HttpContext.Session.GetString("sesa_id");
-            tbl.Columns.Add("id_upload", typeof(string));
-            tbl.Columns.Add("inserted_by", typeof(string));
+            // Paksa buat kolom 1-17 kalau tidak ada
+            for (int i = 1; i <= 17; i++)
+            {
+                string colName = "Column " + i;
+                if (!tbl.Columns.Contains(colName))
+                {
+                    tbl.Columns.Add(colName, typeof(string));
+                }
+            }
 
-            // Set the value of the "Plant" column for each row in the DataTable
+            if (!tbl.Columns.Contains("id_upload")) tbl.Columns.Add("id_upload", typeof(string));
+            if (!tbl.Columns.Contains("inserted_by")) tbl.Columns.Add("inserted_by", typeof(string));
+
             foreach (DataRow row in tbl.Rows)
             {
                 row["id_upload"] = id_login;
@@ -75,10 +83,7 @@ namespace SEMB_ERP.Service
             {
                 using (SqlBulkCopy sqlBulkCopy = new SqlBulkCopy(conn))
                 {
-                    //Set the database table name.
                     sqlBulkCopy.DestinationTableName = "dbo.temp_order";
-
-                    // Map the Excel columns with that of the database table, this is optional but good if you do (you have to do for all columns)
                     sqlBulkCopy.ColumnMappings.Add("Column 1", "material_type");
                     sqlBulkCopy.ColumnMappings.Add("Column 2", "partno");
                     sqlBulkCopy.ColumnMappings.Add("Column 3", "po_no");
@@ -90,11 +95,12 @@ namespace SEMB_ERP.Service
                     sqlBulkCopy.ColumnMappings.Add("Column 9", "supplier_name");
                     sqlBulkCopy.ColumnMappings.Add("Column 10", "order_type");
                     sqlBulkCopy.ColumnMappings.Add("Column 11", "unit_price");
-                    sqlBulkCopy.ColumnMappings.Add("Column 12", "length_mm");
-                    sqlBulkCopy.ColumnMappings.Add("Column 13", "width_mm");
-                    sqlBulkCopy.ColumnMappings.Add("Column 14", "height_mm");
-                    sqlBulkCopy.ColumnMappings.Add("Column 15", "remark");
-                    sqlBulkCopy.ColumnMappings.Add("Column 16", "gatepass");
+                    sqlBulkCopy.ColumnMappings.Add("Column 12", "priority_request");
+                    sqlBulkCopy.ColumnMappings.Add("Column 13", "length_mm");
+                    sqlBulkCopy.ColumnMappings.Add("Column 14", "width_mm");
+                    sqlBulkCopy.ColumnMappings.Add("Column 15", "height_mm");
+                    sqlBulkCopy.ColumnMappings.Add("Column 16", "remark");
+                    sqlBulkCopy.ColumnMappings.Add("Column 17", "gatepass");
                     sqlBulkCopy.ColumnMappings.Add("id_upload", "id_upload");
                     sqlBulkCopy.ColumnMappings.Add("inserted_by", "inserted_by");
 
@@ -103,6 +109,7 @@ namespace SEMB_ERP.Service
                     conn.Close();
                 }
             }
+        
 
             //using (SqlConnection conn = new SqlConnection(ConnectionString))
             //{

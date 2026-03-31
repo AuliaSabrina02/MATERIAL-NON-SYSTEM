@@ -1,0 +1,89 @@
+﻿@model List<BlockBinDetailModel>
+
+@{
+    var partNo = ViewBag.PartNo as string;
+    var totalRecords = ViewBag.TotalRecords as int? ?? 0;
+    var errorMessage = ViewBag.ErrorMessage as string;
+}
+
+<div class="modal-body">
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Error:</strong> @errorMessage
+        </div>
+    }
+    else if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle"></i>
+            <p class="mb-0">No blocked bins found for part: <strong>@partNo</strong></p>
+        </div>
+    }
+    else
+    {
+        <div class="mb-3">
+            <h6>
+                <i class="fas fa-list"></i>
+                Showing <strong>@totalRecords</strong> blocked bin(s) for part: <strong>@partNo</strong>
+            </h6>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover table-sm" id="tbl_blockbin_filtered">
+                <thead class="bg-danger text-white">
+                    <tr>
+                        <th>No</th>
+                        <th>Part Number</th>
+                        <th>Bin Location (SBIN)</th>
+                        <th>Variance Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.no</td>
+                            <td><strong>@item.partno</strong></td>
+                            <td>
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-ban"></i> @item.sbin
+                                </span>
+                            </td>
+                            <td>
+                                @if (item.variance_date.HasValue)
+                                {
+                                    @string.Format("{0:yyyy-MM-dd HH:mm}", item.variance_date.Value)
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<script>
+    $(function () {
+        if ($.fn.DataTable.isDataTable('#tbl_blockbin_filtered')) {
+            $('#tbl_blockbin_filtered').DataTable().destroy();
+        }
+
+        $('#tbl_blockbin_filtered').DataTable({
+            "paging": true,
+            "pageLength": 10,
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "autoWidth": false,
+            "responsive": true,
+            "order": [[3, 'desc']] // Sort by variance_date descending
+        });
+    });
+</script>

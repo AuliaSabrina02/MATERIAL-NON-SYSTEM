@@ -17,6 +17,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
+using Microsoft.Data.SqlClient;
 
 namespace SEMB_ERP.Controllers
 {
@@ -27,6 +28,8 @@ namespace SEMB_ERP.Controllers
         //private readonly FileManagementService _fileManagement;
         private readonly ILogger<UserController> _logger;
         private readonly IWebHostEnvironment _environment;
+        private readonly DatabaseAccessLayer _dal;
+
         public UserController(ImportExportFactory importexportFactory, ILogger<UserController> logger, ApplicationDbContext context, IWebHostEnvironment environment)
         {
             this._context = context;
@@ -34,6 +37,7 @@ namespace SEMB_ERP.Controllers
             //_fileManagement = fileManagement;
             _logger = logger;
             _environment = environment;
+            this._dal = new DatabaseAccessLayer();
         }
         public IActionResult Index()
         {
@@ -48,8 +52,6 @@ namespace SEMB_ERP.Controllers
                 string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 string name = User.FindFirst("semb_erp_name")?.Value;
                 string plant = db.GetUserPlant(sesa_id);
-                //List<string> supplierList = db.GetSupplierList();
-                //ViewBag.supplierList = supplierList;
                 ViewBag.name = name;
                 ViewBag.sesa_id = sesa_id;
                 ViewBag.plant = plant;
@@ -94,9 +96,763 @@ namespace SEMB_ERP.Controllers
                 var db = new DatabaseAccessLayer();
                 List<OrderTempListModel> dataTemp = db.GetTempOrder(id_upload, sesa_id);
                 ViewBag.id_upload = id_upload;
-                //return Content("Upload Success!!", "text/plain");
-
                 return PartialView("_TableTempOrder", dataTemp);
+            }
+        }
+
+        public JsonResult GetDiscussions(int id_order)
+        {
+            try
+            {
+                string fullIdentity = User.Identity?.Name ?? "";
+                string sesaId = fullIdentity.Contains("\\") ? fullIdentity.Split('\\')[1] : fullIdentity;
+
+                if (string.IsNullOrEmpty(sesaId))
+                {
+                    sesaId = User.FindFirstValue("sesa_id") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+                }
+
+                if (string.IsNullOrEmpty(sesaId))
+                {
+                    return Json(new { error = "User not authenticated" });
+                }
+
+                DatabaseAccessLayer dal = new DatabaseAccessLayer();
+                var discussions = dal.GetDiscussions(id_order, sesaId);
+                dal.MarkDiscussionAsRead(id_order, sesaId);
+
+                return Json(discussions);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting discussions");
+                return Json(new { error = ex.Message });
+            }
+        }
+        public IActionResult MaterialReturn()
+        {
+            ViewBag.listStatus = new List<string> { "Sent", "Approved", "In Transit", "Returned" };
+
+            // Kirim list kosong menggunakan model yang baru dibuat
+            return View(new List<MaterialReturnModel>());
+        }
+
+        [HttpGet]
+        public IActionResult ReturnMaterialReceiver()
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            ViewBag.sesa_id = sesa_id;
+            ViewBag.listStatus = new List<string> { "Sent", "Approved", "In Transit", "Returned" };
+
+            return View();
+        }
+
+        [HttpPost]
+        public string CreateReturn(MaterialReturnModel model, IFormFile image_support_file)
+        {
+            string sesa_id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+
+            // Pastikan urutan parameter sesuai: model, file, lalu sesa_id
+            return db.CreateReturn(model, image_support_file, sesa_id);
+        }
+
+        [HttpPost]
+        public string UpdateStatusByReceiver(int id_return, int status)
+        {
+            var db = new DatabaseAccessLayer();
+            return db.UpdateReturnStatus(id_return, status);
+        }
+
+
+
+        [HttpPost]
+        public dynamic GetReturnList(IFormCollection form)
+        {
+            var db = new DatabaseAccessLayer();
+            return db.GetReturnList(form);
+        }
+
+
+
+        [HttpPost]
+        public string UpdateReturn(MaterialReturnModel model, IFormFile image_support_file)
+        {
+            // Ambil sesa_id untuk keperluan log jika nanti dibutuhkan
+            string sesa_id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            var db = new DatabaseAccessLayer();
+
+            // Pastikan urutan parameter: model, baru file, baru string
+            return db.UpdateReturn(model, image_support_file, sesa_id);
+        }
+
+        [HttpGet]
+        public IActionResult PalletProblem()
+        {
+
+
+            return View();
+        }
+
+        [HttpPost]
+        public JsonResult GetPalletProblems()
+        {
+            try
+            {
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = Request.Form["start"].FirstOrDefault();
+                var length = Request.Form["length"].FirstOrDefault();
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                var sortColumn = Request.Form["order[0][column]"].FirstOrDefault();
+                var sortDirection = Request.Form["order[0][dir]"].FirstOrDefault();
+
+                int pageSize = length != null ? Convert.ToInt32(length) : 10;
+                int skip = start != null ? Convert.ToInt32(start) : 0;
+
+                var result = _dal.GetPalletProblems(skip, pageSize, searchValue, sortColumn, sortDirection);
+
+                return Json(new
+                {
+                    draw = draw,
+                    recordsFiltered = result.totalRecords,
+                    recordsTotal = result.totalRecords,
+                    data = result.data
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
+
+        [Authorize(Policy = "RequireRequestor")]
+        [HttpPost]
+        public JsonResult SaveAsTemplate(OrderTemplateModel model)
+        {
+            try
+            {
+                // Pastikan sesa_id diambil dengan benar dan konsisten (misal: ToLower)
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value?.ToLower();
+                model.created_by = sesa_id;
+                model.created_date = DateTime.Now;
+
+                // Tambahkan pengecekan jika model kosong
+                if (model == null) return Json(new { status = "error", message = "Data model is empty" });
+
+                var db = new DatabaseAccessLayer();
+                string result = db.SaveOrderTemplate(model);
+
+                if (result.StartsWith("success"))
+                {
+                    return Json(new { status = "success", message = "Template saved successfully" });
+                }
+                else
+                {
+                    return Json(new { status = "error", message = result.Split(';')[1] });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { status = "error", message = ex.Message });
+            }
+        }
+
+        [Authorize(Policy = "RequireRequestor")]
+        [HttpGet]
+        public JsonResult GetTemplateList()
+        {
+            try
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var db = new DatabaseAccessLayer();
+                var templates = db.GetOrderTemplates(sesa_id);
+
+                return Json(templates);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<OrderTemplateModel>());
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetPalletProblemDetail(int id)
+        {
+            try
+            {
+                var data = _dal.GetPalletProblemById(id);
+
+                if (data == null)
+                {
+                    return Content("<p class='text-danger'>Data not found</p>");
+                }
+
+                var html = $@"
+                    <table class='table table-bordered'>
+                        <tr>
+                            <th width='30%'>Pallet No</th>
+                            <td>{data.pallet_no}</td>
+                        </tr>
+                        <tr>
+                            <th>Request No</th>
+                            <td>{data.req_no}</td>
+                        </tr>
+                        <tr>
+                            <th>Date</th>
+                            <td>{data.date:dd/MM/yyyy}</td>
+                        </tr>
+                        <tr>
+                            <th>Issue</th>
+                            <td>{data.issue}</td>
+                        </tr>
+                        <tr>
+                            <th>Created By</th>
+                            <td>{data.created_by ?? "-"}</td>
+                        </tr>
+                        <tr>
+                            <th>Created Date</th>
+                            <td>{data.created_date:dd/MM/yyyy HH:mm:ss}</td>
+                        </tr>
+                        {(data.updated_by != null ? $@"
+                        <tr>
+                            <th>Updated By</th>
+                            <td>{data.updated_by}</td>
+                        </tr>
+                        <tr>
+                            <th>Updated Date</th>
+                            <td>{data.updated_date:dd/MM/yyyy HH:mm:ss}</td>
+                        </tr>" : "")}
+                        <tr>
+                            <th>Status</th>
+                            <td><span class='badge badge-success'>{data.status}</span></td>
+                        </tr>
+                    </table>
+                ";
+
+                return Content(html);
+            }
+            catch (Exception ex)
+            {
+                return Content($"<p class='text-danger'>Error: {ex.Message}</p>");
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult AddPalletProblem(IFormCollection form)
+        {
+            try
+            {
+                string palletNo = form["pallet_no"].ToString().Trim();
+
+                // Check if Pallet No already exists
+                if (_dal.CheckPalletNoExists(palletNo))
+                {
+                    return Content("error;Pallet No already exists!");
+                }
+
+                var palletProblem = new PalletProblem
+                {
+                    pallet_no = palletNo,
+                    req_no = form["req_no"].ToString().Trim(),
+                    date = DateTime.Parse(form["date"].ToString()),
+                    issue = form["issue"].ToString().Trim(),
+                    created_by = form["created_by"].ToString().Trim(),
+                    created_date = DateTime.Now,
+                    status = "Active"
+                };
+
+                bool success = _dal.AddPalletProblem(palletProblem);
+
+                if (success)
+                {
+                    return Content("success;Pallet Problem has been added successfully!");
+                }
+                else
+                {
+                    return Content("error;Failed to add Pallet Problem");
+                }
+            }
+            catch (Exception ex)
+            {
+                return Content($"error;{ex.Message}");
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult UpdatePalletProblem(IFormCollection form)
+        {
+            try
+            {
+                int id = int.Parse(form["id"].ToString());
+                string palletNo = form["pallet_no"].ToString().Trim();
+
+                // Check if Pallet No already exists (exclude current record)
+                if (_dal.CheckPalletNoExists(palletNo, id))
+                {
+                    return Content("error;Pallet No already exists!");
+                }
+
+                var palletProblem = new PalletProblem
+                {
+                    id = id,
+                    pallet_no = palletNo,
+                    req_no = form["req_no"].ToString().Trim(),
+                    date = DateTime.Parse(form["date"].ToString()),
+                    issue = form["issue"].ToString().Trim(),
+                    updated_by = form["created_by"].ToString().Trim(),
+                    updated_date = DateTime.Now
+                };
+
+                bool success = _dal.UpdatePalletProblem(palletProblem);
+
+                if (success)
+                {
+                    return Content("success;Pallet Problem has been updated successfully!");
+                }
+                else
+                {
+                    return Content("error;Failed to update Pallet Problem");
+                }
+            }
+            catch (Exception ex)
+            {
+                return Content($"error;{ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        public JsonResult GetPalletProblemById(int id)
+        {
+            try
+            {
+                var data = _dal.GetPalletProblemById(id);
+
+                if (data == null)
+                {
+                    return Json(new { error = "Data not found" });
+                }
+
+                return Json(new
+                {
+                    id = data.id,
+                    pallet_no = data.pallet_no,
+                    req_no = data.req_no,
+                    date = data.date.ToString("yyyy-MM-dd"),
+                    issue = data.issue,
+                    created_by = data.created_by
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
+        [HttpPost]
+        public IActionResult DeletePalletProblem(int id)
+        {
+            try
+            {
+                bool success = _dal.DeletePalletProblem(id);
+
+                if (success)
+                {
+                    return Content("success;Pallet Problem has been deleted successfully!");
+                }
+                else
+                {
+                    return Content("error;Failed to delete Pallet Problem");
+                }
+            }
+            catch (Exception ex)
+            {
+                return Content($"error;{ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetPalletProblemByDate(string date)
+        {
+            try
+            {
+                var result = _dal.GetPalletProblems(0, 9999, "", "", "");
+
+                System.Diagnostics.Debug.WriteLine($"=== PALLET DEBUG ===");
+                System.Diagnostics.Debug.WriteLine($"Date param: '{date}'");
+                System.Diagnostics.Debug.WriteLine($"Total data: {result.data.Count}");
+
+                // ✅ Print semua tanggal yang ada di data
+                foreach (var item in result.data)
+                {
+                    System.Diagnostics.Debug.WriteLine($"  date='{item.date}' | .Date='{item.date.Date}' | ToString='{item.date.ToString("yyyy-MM-dd")}'");
+                }
+
+                List<PalletProblem> filteredData;
+
+                if (DateTime.TryParse(date, out DateTime parsedDate))
+                {
+                    filteredData = result.data
+                        .Where(x => x.date.Date == parsedDate.Date)
+                        .OrderByDescending(x => x.created_date)
+                        .ToList();
+
+                    System.Diagnostics.Debug.WriteLine($"Parsed date: '{parsedDate.Date}'");
+                    System.Diagnostics.Debug.WriteLine($"Filtered: {filteredData.Count} records");
+                }
+                else
+                {
+                    // ✅ Kalau TryParse gagal, coba manual parse yyyy-MM-dd
+                    System.Diagnostics.Debug.WriteLine($"TryParse failed, trying manual parse...");
+                    var parts = date.Split('-');
+                    if (parts.Length == 3)
+                    {
+                        int year = int.Parse(parts[0]);
+                        int month = int.Parse(parts[1]);
+                        int day = int.Parse(parts[2]);
+                        var manualDate = new DateTime(year, month, day).Date;
+
+                        filteredData = result.data
+                            .Where(x => x.date.Date == manualDate)
+                            .OrderByDescending(x => x.created_date)
+                            .ToList();
+
+                        System.Diagnostics.Debug.WriteLine($"Manual parsed: '{manualDate}' | Filtered: {filteredData.Count}");
+                    }
+                    else
+                    {
+                        filteredData = new List<PalletProblem>();
+                    }
+                }
+
+                System.Diagnostics.Debug.WriteLine($"=== END DEBUG ===");
+
+                ViewBag.DateFilter = date;
+                ViewBag.TotalRecords = filteredData.Count;
+
+                return PartialView("_PalletProblemByDatePartial", filteredData);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"ERROR: {ex.Message}");
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult PalletList()
+        {
+
+            return View();
+        }
+
+        [HttpPost]
+        public JsonResult GetPalletList()
+        {
+            try
+            {
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = Request.Form["start"].FirstOrDefault();
+                var length = Request.Form["length"].FirstOrDefault();
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                var sortColumn = Request.Form["order[0][column]"].FirstOrDefault();
+                var sortDirection = Request.Form["order[0][dir]"].FirstOrDefault();
+
+                int pageSize = length != null ? Convert.ToInt32(length) : 10;
+                int skip = start != null ? Convert.ToInt32(start) : 0;
+
+                var result = _dal.GetPalletList(skip, pageSize, searchValue, sortColumn, sortDirection);
+
+                return Json(new
+                {
+                    draw = draw,
+                    recordsFiltered = result.totalRecords,
+                    recordsTotal = result.totalRecords,
+                    data = result.data
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetPalletListDetail(int id)
+        {
+            try
+            {
+                var data = _dal.GetPalletProblemById(id);
+
+                if (data == null)
+                {
+                    return Content("<p class='text-danger'>Data not found</p>");
+                }
+
+                var html = $@"
+            <table class='table table-bordered'>
+                <tr>
+                    <th width='30%'>Pallet No</th>
+                    <td>{data.pallet_no}</td>
+                </tr>
+                <tr>
+                    <th>Request No</th>
+                    <td>{data.req_no}</td>
+                </tr>
+                <tr>
+                    <th>Date</th>
+                    <td>{data.date:dd/MM/yyyy}</td>
+                </tr>
+                <tr>
+                    <th>Issue</th>
+                    <td>{data.issue}</td>
+                </tr>
+                
+                <tr>
+                    <th>Created By</th>
+                    <td>{data.created_by ?? "-"}</td>
+                </tr>
+                <tr>
+                    <th>Created Date</th>
+                    <td>{data.created_date:dd/MM/yyyy HH:mm:ss}</td>
+                </tr>
+            </table>
+        ";
+
+                return Content(html);
+            }
+            catch (Exception ex)
+            {
+                return Content($"<p class='text-danger'>Error: {ex.Message}</p>");
+            }
+        }
+
+
+        [HttpPost]
+        public string SendDiscussion(int id_order, string message, int? parent_id)
+        {
+            try
+            {
+                string fullIdentity = User.Identity?.Name ?? "";
+                string sesa_id = fullIdentity.Contains("\\")
+                    ? fullIdentity.Split('\\')[1]
+                    : fullIdentity;
+                if (string.IsNullOrEmpty(sesa_id))
+                {
+                    sesa_id = User.FindFirstValue("sesa_id")
+                             ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+                }
+                if (string.IsNullOrEmpty(sesa_id))
+                {
+                    return "Error: User not authenticated. Please login again.";
+                }
+                if (string.IsNullOrWhiteSpace(message))
+                {
+                    return "Error: Message cannot be empty.";
+                }
+                DatabaseAccessLayer dal = new DatabaseAccessLayer();
+                string result = dal.InsertDiscussion(id_order, sesa_id, message, parent_id);
+
+                if (result == "OK")
+                {
+                    Task.Run(() =>
+                    {
+                        try
+                        {
+                            bool emailSent = dal.SendDiscussionEmailNotification(id_order, sesa_id, message);
+
+                            if (emailSent)
+                            {
+                                _logger.LogInformation($"Email notification sent for discussion on Order #{id_order} by {sesa_id}");
+                            }
+                            else
+                            {
+                                _logger.LogWarning($"Email notification failed for discussion on Order #{id_order}");
+                            }
+                        }
+                        catch (Exception emailEx)
+                        {
+                            _logger.LogError(emailEx, $"Error sending email notification for Order #{id_order}");
+                        }
+                    });
+
+                    return "OK";
+                }
+                else
+                {
+                    return result; 
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending discussion");
+                return "Error: " + ex.Message;
+            }
+        }
+
+        [HttpPost]
+        public JsonResult GetPalletSummary()
+        {
+            try
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var db = new DatabaseAccessLayer();
+                string plant = db.GetUserPlant(sesa_id);
+
+                // ✅ ToList dulu sebelum Count
+                var palletData = _context.v_pallet_header
+                    .Where(p => p.plant == "ALL" || p.plant == plant)
+                    .Select(p => new { p.status_pallet }) // Ambil yang dibutuhkan saja
+                    .ToList(); // ✅ Execute query dulu
+
+                var summary = new
+                {
+                    totalCreated = palletData.Count(p => p.status_pallet == "CREATION"),
+                    totalTransferred = palletData.Count(p => p.status_pallet == "TRANSFER" ||
+                                                              p.status_pallet == "RECEIVED"),
+                    totalSupplied = palletData.Count(p => p.status_pallet == "SUPPLIED")
+                };
+
+                return Json(summary);
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    error = ex.Message,
+                    stackTrace = ex.StackTrace
+                });
+            }
+        }
+
+        [HttpPost]
+        public IActionResult GetPalletStatusChartData()
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            string plant = db.GetUserPlant(sesa_id);
+
+            // Ambil data dan group berdasarkan status
+            var statusGroups = _context.v_pallet_header
+                .Where(p => (p.plant == "ALL" || p.plant == plant))
+                .GroupBy(p => p.status_pallet)
+                .Select(g => new
+                {
+                    Status = g.Key,
+                    Count = g.Count()
+                }).ToList();
+
+            // Siapkan untuk Highcharts
+            var categories = statusGroups.Select(x => x.Status).ToArray();
+            var dataValues = statusGroups.Select(x => x.Count).ToArray();
+
+            return Json(new { categories, dataValues });
+        }
+
+        public IActionResult GetPalletListByStatus(string status)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            string plant = db.GetUserPlant(sesa_id);
+
+            // Ambil data header pallet sesuai status
+            var data = (from Pallet in _context.v_pallet_header
+                        where Pallet.status_pallet == status.ToUpper()
+                        && (Pallet.plant == "ALL" || Pallet.plant == plant)
+                        select Pallet).ToList();
+
+            // Pastikan nama file ini sesuai dengan yang dibuat di poin nomor 2
+            return PartialView("_PalletListPartial", data);
+        }
+
+        public IActionResult DashboardPalletReceiver()
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+
+            // Get user details
+            var userDetail = db.GetUserDetail(sesa_id);
+            var userRoles = db.GetUserRole(sesa_id);
+
+            ViewBag.sesa_id = sesa_id;
+            ViewBag.name = userDetail.FirstOrDefault()?.name ?? "";
+            ViewBag.userRoles = userRoles;
+
+            return View(userDetail);
+        }
+
+        [HttpPost]
+        public IActionResult GetPalletHistoryList()
+        {
+            try
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var db = new DatabaseAccessLayer();
+                string plant = db.GetUserPlant(sesa_id);
+
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+
+                // 1. Query Dasar
+                var query = from Pallet in _context.v_pallet_header
+                            join request in _context.v_request
+                            on Pallet.id_request equals request.id_request
+                            where (Pallet.plant == "ALL" || Pallet.plant == plant)
+                            select Pallet;
+
+                // 2. Filter pencarian (Jika ada input dari user)
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    query = query.Where(m => m.request_no.Contains(searchValue) ||
+                                             m.pallet_no.Contains(searchValue));
+                }
+
+                // 3. AMBIL HANYA 10 DATA TERBARU
+                // Urutkan dari yang paling baru, lalu ambil 10 teratas
+                var rawData = query.OrderByDescending(p => p.record_date)
+                                   .Take(10)
+                                   .ToList();
+
+                // 4. Formatting data untuk tampilan
+                var data = rawData.Select(p => new
+                {
+                    p.id_pallet,
+                    p.pallet_no,
+                    p.request_no,
+                    p.status_pallet,
+                    record_date = p.record_date != null ? p.record_date.Value.ToString("yyyy-MM-dd HH:mm") : "-",
+                    transfer_date = p.receive_date != null ? p.receive_date.Value.ToString("yyyy-MM-dd HH:mm") : "-",
+                    supplied_date = p.supply_date != null ? p.supply_date.Value.ToString("yyyy-MM-dd HH:mm") : "-"
+                }).ToList();
+
+                int recordsTotal = data.Count; // Totalnya sekarang hanya maksimal 10
+
+                var jsonData = new
+                {
+                    draw = draw,
+                    recordsFiltered = recordsTotal,
+                    recordsTotal = recordsTotal,
+                    data = data
+                };
+
+                return Ok(jsonData);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
+        private void SendEmail(string toEmail, string subject, string body)
+        {
+            try
+            {
+                _logger.LogInformation($"Sending email to: {toEmail}, Subject: {subject}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error sending email to {toEmail}");
+                throw;
             }
         }
         [Authorize(Policy = "RequireRequestor")]
@@ -104,64 +860,225 @@ namespace SEMB_ERP.Controllers
         public async Task<IActionResult> SubmitUploadOrder(IFormFile file_support, string id_upload)
         {
             string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (sesa_id == "")
+            if (string.IsNullOrEmpty(sesa_id))
             {
                 return Content("Session Timeout, Please relogin!!", "text/plain");
             }
-            else
+
+            var db = new DatabaseAccessLayer();
+            string file_support_db = "";
+            if (file_support != null && file_support.Length > 0)
             {
-                var db = new DatabaseAccessLayer();
-                string file_support_db = "";
-                if (file_support != null && file_support.Length > 0)
+                string filePath = getNextFileName(_environment.WebRootPath + "\\Documents\\" + id_upload + " - " + file_support.FileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    string filePath = getNextFileName(_environment.WebRootPath + "\\Documents\\" + id_upload + " - " + file_support.FileName);
-                    //filePaths.Add(filePath);
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await file_support.CopyToAsync(stream);
-                        file_support_db = Path.GetFileName(filePath);
-                    }
+                    await file_support.CopyToAsync(stream);
+                    file_support_db = Path.GetFileName(filePath);
                 }
-                string submit = db.SubmitUploadOrder(file_support_db, id_upload, sesa_id);
-                return Content("success;Succesfully Submitted!", "text/plain");
             }
+
+            string submit = db.SubmitUploadOrder(file_support_db, id_upload, sesa_id);
+
+            if (submit.ToLower().Contains("success"))
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Task.Delay(500);
+                        var dalEmail = new DatabaseAccessLayer();
+                        var orders = dalEmail.GetAllOrderIdsByUploadId(id_upload);
+
+                        foreach (var (id, priority) in orders)
+                        {
+                            // Kirim status update email
+                            dalEmail.TriggerStatusUpdateEmail(id, sesa_id, 1);
+
+                            // Cek priority, kalau High kirim urgent email
+                            System.Diagnostics.Debug.WriteLine($"[SubmitUploadOrder] Order {id} priority: '{priority}'");
+                            if (!string.IsNullOrEmpty(priority) && priority.Trim().Equals("High", StringComparison.OrdinalIgnoreCase))
+                            {
+                                System.Diagnostics.Debug.WriteLine($"[SubmitUploadOrder] Order {id} HIGH, sending urgent email...");
+                                try
+                                {
+                                    dalEmail.TriggerUrgentReceiverEmail(id, sesa_id);
+                                    System.Diagnostics.Debug.WriteLine($"[SubmitUploadOrder] Urgent email sent for order {id}");
+                                }
+                                catch (Exception ex)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"[SubmitUploadOrder] Urgent email failed: {ex.Message}");
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[SubmitUploadOrder] ERROR: {ex.Message}");
+                    }
+                });
+            }
+
+            return Content("success;Successfully Submitted!", "text/plain");
         }
+
+        [Authorize(Policy = "RequireAny")]
+        public IActionResult RequestList()
+        {
+            return this.CheckSession(() =>
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> userRoles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                //sesa_id = "SESA126011";
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                List<string> listStatus = db.GetStatusRequest();
+                List<string> listPrinter = db.GetPrinter();
+                string name = User.FindFirst("semb_erp_name")?.Value;
+                ViewBag.name = name;
+                ViewBag.sesa_id = sesa_id;
+                ViewBag.listStatus = listStatus;
+                ViewBag.userRoles = userRoles;
+                ViewBag.listPrinter = listPrinter;
+
+                return View(userDetail);
+            });
+        }
+
 
         [Authorize(Policy = "RequireRequestor")]
         [HttpPost]
-        public async Task<IActionResult> SubmitOrder(IFormFile file_support, string material_type, string partno, string po_no, double qty, string uom, string revision, string project_name,
-            string storage_requirement, string supplier_name, string pic, string order_type, double unit_price, double length_mm, double width_mm, double height_mm, string remark, string gatepass)
+        public async Task<IActionResult> SubmitOrder(
+        IFormFile file_support,
+        string material_type,
+        string partno,
+        string po_no,
+        double qty,
+        string uom,
+        string revision,
+        string project_name,
+        string storage_requirement,
+        string supplier_name,
+        string pic,
+        string order_type,
+        double unit_price,
+        string priority_request,
+        double length_mm,
+        double width_mm,
+        double height_mm,
+        string remark,
+        string gatepass)
         {
             DateTime now = DateTime.Now;
             string id_upload = now.ToString("yyMMddHHmmssfff");
             string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (sesa_id == "")
+
+            if (string.IsNullOrEmpty(sesa_id))
             {
                 return Content("Session Timeout, Please relogin!!", "text/plain");
             }
-            else
-            {
-                var db = new DatabaseAccessLayer();
-                string file_support_db = "";
-                if (file_support != null && file_support.Length > 0)
-                {
-                    string filePath = getNextFileName(_environment.WebRootPath + "\\Documents\\" + id_upload + " - " + file_support.FileName);
-                    //filePaths.Add(filePath);
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await file_support.CopyToAsync(stream);
-                        file_support_db = Path.GetFileName(filePath);
-                    }
-                }
-                string submit = db.SubmitOrder(id_upload, material_type, partno, po_no, qty, uom, revision, project_name, storage_requirement, supplier_name,
-                                                pic, order_type, unit_price, length_mm, width_mm, height_mm, remark, gatepass, file_support_db, sesa_id);
-                return Content("success;Succesfully Submitted!", "text/plain");
-            }
-        }
 
+            var db = new DatabaseAccessLayer();
+            string file_support_db = "";
+            if (file_support != null && file_support.Length > 0)
+            {
+                string filePath = getNextFileName(_environment.WebRootPath + "\\Documents\\" + id_upload + " - " + file_support.FileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file_support.CopyToAsync(stream);
+                    file_support_db = Path.GetFileName(filePath);
+                }
+            }
+            string submit = db.SubmitOrder(
+                id_upload, material_type, partno, po_no, qty, uom, revision, project_name,
+                storage_requirement, supplier_name, pic, order_type, unit_price, priority_request,
+                length_mm, width_mm, height_mm, remark, gatepass, file_support_db, sesa_id);
+            if (submit.ToLower().Contains("success"))
+            {
+                System.Diagnostics.Debug.WriteLine($"=== ORDER SUBMITTED ===");
+                System.Diagnostics.Debug.WriteLine($"id_upload: {id_upload}");
+                System.Diagnostics.Debug.WriteLine($"sesa_id: {sesa_id}");
+                System.Diagnostics.Debug.WriteLine($"priority_request: '{priority_request}'");
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Task.Delay(500);
+                        var dalEmail = new DatabaseAccessLayer();
+                        int orderId = dalEmail.GetOrderIdByUploadId(id_upload);
+
+                        System.Diagnostics.Debug.WriteLine($"Order ID retrieved: {orderId}");
+
+                        if (orderId > 0)
+                        {
+                            System.Diagnostics.Debug.WriteLine("Sending status update email to requestor...");
+                            try
+                            {
+                                dalEmail.TriggerStatusUpdateEmail(orderId, sesa_id, 1);
+                                System.Diagnostics.Debug.WriteLine("Status update email sent successfully");
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"Status update email failed: {ex.Message}");
+                            }
+                            System.Diagnostics.Debug.WriteLine($"Checking priority: '{priority_request}'");
+
+                            if (!string.IsNullOrEmpty(priority_request))
+                            {
+                                string priorityTrimmed = priority_request.Trim();
+                                System.Diagnostics.Debug.WriteLine($"Priority after trim: '{priorityTrimmed}'");
+
+                                if (priorityTrimmed.Equals("High", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    System.Diagnostics.Debug.WriteLine("Priority is HIGH, sending urgent email to receivers...");
+                                    try
+                                    {
+                                        dalEmail.TriggerUrgentReceiverEmail(orderId, sesa_id);
+                                        System.Diagnostics.Debug.WriteLine("Urgent receiver email sent successfully");
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        System.Diagnostics.Debug.WriteLine($"Urgent receiver email failed: {ex.Message}");
+                                        System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                                    }
+                                }
+                                else
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"Priority is '{priorityTrimmed}' (not HIGH), skipping urgent email");
+                                }
+                            }
+                            else
+                            {
+                                System.Diagnostics.Debug.WriteLine("Priority request is NULL or empty, skipping urgent email");
+                            }
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine("ERROR: Order ID is 0 or negative, cannot send emails");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"=== EMAIL NOTIFICATION CRITICAL ERROR ===");
+                        System.Diagnostics.Debug.WriteLine($"Error: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                        if (ex.InnerException != null)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                        }
+                    }
+                });
+
+                return Content("success;Successfully Submitted!", "text/plain");
+            }
+
+            return Content("error;Failed to submit order.", "text/plain");
+        }
         [HttpPost]
         public async Task<IActionResult> UpdateOrder(IFormFile file_support, string id_order, string material_type, string partno, string po_no, double qty, string uom, string revision, string project_name,
-            string storage_requirement, string supplier_name, string order_type, double unit_price, double length_mm, double width_mm, double height_mm, string remark, string gatepass)
+          string storage_requirement, string supplier_name, string order_type, double unit_price, string priority_request, double length_mm, double width_mm, double height_mm, string remark, string gatepass)
         {
             DateTime now = DateTime.Now;
             string id_upload = now.ToString("yyMMddHHmmssfff");
@@ -184,8 +1101,9 @@ namespace SEMB_ERP.Controllers
                         file_support_db = Path.GetFileName(filePath);
                     }
                 }
+                // Menambahkan priority_request ke dalam parameter db.UpdateOrder
                 string submit = db.UpdateOrder(id_order, id_upload, material_type, partno, po_no, qty, uom, revision, project_name, storage_requirement, supplier_name,
-                                                order_type, unit_price, length_mm, width_mm, height_mm, remark, gatepass, file_support_db, sesa_id);
+                                                order_type, unit_price, priority_request, length_mm, width_mm, height_mm, remark, gatepass, file_support_db, sesa_id);
                 return Content("success;Updated Succesfully!", "text/plain");
             }
         }
@@ -214,6 +1132,7 @@ namespace SEMB_ERP.Controllers
                 return View(userDetail);
             });
         }
+        [HttpPost]
         public IActionResult GetOrderList()
         {
             try
@@ -227,147 +1146,266 @@ namespace SEMB_ERP.Controllers
                 List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
                 var user = userDetail.First();
 
+                // Handle null/empty other_dept
+                var departments = string.IsNullOrEmpty(user.other_dept)
+                    ? new List<string>()
+                    : user.other_dept.Split(',').Select(d => d.Trim()).ToList();
+
+                // ✅ TAMBAHKAN LOG INI - Kalau tidak muncul, berarti method ini tidak dipanggil!
+                System.Diagnostics.Debug.WriteLine("=== GetOrderList CALLED ===");
+                System.Diagnostics.Debug.WriteLine($"User: {sesa_id}");
+                System.Diagnostics.Debug.WriteLine($"Roles: {string.Join(", ", user_roles)}");
+
                 var draw = Request.Form["draw"].FirstOrDefault();
                 var start = Request.Form["start"].FirstOrDefault();
                 var length = Request.Form["length"].FirstOrDefault();
-                //var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][name]"].FirstOrDefault();
                 var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][data]"].FirstOrDefault();
                 var sortColumnDirection = Request.Form["order[0][dir]"].FirstOrDefault();
                 var searchValue = Request.Form["search[value]"].FirstOrDefault();
-                var column0Value = Request.Form["columns[0][search][value]"];
-                var column1Value = Request.Form["columns[1][search][value]"];
-                var column2Value = Request.Form["columns[2][search][value]"];
+
                 int pageSize = length != null ? Convert.ToInt32(length) : 0;
                 int skip = start != null ? Convert.ToInt32(start) : 0;
                 int recordsTotal = 0;
 
-                var departments = user.other_dept.Split(',').Select(d => d.Trim()).ToList();
-
+                // ✅ QUERY SUDAH BENAR (sesuai log EF yang Anda kirim)
                 var mstData = (from OrderList in _context.v_order
-                               where user_roles.Contains("receiver") || user_roles.Contains("admin") || (user_roles.Contains("requestor") && departments.Contains(OrderList.pic_department))
-                               select
-                                   new
-                                   {
-                                       OrderList.id_order,
-                                       OrderList.material_type,
-                                       OrderList.partno,
-                                       OrderList.po_no,
-                                       OrderList.qty,
-                                       OrderList.picked_qty,
-                                       OrderList.available_qty,
-                                       OrderList.uom,
-                                       OrderList.revision,
-                                       OrderList.project_name,
-                                       OrderList.storage_requirement,
-                                       OrderList.supplier_name,
-                                       OrderList.pic,
-                                       OrderList.order_type,
-                                       OrderList.length_mm,
-                                       OrderList.width_mm,
-                                       OrderList.height_mm,
-                                       OrderList.unit_price,
-                                       OrderList.file_support,
-                                       OrderList.status_code,
-                                       OrderList.status_desc,
-                                       OrderList.pic_name,
-                                       OrderList.pic_department,
-                                       OrderList.remark,
-                                       OrderList.gatepass,
-                                       OrderList.record_date,
-                                   });
+                               where user_roles.Contains("receiver") ||
+                                     user_roles.Contains("admin") ||
+                                     (user_roles.Contains("requestor") &&
+                                      (OrderList.pic == sesa_id ||
+                                       string.IsNullOrEmpty(OrderList.pic_department) ||
+                                       departments.Contains(OrderList.pic_department)))
+                               select new
+                               {
+                                   OrderList.id_order,
+                                   OrderList.material_type,
+                                   OrderList.partno,
+                                   OrderList.po_no,
+                                   OrderList.qty,
+                                   OrderList.picked_qty,
+                                   OrderList.available_qty,
+                                   OrderList.uom,
+                                   OrderList.revision,
+                                   OrderList.project_name,
+                                   OrderList.storage_requirement,
+                                   OrderList.supplier_name,
+                                   OrderList.pic,
+                                   OrderList.order_type,
+                                   OrderList.length_mm,
+                                   OrderList.width_mm,
+                                   OrderList.height_mm,
+                                   OrderList.unit_price,
+                                   OrderList.priority_request,
+                                   OrderList.file_support,
+                                   OrderList.status_code,
+                                   OrderList.status_desc,
+                                   OrderList.pic_name,
+                                   OrderList.pic_department,
+                                   OrderList.remark,
+                                   OrderList.gatepass,
+                                   OrderList.record_date,
+                               });
 
-                //var mstData = (from temp in _context.mst_material_plant select temp);
+                int totalBeforeFilter = mstData.Count();
+                System.Diagnostics.Debug.WriteLine($"Total BEFORE filter: {totalBeforeFilter}");
+
+                // Sorting
                 if (!(string.IsNullOrEmpty(sortColumn) && string.IsNullOrEmpty(sortColumnDirection)))
                 {
                     mstData = mstData.OrderBy(sortColumn + " " + sortColumnDirection);
                 }
+
+                // Global search
                 if (!string.IsNullOrEmpty(searchValue))
                 {
-                    mstData = mstData.Where(m => m.partno.Contains(searchValue)
-                                                || m.pic.Contains(searchValue));
+                    mstData = mstData.Where(m => m.partno.Contains(searchValue) || m.pic.Contains(searchValue));
                 }
-                for (int i = 0; i < 17; i++)
+
+                // Column filters
+                for (int i = 0; i < 18; i++)
                 {
                     var searchColVal = Request.Form["columns[" + i.ToString() + "][search][value]"];
                     var fieldName = Request.Form["columns[" + i.ToString() + "][data]"].FirstOrDefault();
+
                     if (!string.IsNullOrEmpty(searchColVal))
                     {
+                        System.Diagnostics.Debug.WriteLine($"Filter: {fieldName} = {searchColVal}");
+
                         if (fieldName == "status_desc")
-                        {
                             mstData = mstData.Where(m => m.status_desc.Contains(searchColVal));
-                        }
                         else if (fieldName == "material_type")
-                        {
                             mstData = mstData.Where(m => m.material_type.Contains(searchColVal));
-                        }
                         else if (fieldName == "partno")
-                        {
                             mstData = mstData.Where(m => m.partno.Contains(searchColVal));
-                        }
                         else if (fieldName == "po_no")
-                        {
                             mstData = mstData.Where(m => m.po_no.Contains(searchColVal));
-                        }
                         else if (fieldName == "qty")
-                        {
                             mstData = mstData.Where(m => m.qty.ToString().Contains(searchColVal));
-                        }
                         else if (fieldName == "picked_qty")
-                        {
                             mstData = mstData.Where(m => m.picked_qty.ToString().Contains(searchColVal));
-                        }
                         else if (fieldName == "available_qty")
-                        {
                             mstData = mstData.Where(m => m.available_qty.ToString().Contains(searchColVal));
-                        }
                         else if (fieldName == "uom")
-                        {
                             mstData = mstData.Where(m => m.uom.Contains(searchColVal));
-                        }
                         else if (fieldName == "revision")
-                        {
                             mstData = mstData.Where(m => m.revision.Contains(searchColVal));
-                        }
                         else if (fieldName == "project_name")
-                        {
                             mstData = mstData.Where(m => m.project_name.Contains(searchColVal));
-                        }
                         else if (fieldName == "storage_requirement")
-                        {
                             mstData = mstData.Where(m => m.storage_requirement.Contains(searchColVal));
-                        }
                         else if (fieldName == "supplier_name")
-                        {
                             mstData = mstData.Where(m => m.supplier_name.Contains(searchColVal));
-                        }
                         else if (fieldName == "pic_name")
-                        {
                             mstData = mstData.Where(m => m.pic_name.Contains(searchColVal));
-                        }
                         else if (fieldName == "order_type")
-                        {
                             mstData = mstData.Where(m => m.order_type.Contains(searchColVal));
-                        }
                         else if (fieldName == "unit_price")
-                        {
                             mstData = mstData.Where(m => m.unit_price.ToString().Contains(searchColVal));
-                        }
+                        else if (fieldName == "priority_request")
+                            mstData = mstData.Where(m => m.priority_request.Contains(searchColVal));
                         else if (fieldName == "gatepass")
-                        {
-                            mstData = mstData.Where(m => m.gatepass.Contains(searchColVal));
-                        }
+                            mstData = mstData.Where(m => m.gatepass != null && m.gatepass.Contains(searchColVal));
                     }
                 }
+
                 recordsTotal = mstData.Count();
+                System.Diagnostics.Debug.WriteLine($"Total AFTER filter: {recordsTotal}");
+
                 var data = mstData.Skip(skip).Take(pageSize).ToList();
-                var jsonData = new { draw = draw, recordsFiltered = recordsTotal, recordsTotal = recordsTotal, data = data };
+
+                System.Diagnostics.Debug.WriteLine($"Returning {data.Count} records");
+                System.Diagnostics.Debug.WriteLine("=========================");
+
+                var jsonData = new
+                {
+                    draw = draw,
+                    recordsFiltered = recordsTotal,
+                    recordsTotal = recordsTotal,
+                    data = data
+                };
+
                 return Ok(jsonData);
             }
             catch (Exception ex)
             {
-                throw;
+                System.Diagnostics.Debug.WriteLine($"ERROR: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack: {ex.StackTrace}");
+                return StatusCode(500, new { error = ex.Message });
             }
         }
+        [HttpGet]
+        public JsonResult GetUnreadDiscussionCount()
+        {
+            try
+            {
+                string fullIdentity = User.Identity?.Name ?? "";
+                string sesaId = fullIdentity.Contains("\\") ? fullIdentity.Split('\\')[1] : fullIdentity;
+                if (string.IsNullOrEmpty(sesaId))
+                {
+                    sesaId = User.FindFirstValue("sesa_id") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+                }
+                if (string.IsNullOrEmpty(sesaId))
+                {
+                    return Json(0); // ✅ return plain angka
+                }
+
+                DatabaseAccessLayer dal = new DatabaseAccessLayer();
+                int unreadCount = dal.GetUnreadDiscussionCount(sesaId);
+                return Json(unreadCount); // ✅ return plain angka
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting unread discussion count");
+                return Json(0); // ✅ return plain angka
+            }
+        }
+        [Authorize(Policy = "RequireRequestor")]
+        [HttpGet]
+        public IActionResult TemplateList()
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            string name = User.FindFirst(ClaimTypes.Name)?.Value;
+
+            ViewBag.sesa_id = sesa_id;
+            ViewBag.name = name;
+
+            return View();
+        }
+
+        [Authorize(Policy = "RequireRequestor")]
+        [HttpPost]
+        public IActionResult DeleteTemplate(int id_template)
+        {
+            try
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var db = new DatabaseAccessLayer();
+                string result = db.DeleteOrderTemplate(id_template, sesa_id);
+                return Content(result, "text/plain");
+            }
+            catch (Exception ex)
+            {
+                return Content("error;" + ex.Message, "text/plain");
+            }
+        }
+        [Authorize(Policy = "RequireRequestor")]
+        [HttpGet]
+        public IActionResult DownloadTemplate(int id_template)
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            try
+            {
+                var db = new DatabaseAccessLayer();
+                var template = db.GetOrderTemplateDetail(id_template, sesa_id);
+                using (var workbook = new XLWorkbook())
+                {
+                    var worksheet = workbook.Worksheets.Add("Order Template");
+                    string[] headers = {
+                "Material Type*", "Part No*", "PO No*", "Qty*", "UOM*", "Revision*",
+                "Project Name*", "Storage Requirement*", "Supplier Name*", "Order Type*",
+                "Price ($)*", "Priority Request*", "Length (mm)", "Width (mm)", "Height (mm)", "Remark", "Gatepass"
+            };
+
+                    for (int i = 0; i < headers.Length; i++)
+                    {
+                        worksheet.Cell(1, i + 1).Value = headers[i];
+                    }
+
+                    worksheet.Cell(2, 1).Value = template.material_type;
+                    worksheet.Cell(2, 2).Value = template.partno;
+                    worksheet.Cell(2, 3).Value = template.po_no;
+                    worksheet.Cell(2, 4).Value = template.qty;
+                    worksheet.Cell(2, 5).Value = template.uom;
+                    worksheet.Cell(2, 6).Value = template.revision;
+                    worksheet.Cell(2, 7).Value = template.project_name;
+                    worksheet.Cell(2, 8).Value = template.storage_requirement;
+                    worksheet.Cell(2, 9).Value = template.supplier_name;
+                    worksheet.Cell(2, 10).Value = template.order_type;
+                    worksheet.Cell(2, 11).Value = template.unit_price;
+                    worksheet.Cell(2, 12).Value = template.priority_request;  
+                    worksheet.Cell(2, 13).Value = template.length_mm;       
+                    worksheet.Cell(2, 14).Value = template.width_mm;  
+                    worksheet.Cell(2, 15).Value = template.height_mm;   
+                    worksheet.Cell(2, 16).Value = template.remark;     
+                    worksheet.Cell(2, 17).Value = template.gatepass;        
+
+                    worksheet.Columns().AdjustToContents();
+
+                    using (var stream = new MemoryStream())
+                    {
+                        workbook.SaveAs(stream);
+                        var content = stream.ToArray();
+                        string fileName = $"Template_{template.partno}_{DateTime.Now:yyyyMMdd}.xlsx";
+                        return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return Content("Error: " + ex.Message);
+            }
+        }
+
         [HttpGet]
         public IActionResult ExportOrderList()
         {
@@ -398,7 +1436,6 @@ namespace SEMB_ERP.Controllers
             {
                 var db = new DatabaseAccessLayer();
                 List<OrderListModel> dataGR = db.GetDataGR(id_order_string);
-                //return Content("Upload Success!!", "text/plain");
 
                 return PartialView("_TableGR", dataGR);
             }
@@ -407,15 +1444,67 @@ namespace SEMB_ERP.Controllers
         public IActionResult SubmitGR(string id_order_spq_string)
         {
             string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (sesa_id == "")
+            if (string.IsNullOrEmpty(sesa_id))
             {
                 return Content("Session Timeout, Please relogin!!", "text/plain");
             }
-            else
+
+            var db = new DatabaseAccessLayer();
+            string result = db.SubmitGR(id_order_spq_string, sesa_id);
+
+            // Cek apakah database mengembalikan pesan sukses "OK"
+            if (result.StartsWith("OK"))
             {
-                var db = new DatabaseAccessLayer();
-                string submit = db.SubmitGR(id_order_spq_string, sesa_id);
-                return Content(submit, "text/plain");
+                // Jalankan Task background untuk kirim email agar aplikasi tidak lambat
+                _ = Task.Run(() =>
+                {
+                    try
+                    {
+                        var pairs = id_order_spq_string.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                        foreach (var pair in pairs)
+                        {
+                            var parts = pair.Split(',');
+                            if (parts.Length > 0 && int.TryParse(parts[0], out int id_order))
+                            {
+                                var dalEmail = new DatabaseAccessLayer();
+                                // Status Code 2 = Received
+                                dalEmail.TriggerStatusUpdateEmail(id_order, sesa_id, 2);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Email Error: {ex.Message}");
+                    }
+                });
+            }
+
+            return Content(result, "text/plain");
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> GetScheduleCount()
+        {
+            try
+            {
+                // Ambil SESA ID dari claim user login
+                string sesaId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(sesaId)) return Json(0);
+
+                // ✅ HITUNG SCHEDULE YANG SUDAH DINOTIFIKASI TAPI BELUM COMPLETED
+                var count = await _context.ScheduledRequests
+                    .Where(s => s.SesaId == sesaId
+                             && s.IsNotified == true      // ✅ Sudah dinotifikasi (email sudah dikirim)
+                             && s.IsCompleted == false)   // ✅ Belum completed
+                    .CountAsync();
+
+                return Json(count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching schedule count");
+                return Json(0);
             }
         }
         public IActionResult GetGRDetail(int id_gr)
@@ -721,6 +1810,17 @@ namespace SEMB_ERP.Controllers
             });
         }
 
+
+        public IActionResult DashboardReceiver()
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            var userDetail = db.GetUserDetail(sesa_id);
+            var userRoles = db.GetUserRole(sesa_id);
+            ViewBag.sesa_id = sesa_id;
+            ViewBag.name = userDetail.FirstOrDefault()?.name ?? "Guest";
+            ViewBag.userRoles = userRoles; return View(userDetail);
+        }
         public IActionResult GET_NON_CONF_LIST()
         {
             try
@@ -833,6 +1933,325 @@ namespace SEMB_ERP.Controllers
             catch (Exception ex)
             {
                 throw;
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetRequestListByStatus(string status)
+        {
+            try
+            {
+                status = status?.Trim() ?? "";
+                var cleanStatus = System.Text.RegularExpressions.Regex.Replace(status, @"\s+\d+$", "").Trim();
+
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> user_roles = User.Claims
+                                            .Where(c => c.Type == "semb_erp_role")
+                                            .Select(c => c.Value)
+                                            .ToList();
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                var user = userDetail.First();
+
+                // ✅ Cast ke object supaya compatible dengan List<dynamic>
+                var requestData = (from req in _context.v_request
+                                   where (req.requested_by == sesa_id ||
+                                          user_roles.Contains("admin") ||
+                                          user_roles.Contains("receiver"))
+                                   && req.status_desc.ToUpper() == cleanStatus.ToUpper()
+                                   orderby req.record_date descending
+                                   select new
+                                   {
+                                       id_request = req.id_request,
+                                       request_no = req.request_no != null ? req.request_no.ToString() : "",
+                                       status_desc = req.status_desc != null ? req.status_desc.ToString() : "",
+                                       requested_by_name = req.requested_by_name != null ? req.requested_by_name.ToString() : "",
+                                       record_date = req.record_date != null ? req.record_date.Value.ToString("dd-MM-yyyy HH:mm") : ""
+                                   })
+                                   .ToList()
+                                   .Cast<object>() // ✅ INI YANG PENTING
+                                   .ToList();
+
+                ViewBag.StatusFilter = cleanStatus;
+                ViewBag.TotalRecords = requestData.Count;
+                ViewBag.UserRoles = user_roles;
+                ViewBag.SesaId = sesa_id;
+
+                return PartialView("_RequestListByStatusPartial", requestData);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        public IActionResult DashboardRequestor()
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            var userDetail = db.GetUserDetail(sesa_id);
+            var userRoles = db.GetUserRole(sesa_id);
+            ViewBag.sesa_id = sesa_id;
+            ViewBag.name = userDetail.FirstOrDefault()?.name ?? "Guest";
+            ViewBag.userRoles = userRoles;
+            return View(userDetail);
+        }
+
+
+        [HttpPost]
+        public IActionResult GetReceiverSummary()
+        {
+            try
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                // --- 1. DATA UNTUK BOX DASHBOARD (v_order) ---
+                var baseQuery = _context.v_order.AsQueryable();
+
+                int submission = baseQuery.Count(o => o.status_desc.ToUpper() == "SUBMISSION");
+                int received = baseQuery.Count(o => o.status_desc.ToUpper() == "RECEIVED");
+                int putaway = baseQuery.Count(o => o.status_desc.ToUpper() == "PUTAWAY");
+                int partiallyPicked = baseQuery.Count(o => o.status_desc.ToUpper() == "PARTIALLY PICKED");
+                int closed = baseQuery.Count(o => o.status_desc.ToUpper() == "CLOSED");
+
+                // --- 2. DATA UNTUK TABEL DASHBOARD (Hanya 5 Variance terbaru) ---
+                // Mengganti v_request menjadi v_picking_variance
+                var recentVariance = (from v in _context.v_picking_variance
+                                      orderby v.record_date descending
+                                      select new
+                                      {
+                                          v.partno,
+                                          v.sbin,
+                                          v.qty,
+                                          v.request_no,
+                                          v.name,
+                                          record_date = v.record_date.HasValue
+                                              ? v.record_date.Value.ToString("dd MMM yyyy HH:mm")
+                                              : "-"
+                                      }).Take(5).ToList();
+
+                // --- 3. DATA UNTUK PIE CHART ---
+                var pickingStatusStats = _context.v_request
+                    .GroupBy(r => r.status_desc)
+                    .Select(g => new {
+                        Label = g.Key.ToUpper(),
+                        Count = g.Count()
+                    }).ToList();
+
+                var result = new
+                {
+                    totalRequest = baseQuery.Count(),
+                    submission = submission,
+                    received = received,
+                    putaway = putaway,
+                    partiallyPicked = partiallyPicked,
+                    closed = closed,
+                    recentVariance = recentVariance, // Data variance baru
+                    pickingStatusStats = pickingStatusStats
+                };
+
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetBlockBinDetail(string partno)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(partno))
+                {
+                    ViewBag.ErrorMessage = "Part number is required.";
+                    return PartialView("_BlockBinDetail", new List<BlockBinDetailModel>());
+                }
+
+                // Get data from view for specific partno
+                var blockBinData = _context.v_block_bin
+                    .Where(b => b.partno == partno)
+                    .Select(b => new BlockBinDetailModel
+                    {
+                        no = b.no,
+                        partno = b.partno,
+                        sbin = b.sbin,
+                        variance_date = b.variance_date
+                    })
+                    .OrderByDescending(b => b.variance_date)
+                    .ToList();
+
+                ViewBag.PartNo = partno;
+                ViewBag.TotalRecords = blockBinData.Count;
+
+                return PartialView("_BlockBinDetail", blockBinData);
+            }
+            catch (Exception ex)
+            {
+                ViewBag.ErrorMessage = ex.Message;
+                return PartialView("_BlockBinDetail", new List<BlockBinDetailModel>());
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetReservationListByStatus(string status)
+        {
+            try
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var db = new DatabaseAccessLayer();
+
+                // Create form collection dengan filter status
+                var formCollection = new FormCollection(new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>
+        {
+            { "draw", "1" },
+            { "start", "0" },
+            { "length", "1000" }, // Get all data
+            { "columns[0][search][value]", status }, // Filter by status
+            { "search[value]", "" }
+        });
+
+                var result = db.GetReservationList(formCollection, sesa_id);
+
+                // Extract data list
+                var dataList = ((dynamic)result).data as List<MaterialReservationModel>;
+
+                ViewBag.Status = status;
+                ViewBag.TotalRecords = dataList?.Count ?? 0;
+
+                return PartialView("_ReservationListByStatus", dataList);
+            }
+            catch (Exception ex)
+            {
+                ViewBag.ErrorMessage = ex.Message;
+                return PartialView("_ReservationListByStatus", new List<MaterialReservationModel>());
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetReturnListByStatus(string status)
+        {
+            try
+            {
+                var db = new DatabaseAccessLayer();
+
+                // Create form collection dengan filter status
+                var formCollection = new FormCollection(new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>
+        {
+            { "draw", "1" },
+            { "start", "0" },
+            { "length", "1000" }, // Get all data
+            { "columns[0][search][value]", status }, // Filter by status
+            { "search[value]", "" }
+        });
+
+                var result = db.GetReturnList(formCollection);
+
+                // Extract data list
+                var dataList = ((dynamic)result).data as List<MaterialReturnModel>;
+
+                ViewBag.Status = status;
+                ViewBag.TotalRecords = dataList?.Count ?? 0;
+
+                return PartialView("_ReturnListByStatus", dataList);
+            }
+            catch (Exception ex)
+            {
+                ViewBag.ErrorMessage = ex.Message;
+                return PartialView("_ReturnListByStatus", new List<MaterialReturnModel>());
+            }
+        }
+
+
+        [HttpGet]
+        public IActionResult GetOrderListByStatus(string status)
+        {
+            try
+            {
+                // 1. Ambil identitas user dari Claims
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> user_roles = User.Claims
+                                              .Where(c => c.Type == "semb_erp_role")
+                                              .Select(c => c.Value)
+                                              .ToList();
+
+                if (string.IsNullOrEmpty(sesa_id))
+                {
+                    return Unauthorized("Sesi anda berakhir atau ID User tidak ditemukan.");
+                }
+
+                // 2. Ambil detail departemen user
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+
+                if (userDetail == null || !userDetail.Any())
+                {
+                    return BadRequest("Detail user tidak ditemukan di database.");
+                }
+
+                var user = userDetail.First();
+                var departments = string.IsNullOrEmpty(user.other_dept)
+                    ? new List<string>()
+                    : user.other_dept.Split(',').Select(d => d.Trim()).ToList();
+
+                // 3. Query Dasar (Filter by Status)
+                var query = _context.v_order.Where(o => o.status_desc == status);
+
+                // 4. Logika Hak Akses (Filtering Data)
+                // Jika user BUKAN admin dan BUKAN receiver, maka dia adalah requestor murni
+                // Kita batasi datanya hanya yang dia buat (PIC) atau departemennya sama
+                if (!user_roles.Contains("admin") && !user_roles.Contains("receiver"))
+                {
+                    query = query.Where(o => o.pic == sesa_id ||
+                                             departments.Contains(o.pic_department));
+                }
+
+                // 5. Mapping ke ViewModel
+                var orderData = query.Select(OrderList => new OrderListModel
+                {
+                    id_order = OrderList.id_order,
+                    material_type = OrderList.material_type,
+                    partno = OrderList.partno,
+                    po_no = OrderList.po_no,
+                    qty = OrderList.qty,
+                    picked_qty = OrderList.picked_qty,
+                    available_qty = OrderList.available_qty,
+                    uom = OrderList.uom,
+                    revision = OrderList.revision,
+                    project_name = OrderList.project_name,
+                    storage_requirement = OrderList.storage_requirement,
+                    supplier_name = OrderList.supplier_name,
+                    pic = OrderList.pic,
+                    pic_name = OrderList.pic_name,
+                    pic_department = OrderList.pic_department,
+                    order_type = OrderList.order_type,
+                    length_mm = OrderList.length_mm,
+                    width_mm = OrderList.width_mm,
+                    height_mm = OrderList.height_mm,
+                    unit_price = OrderList.unit_price,
+                    priority_request = OrderList.priority_request,
+                    file_support = OrderList.file_support,
+                    status_code = OrderList.status_code,
+                    status_desc = OrderList.status_desc,
+                    remark = OrderList.remark,
+                    gatepass = OrderList.gatepass,
+                    record_date = OrderList.record_date
+                }).ToList();
+
+                // 6. Data pendukung untuk View/Modal
+                ViewBag.StatusFilter = status;
+                ViewBag.TotalRecords = orderData.Count;
+                ViewBag.UserRoles = user_roles;
+                ViewBag.SesaId = sesa_id;
+
+                return PartialView("_OrderListByStatusPartial", orderData);
+            }
+            catch (Exception ex)
+            {
+                // Log error secara internal
+                System.Diagnostics.Debug.WriteLine($"ERROR in GetOrderListByStatus: {ex.Message}");
+                return StatusCode(500, new { error = "Terjadi kesalahan internal: " + ex.Message });
             }
         }
 
@@ -972,10 +2391,48 @@ namespace SEMB_ERP.Controllers
         public IActionResult ConfirmBinItem(string binId, string sesa_id)
         {
             var db = new DatabaseAccessLayer();
-            string comfirmResult = db.ConfirmBinItem(binId, sesa_id);
+            List<int> orderIds;
+            string confirmResult = db.ConfirmBinItem(binId, sesa_id, out orderIds);
 
-            // Return the result directly
-            return Content(comfirmResult, "text/plain");
+            System.Diagnostics.Debug.WriteLine($"========== CONFIRM BIN ITEM ==========");
+            System.Diagnostics.Debug.WriteLine($"binId: {binId}");
+            System.Diagnostics.Debug.WriteLine($"sesa_id: {sesa_id}");
+            System.Diagnostics.Debug.WriteLine($"confirmResult: {confirmResult}");
+            System.Diagnostics.Debug.WriteLine($"orderIds.Count: {orderIds.Count}");
+
+            if (confirmResult == "OK" && orderIds.Count > 0)
+            {
+                // ✅ Kirim email di background
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        DatabaseAccessLayer dalEmail = new DatabaseAccessLayer();
+
+                        System.Diagnostics.Debug.WriteLine($"📧 Starting email process for {orderIds.Count} orders");
+
+                        foreach (int id_order in orderIds)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"📧 Sending email for id_order: {id_order}");
+                            dalEmail.TriggerStatusUpdateEmail(id_order, sesa_id, 3); // 3 = Putaway
+                            System.Diagnostics.Debug.WriteLine($"✅ Email sent successfully for id_order: {id_order}");
+                        }
+
+                        System.Diagnostics.Debug.WriteLine($"========== EMAIL PROCESS COMPLETE ==========");
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"❌ Email Error: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"❌ Stack Trace: {ex.StackTrace}");
+                    }
+                });
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"⚠️ No email sent. confirmResult: {confirmResult}, orderIds.Count: {orderIds.Count}");
+            }
+
+            return Content(confirmResult, "text/plain");
         }
 
         [HttpPost]
@@ -1055,32 +2512,6 @@ namespace SEMB_ERP.Controllers
             string submit = db.SubmitReqPicking(remark ?? "", sesa_id, plant);
             return Content(submit, "text/plain");
         }
-        [Authorize(Policy = "RequireAny")]
-        public IActionResult RequestList()
-        {
-            return this.CheckSession(() =>
-            {
-                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                List<string> userRoles = User.Claims
-                                            .Where(c => c.Type == "semb_erp_role")
-                                            .Select(c => c.Value)
-                                            .ToList();
-                //sesa_id = "SESA126011";
-                var db = new DatabaseAccessLayer();
-                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
-                List<string> listStatus = db.GetStatusRequest();
-                List<string> listPrinter = db.GetPrinter();
-                string name = User.FindFirst("semb_erp_name")?.Value;
-                ViewBag.name = name;
-                ViewBag.sesa_id = sesa_id;
-                ViewBag.listStatus = listStatus;
-                ViewBag.userRoles = userRoles;
-                ViewBag.listPrinter = listPrinter;
-
-                return View(userDetail);
-            });
-        }
-
         public IActionResult RequestMonitoring()
         {
             return this.CheckSession(() =>
@@ -1633,45 +3064,40 @@ namespace SEMB_ERP.Controllers
                 var db = new DatabaseAccessLayer();
                 List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
                 var user = userDetail.First();
-
-                var draw = Request.Form["draw"].FirstOrDefault();
-                var start = Request.Form["start"].FirstOrDefault();
-                var length = Request.Form["length"].FirstOrDefault();
-                //var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][name]"].FirstOrDefault();
+                var draw = Request.Form["draw"].FirstOrDefault() ?? "1";
+                var start = Request.Form["start"].FirstOrDefault() ?? "0";
+                var length = Request.Form["length"].FirstOrDefault() ?? "10";
                 var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][data]"].FirstOrDefault();
                 var sortColumnDirection = Request.Form["order[0][dir]"].FirstOrDefault();
                 var searchValue = Request.Form["search[value]"].FirstOrDefault();
                 var column0Value = Request.Form["columns[0][search][value]"];
                 var column1Value = Request.Form["columns[1][search][value]"];
                 var column2Value = Request.Form["columns[2][search][value]"];
-                int pageSize = length != null ? Convert.ToInt32(length) : 0;
-                int skip = start != null ? Convert.ToInt32(start) : 0;
+                int pageSize = int.TryParse(length, out int parsedLength) ? parsedLength : 10;
+                int skip = int.TryParse(start, out int parsedSkip) ? parsedSkip : 0;
                 int recordsTotal = 0;
                 var mstData = (from RequestDetail in _context.v_request_detail
-                               select
-                                   new
-                                   {
-                                       RequestDetail.id_det,
-                                       RequestDetail.id_request,
-                                       RequestDetail.id_order,
-                                       RequestDetail.request_no,
-                                       RequestDetail.partno,
-                                       RequestDetail.qty,
-                                       RequestDetail.picked_qty,
-                                       RequestDetail.uom,
-                                       RequestDetail.status_picking
-                                   });
-
-                //var mstData = (from temp in _context.mst_material_plant select temp);
+                               select new
+                               {
+                                   RequestDetail.id_det,
+                                   RequestDetail.id_request,
+                                   RequestDetail.id_order,
+                                   RequestDetail.request_no,
+                                   RequestDetail.partno,
+                                   RequestDetail.qty,
+                                   RequestDetail.picked_qty,
+                                   RequestDetail.uom,
+                                   RequestDetail.status_picking
+                               });
                 if (!(string.IsNullOrEmpty(sortColumn) && string.IsNullOrEmpty(sortColumnDirection)))
                 {
                     mstData = mstData.OrderBy(sortColumn + " " + sortColumnDirection);
                 }
                 if (!string.IsNullOrEmpty(searchValue))
                 {
-                    mstData = mstData.Where(m => m.request_no.Contains(searchValue)
-                                                || m.partno.Contains(searchValue)
-                                                || m.status_picking.Contains(searchValue));
+                    mstData = mstData.Where(m => (m.request_no != null && m.request_no.Contains(searchValue))
+                                                || (m.partno != null && m.partno.Contains(searchValue))
+                                                || (m.status_picking != null && m.status_picking.Contains(searchValue)));
                 }
                 recordsTotal = mstData.Count();
                 var data = mstData.Skip(skip).Take(pageSize).ToList();
@@ -2083,59 +3509,84 @@ namespace SEMB_ERP.Controllers
                 var draw = Request.Form["draw"].FirstOrDefault();
                 var start = Request.Form["start"].FirstOrDefault();
                 var length = Request.Form["length"].FirstOrDefault();
-                //var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][name]"].FirstOrDefault();
-                var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][data]"].FirstOrDefault();
-                var sortColumnDirection = Request.Form["order[0][dir]"].FirstOrDefault();
+
+                // Proteksi sortColumn agar tidak null
+                var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][data]"].FirstOrDefault() ?? "record_date";
+                var sortColumnDirection = Request.Form["order[0][dir]"].FirstOrDefault() ?? "desc";
+
                 var searchValue = Request.Form["search[value]"].FirstOrDefault();
-                var column0Value = Request.Form["columns[0][search][value]"];
-                var column1Value = Request.Form["columns[1][search][value]"];
-                var column2Value = Request.Form["columns[2][search][value]"];
-                int pageSize = length != null ? Convert.ToInt32(length) : 0;
+
+                int pageSize = length != null ? Convert.ToInt32(length) : 10;
                 int skip = start != null ? Convert.ToInt32(start) : 0;
                 int recordsTotal = 0;
-                var mstData = (from Pallet in _context.v_pallet_header
-                               join request in _context.v_request
-                                on Pallet.id_request equals request.id_request
-                               where Pallet.status_pallet == "SUPPLIED"
-                               select
-                                   new
-                                   {
-                                       Pallet.id_pallet,
-                                       Pallet.id_request,
-                                       Pallet.request_no,
-                                       Pallet.pallet_no,
-                                       Pallet.status_pallet,
-                                       Pallet.record_date,
-                                       Pallet.receive_date,
-                                       Pallet.received_by,
-                                       Pallet.received_by_name,
-                                       Pallet.supply_date,
-                                       Pallet.supplied_by,
-                                       Pallet.supplied_by_name,
-                                       Pallet.supply_comment,
-                                   });
 
-                //var mstData = (from temp in _context.mst_material_plant select temp);
-                if (!(string.IsNullOrEmpty(sortColumn) && string.IsNullOrEmpty(sortColumnDirection)))
-                {
-                    mstData = mstData.OrderBy(sortColumn + " " + sortColumnDirection);
-                }
+                // 1. Definisikan Query Awal
+                var mstData = (from Pallet in _context.v_pallet_header
+                               join request in _context.v_request on Pallet.id_request equals request.id_request
+                               where Pallet.status_pallet == "SUPPLIED"
+                               select new
+                               {
+                                   Pallet.id_pallet,
+                                   // Paksa id_request jadi string di level aplikasi agar tidak bentrok saat sorting/search
+                                   id_request = Pallet.id_request.ToString(),
+                                   Pallet.request_no,
+                                   Pallet.pallet_no,
+                                   Pallet.status_pallet,
+                                   Pallet.record_date,
+                                   Pallet.receive_date,
+                                   Pallet.received_by,
+                                   Pallet.received_by_name,
+                                   Pallet.supply_date,
+                                   Pallet.supplied_by,
+                                   Pallet.supplied_by_name,
+                                   Pallet.supply_comment,
+                               });
+
+                // 2. Filter Search (Hanya kolom string)
                 if (!string.IsNullOrEmpty(searchValue))
                 {
                     mstData = mstData.Where(m => m.request_no.Contains(searchValue)
-                                                || m.pallet_no.Contains(searchValue));
+                                              || m.pallet_no.Contains(searchValue)
+                                              || m.supplied_by_name.Contains(searchValue));
                 }
+
+                // 3. Hitung Total Records sebelum paging
                 recordsTotal = mstData.Count();
+
+                // 4. Sorting Dinamis (DIBUNGKUS TRY-CATCH KHUSUS)
+                try
+                {
+                    if (!string.IsNullOrEmpty(sortColumn))
+                    {
+                        // Gunakan System.Linq.Dynamic.Core jika tersedia
+                        mstData = mstData.OrderBy(sortColumn + " " + sortColumnDirection);
+                    }
+                }
+                catch
+                {
+                    // Jika sorting gagal karena konversi, default ke record_date
+                    mstData = mstData.OrderByDescending(x => x.record_date);
+                }
+
+                // 5. Execution & Paging
                 var data = mstData.Skip(skip).Take(pageSize).ToList();
-                var jsonData = new { draw = draw, recordsFiltered = recordsTotal, recordsTotal = recordsTotal, data = data };
+
+                var jsonData = new
+                {
+                    draw = draw,
+                    recordsFiltered = recordsTotal,
+                    recordsTotal = recordsTotal,
+                    data = data
+                };
+
                 return Ok(jsonData);
             }
             catch (Exception ex)
             {
-                throw;
+                // Log error di sini jika perlu
+                return BadRequest(new { message = ex.Message });
             }
         }
-
         public IActionResult UpdateReceived(string id_pallet, string sesa_id)
         {
             var db = new DatabaseAccessLayer();
@@ -2346,6 +3797,206 @@ namespace SEMB_ERP.Controllers
             }
         }
 
+        public IActionResult RequestSchedule()
+        {
+            return View();
+        }
+        [HttpPost]
+        public IActionResult CreateSchedule([FromBody] ScheduledRequest model)
+        {
+            try
+            {
+                // Ambil SESA ID dari user yang login
+                string fullIdentity = User.Identity?.Name ?? "";
+                string sesaId = fullIdentity.Contains("\\")
+                    ? fullIdentity.Split('\\')[1]
+                    : fullIdentity;
+
+                if (string.IsNullOrEmpty(sesaId))
+                {
+                    sesaId = User.FindFirstValue("sesa_id")
+                        ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+                }
+
+                if (string.IsNullOrEmpty(sesaId))
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "SESA ID cannot be identified. Please re-login."
+                    });
+                }
+
+                string userEmail = User.FindFirstValue(ClaimTypes.Email)
+                    ?? "no-email@company.com";
+
+                // Insert ke database
+                DatabaseAccessLayer dal = new DatabaseAccessLayer();
+                int newId = dal.CreateSchedule(
+                    sesaId,
+                    userEmail,
+                    model.ScheduledDate,
+                    model.Title,
+                    model.Description
+                );
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Schedule created successfully!",
+                    id = newId
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Error: " + ex.Message
+                });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetSchedules()
+        {
+            try
+            {
+                // Log awal
+                System.Diagnostics.Debug.WriteLine("=== GetSchedules CALLED ===");
+
+                // Ambil SESA ID
+                string fullIdentity = User.Identity?.Name ?? "";
+                string sesaId = fullIdentity.Contains("\\")
+                    ? fullIdentity.Split('\\')[1]
+                    : fullIdentity;
+
+                if (string.IsNullOrEmpty(sesaId))
+                {
+                    sesaId = User.FindFirstValue("sesa_id")
+                        ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+                }
+
+                System.Diagnostics.Debug.WriteLine($"SESA ID: {sesaId}");
+
+                if (string.IsNullOrEmpty(sesaId))
+                {
+                    return Json(new { success = false, message = "User not authenticated" });
+                }
+
+                // Query database
+                DatabaseAccessLayer dal = new DatabaseAccessLayer();
+                var schedules = dal.GetUserSchedules(sesaId);
+
+                System.Diagnostics.Debug.WriteLine($"Rows fetched: {schedules.Rows.Count}");
+
+                // Build response
+                var data = new List<object>();
+
+                foreach (DataRow row in schedules.Rows)
+                {
+                    var scheduledDate = Convert.ToDateTime(row["scheduled_date"]);
+                    var formattedDate = scheduledDate.ToString("yyyy-MM-ddTHH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+
+                    System.Diagnostics.Debug.WriteLine($"Schedule: {row["title"]} at {formattedDate}");
+
+                    data.Add(new
+                    {
+                        id = Convert.ToInt32(row["id"]),
+                        title = row["title"].ToString(),
+                        start = formattedDate, // ✅ Format ISO dengan InvariantCulture
+                        description = row["description"]?.ToString() ?? ""
+                    });
+                }
+
+                System.Diagnostics.Debug.WriteLine($"Total mapped: {data.Count}");
+
+                return Json(new { success = true, data = data });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"ERROR: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"STACK: {ex.StackTrace}");
+                return Json(new { success = false, message = ex.Message });
+
+            }
+        }
+
+        //[HttpPost]
+        //public IActionResult CreateSchedule([FromBody] ScheduledRequest model)
+        //{
+        //    try
+        //    {
+        //        // Ambil SESA ID dari user yang login
+        //        string fullIdentity = User.Identity?.Name ?? "";
+        //        string sesaId = fullIdentity.Contains("\\")
+        //            ? fullIdentity.Split('\\')[1]
+        //            : fullIdentity;
+
+        //        if (string.IsNullOrEmpty(sesaId))
+        //        {
+        //            sesaId = User.FindFirstValue("sesa_id")
+        //                ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+        //        }
+
+        //        if (string.IsNullOrEmpty(sesaId))
+        //        {
+        //            return Json(new
+        //            {
+        //                success = false,
+        //                message = "SESA ID cannot be identified. Please re-login."
+        //            });
+        //        }
+
+        //        string userEmail = User.FindFirstValue(ClaimTypes.Email)
+        //            ?? "no-email@company.com";
+
+        //        // Insert ke database
+        //        DatabaseAccessLayer dal = new DatabaseAccessLayer();
+        //        int newId = dal.CreateSchedule(
+        //            sesaId,
+        //            userEmail,
+        //            model.ScheduledDate,
+        //            model.Title,
+        //            model.Description
+        //        );
+
+        //        return Json(new
+        //        {
+        //            success = true,
+        //            message = "Schedule created successfully!",
+        //            id = newId
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Json(new
+        //        {
+        //            success = false,
+        //            message = "Error: " + ex.Message
+        //        });
+        //    }
+        //}
+
+        [HttpPost]
+        public async Task<IActionResult> MarkScheduleCompleted([FromBody] int scheduleId)
+        {
+            try
+            {
+                // ✅ Update langsung pakai SQL
+                var sql = "UPDATE scheduled_requests SET is_completed = 1 WHERE id = @id";
+
+                await _context.Database.ExecuteSqlRawAsync(sql,
+                    new SqlParameter("@id", scheduleId));
+
+                return Json(new { success = true, message = "Schedule marked as completed" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error marking schedule as completed");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
         public IActionResult GetAgingMovementChart()
         {
             var db = new DatabaseAccessLayer();
@@ -2582,6 +4233,67 @@ namespace SEMB_ERP.Controllers
                 return Content(result, "text/plain");
             }
         }
+
+        [HttpPost]
+        public IActionResult GetRequestorSummary()
+        {
+            try
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> user_roles = User.Claims
+                    .Where(c => c.Type == "semb_erp_role")
+                    .Select(c => c.Value)
+                    .ToList();
+
+                // ===== ORDER SUMMARY (chart 1) =====
+                var baseQuery = _context.v_order
+                    .Where(o => o.pic == sesa_id || user_roles.Contains("admin"));
+
+                // ===== PICKING SUMMARY (chart 2) =====
+                var pickingQuery = _context.v_request
+                    .Where(r => r.requested_by == sesa_id || user_roles.Contains("admin"));
+
+                var pickingSummary = new
+                {
+                    request = pickingQuery.Count(x => x.status_desc.Trim().ToLower() == "request"),
+                    startPicking = pickingQuery.Count(x => x.status_desc.Trim().ToLower() == "start picking"),
+                    picking = pickingQuery.Count(x => x.status_desc.Trim().ToLower() == "picking"),
+                    consolidation = pickingQuery.Count(x => x.status_desc.Trim().ToLower() == "consolidation"),
+                    transferring = pickingQuery.Count(x => x.status_desc.Trim().ToLower() == "transferring"),
+                    supplied = pickingQuery.Count(x => x.status_desc.Trim().ToLower() == "supplied")
+                };
+
+                // ===== RECENT PICKING =====
+                var recentPicking = pickingQuery
+                    .OrderByDescending(r => r.record_date)
+                    .Take(5)
+                    .Select(r => new {
+                        r.id_request,
+                        r.request_no,
+                        r.status_desc,
+                        r.requested_by_name,
+                        r.record_date
+                    })
+                    .ToList();
+
+                return Json(new
+                {
+                    submission = baseQuery.Count(o => o.status_desc.Trim().ToUpper() == "SUBMISSION"),
+                    received = baseQuery.Count(o => o.status_desc.Trim().ToUpper() == "RECEIVED"),
+                    putaway = baseQuery.Count(o => o.status_desc.Trim().ToUpper() == "PUTAWAY"),
+                    partiallyPicked = baseQuery.Count(o => o.status_desc.Trim().ToUpper() == "PARTIALLY PICKED"),
+                    closed = baseQuery.Count(o => o.status_desc.Trim().ToUpper() == "CLOSED"),
+
+                    pickingSummary,
+                    recentPicking
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
 
         public IActionResult GET_SHIPMENT_LIST_CLOSE()
         {

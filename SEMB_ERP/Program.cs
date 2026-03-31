@@ -1,21 +1,22 @@
-using SEMB_ERP.Function;
-using SEMB_ERP.Service;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.AspNetCore.Authentication;
-using System.Security.Claims;
-using System.Net.Http.Headers;
-using System.Text.Json;
-using SEMB_ERP.Models;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Routing;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using SEMB_ERP.Function;
+using SEMB_ERP.Models;
+using SEMB_ERP.Service;
+using SEMB_ERP.Services;
+using System.Net.Http.Headers;
+using System.Security.Claims;
+using System.Text;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,8 +29,7 @@ builder.Configuration
     .AddEnvironmentVariables();
 
 var configuration = builder.Configuration;
-
-string connectionString = "Data Source=10.155.152.114;Initial Catalog=SEMB_ERP;Persist Security Info=True;User ID=dt;Password=Dt@123;MultipleActiveResultSets=true";
+string connectionString = @"Server=localhost\SQLEXPRESS;Database=SEMB_ERP_QAS;Trusted_Connection=True;TrustServerCertificate=True;";
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseSqlServer(
                     connectionString,
@@ -227,6 +227,7 @@ builder.Services.AddSession();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<ImportExportFactory>();
+builder.Services.AddHostedService<ScheduleEmailReminderService>();
 
 var app = builder.Build();
 

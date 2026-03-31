@@ -1,0 +1,225 @@
+﻿@using SEMB_ERP.Models
+@using Microsoft.AspNetCore.Http;
+@inject IHttpContextAccessor Accessor
+
+@{
+    ViewData["Title"] = "Template Order List";
+}
+
+<style>
+    .smaller-input {
+        height: 25px;
+        padding: 5px;
+        font-size: 10px;
+        line-height: 1;
+    }
+
+    .dataTables_info, .dataTables_paginate, .dataTables_filter {
+        font-size: 10pt;
+    }
+
+    #table_template_filter.dataTables_filter {
+        display: none;
+    }
+
+    table#table_template tr > th {
+        padding: 5px;
+    }
+
+    table#table_template tr > td {
+        padding: 5px;
+    }
+
+    #table_template {
+        border-radius: 0.35rem;
+        overflow: hidden;
+    }
+
+        #table_template td {
+            border-bottom: 0.5px solid #FBF8EF !important;
+            border-left: none !important;
+            border: none !important;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        #table_template thead th {
+            border: none !important;
+            font-size: 14px;
+            vertical-align: middle;
+            text-align: center;
+        }
+</style>
+
+<section id="hero1" class="hero bg-dark position-relative">
+    <div class="inner d-flex justify-content-between align-items-center px-3 py-2 w-100">
+        <div class="position-absolute top-50 start-50 translate-middle text-center">
+            <h3 class="text-white mb-0"><i class="fas fa-file-alt text-success"></i> <b>Template Order List</b></h3>
+        </div>
+    </div>
+</section>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 mt-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 mb-2">
+                                <button class="btn btn-sm btn-primary" onclick="window.location.href='@Url.Action("AddNewOrder", "User")'">
+                                    <i class="fas fa-plus-circle"></i> Create New Order
+                                </button>
+                            </div>
+                            <div class="col-12 table-responsive">
+                                <table class="table table-bordered table-striped align-center nowrap" id="table_template" style="font-size:10pt;width:100%;">
+                                    <thead class="bg-navy-custom align-middle text-center">
+                                        <tr>
+                                            <th rowspan="2">Material Type</th>
+                                            <th rowspan="2">Part No</th>
+                                            <th rowspan="2">PO No</th>
+                                            <th rowspan="2">Qty</th>
+                                            <th rowspan="2">UOM</th>
+                                            <th rowspan="2">Revision</th>
+                                            <th rowspan="2">Project Name</th>
+                                            <th rowspan="2">Storage Requirement</th>
+                                            <th rowspan="2">Supplier Name</th>
+                                            <th rowspan="2">PIC</th>
+                                            <th rowspan="2">Order Type</th>
+                                            <th rowspan="2">Unit Price</th>
+                                            <th rowspan="2">Priority Request</th>
+                                            <th rowspan="2">Gatepass</th>
+                                            <th rowspan="2">Created Date</th>
+                                            <th colspan="3">Dimension</th>
+                                            <th rowspan="2">Action</th>
+                                        </tr>
+                                        <tr>
+                                            <th>L(mm)</th>
+                                            <th>W(mm)</th>
+                                            <th>H(mm)</th>
+                                        </tr>
+                                        <tr style="background-color: #3b6b85;">
+                                            @for (int i = 0; i < 18; i++)
+                                            {
+                                                <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="@i" /></td>
+                                            }
+                                            <td></td>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var table;
+
+        $(document).ready(function () {
+            table = $("#table_template").DataTable({
+                "orderCellsTop": true,
+                "processing": true,
+                "ajax": {
+                    "url": "@Url.Action("GetTemplateList", "User")",
+                    "type": "GET",
+                    "dataSrc": ""
+                },
+                "columns": [
+                    { "data": "material_type", "className": "align-middle" },
+                    { "data": "partno", "className": "align-middle" },
+                    { "data": "po_no", "className": "align-middle", "render": function(data){ return data || '-'; } },
+                    { "data": "qty", "className": "text-center align-middle" },
+                    { "data": "uom", "className": "text-center align-middle" },
+                    { "data": "revision", "className": "text-center align-middle" },
+                    { "data": "project_name", "className": "align-middle" },
+                    { "data": "storage_requirement", "className": "align-middle" },
+                    { "data": "supplier_name", "className": "align-middle" },
+                    { "data": "created_by", "className": "align-middle" },
+                    { "data": "order_type", "className": "align-middle" },
+                    {
+                        "data": "unit_price",
+                        "className": "text-right align-middle",
+                        "render": function(data){ return data ? `$ ${parseFloat(data).toFixed(2)}` : '-'; }
+                    },
+                    {
+                        "data": "priority_request",
+                        "className": "text-center align-middle",
+                        "render": function(data) {
+                            if (data == "High") return `<span class="badge bg-danger">High</span>`;
+                            if (data == "Medium") return `<span class="badge bg-warning text-dark">Medium</span>`;
+                            if (data == "Low") return `<span class="badge bg-success">Low</span>`;
+                            return data || "";
+                        }
+                    },
+                    { "data": "gatepass", "className": "text-center align-middle" },
+                    {
+                        "data": "created_date",
+                        "className": "text-center align-middle",
+                        "render": function(data){
+                            if(!data) return "-";
+                            var d = new Date(data);
+                            return d.getDate().toString().padStart(2,'0') + "-" + (d.getMonth()+1).toString().padStart(2,'0') + "-" + d.getFullYear();
+                        }
+                    },
+                    { "data": "length_mm", "className": "text-center align-middle" },
+                    { "data": "width_mm", "className": "text-center align-middle" },
+                    { "data": "height_mm", "className": "text-center align-middle" },
+                    {
+                        "data": null,
+                        "className": "text-center align-middle",
+                        "orderable": false,
+                             "render": function(data, type, row) {
+            return `
+                <div class="d-flex justify-content-center gap-1">
+                    <button class="btn btn-sm btn-primary px-2" onclick="downloadTemplate(${row.id_template})" title="Download">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger px-2" onclick="deleteTemplate(${row.id_template})" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>`;
+        }
+                    }
+                ],
+                "order": [[14, 'desc']]
+            });
+
+            $('input.filter_table').on('keyup change', function () {
+                var target = $(this).attr('target');
+                table.column(target).search(this.value).draw();
+            });
+        });
+
+        function downloadTemplate(id) {
+            window.location.href = '@Url.Action("DownloadTemplate", "User")?id_template=' + id;
+        }
+
+        function deleteTemplate(id) {
+            Swal.fire({
+                title: 'Delete Template?',
+                text: "This action cannot be undone!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Yes, Delete!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post("@Url.Action("DeleteTemplate", "User")", { id_template: id }, function(res) {
+                        if (res == "success") {
+                            Swal.fire("Deleted!", "Template has been deleted.", "success");
+                            table.ajax.reload(null, false);
+                        } else {
+                            Swal.fire("Error!", "Failed to delete template.", "error");
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

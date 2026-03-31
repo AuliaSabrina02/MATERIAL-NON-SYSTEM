@@ -1,0 +1,328 @@
+﻿@using System.Data;
+@model List<SEMB_ERP.Models.MaterialReturnModel>
+@using Microsoft.AspNetCore.Mvc.Rendering;
+@{
+    string sesa_id = ViewBag.sesa_id ?? "";
+    List<string> listStatus = (ViewBag.listStatus as List<string>) ?? new List<string> { "Sent", "Approved", "In Transit", "Returned" };
+}
+<style>
+    .smaller-input {
+        height: 25px;
+        padding: 5px;
+        font-size: 10px;
+        line-height: 1;
+    }
+
+    .dataTables_info, .dataTables_paginate, .dataTables_filter {
+        font-size: 10pt;
+    }
+
+    #table_receiver_filter.dataTables_filter {
+        display: none;
+    }
+
+    table#table_receiver tr > th {
+        padding: 5px;
+    }
+
+    table#table_receiver tr > td {
+        padding: 5px;
+    }
+
+    #table_receiver {
+        border-radius: 0.35rem;
+        overflow: hidden;
+    }
+
+        #table_receiver td {
+            border-bottom: 0.5px solid #FBF8EF !important;
+            border-left: none !important;
+            border: none !important;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        #table_receiver thead th {
+            border: none !important;
+            font-size: 14px;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+    #loadingSpinner {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+        #loadingSpinner img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+    .bg-navy-custom {
+        background-color: #001f3f;
+        color: white;
+    }
+</style>
+
+<section id="hero1" class="hero bg-dark position-relative">
+    <div class="inner d-flex justify-content-between align-items-center px-3 py-2 w-100">
+        <div class="extract-info"></div>
+        <div class="position-absolute top-50 start-50 translate-middle text-center">
+            <h3 class="text-white mb-0">
+                <i class="fas fa-truck-loading text-success"></i>
+                <b>Receiver - Material Return Processing</b>
+            </h3>
+        </div>
+    </div>
+</section>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 mt-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 table-responsive">
+                                <table class="table table-bordered table-striped align-center nowrap" id="table_receiver" style="font-size:10pt;width:100%;">
+                                    <thead class="bg-navy-custom align-middle text-center">
+                                        <tr>
+                                            <th>Status</th>
+                                            <th>Request No</th>
+                                            <th>PO Number</th>
+                                            <th>Part Number</th>
+                                            <th>Qty</th>
+                                            <th>UOM</th>
+                                            <th>Condition</th>
+                                            <th>Remark</th>
+                                            <th>PIC</th>
+                                            <th>Return Date</th>
+                                            <th>Image</th>
+                                            <th>Action</th>
+                                        </tr>
+                                        <tr style="background-color: #3b6b85;">
+                                            <td>
+                                                <select class="form-control smaller-input filter_table" target="0">
+                                                    <option value="">#ALL</option>
+                                                    @foreach (var s in listStatus)
+                                                    {
+                                                        <option value="@s">@s</option>
+                                                    }
+                                                </select>
+                                            </td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="1" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="2" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="3" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="4" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="5" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="6" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="7" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="8" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="9" /></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="loadingSpinner" style="display: none;">
+                <img src="~/images/icon/loading.gif" alt="Loading..." />
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Image Preview -->
+<div class="modal fade" id="modal_view_image" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header bg-navy-custom text-white py-2">
+                <h6 class="modal-title">Image Preview</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-1">
+                <img id="img_zoom" src="" style="width: 100%; height: auto; border-radius: 4px;" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Update Status -->
+<div class="modal fade" id="modal_receiver" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h6 class="modal-title"><i class="fas fa-edit"></i> Process Return Status</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="form_receiver_update">
+                <input type="hidden" name="id_return" id="rec_id_return" />
+                <div class="modal-body">
+                    <div class="callout callout-info mb-3" style="font-size: 11px; border-left-color: #28a745;">
+                        <div class="row">
+                            <div class="col-6">
+                                <label class="fw-bold text-muted mb-0">PO Number</label>
+                                <p id="lbl_po" class="mb-0 fw-bold text-primary"></p>
+                            </div>
+                            <div class="col-6">
+                                <label class="fw-bold text-muted mb-0">Part Number</label>
+                                <p id="lbl_part" class="mb-0 fw-bold text-primary"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="fw-bold small">Update Status <span class="text-danger">*</span></label>
+                        <select name="status" id="rec_status" class="form-select form-select-sm" required>
+                            <option value="1">Sent</option>
+                            <option value="2">Approved</option>
+                            <option value="3">In Transit</option>
+                            <option value="4">Returned</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="submit" class="btn btn-sm btn-success px-4">
+                        Update Status <i class="fa fa-arrow-right ms-1"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var table;
+        $(document).ready(function () {
+            table = $("#table_receiver").DataTable({
+                "orderCellsTop": true,
+                "processing": true,
+                "serverSide": true,
+                "ajax": {
+                    "url": "@Url.Action("GetReturnList", "User")",
+                    "type": "POST"
+                },
+                "columns": [
+                    { "data": "status_desc", "className": "align-middle text-center", "render": function (data) { return data || ""; } },
+                    { "data": "request_no", "className": "align-middle", "defaultContent": "" },
+                    { "data": "po_no", "className": "align-middle" },
+                    { "data": "partno", "className": "align-middle" },
+                    { "data": "qty_return", "className": "text-center align-middle" },
+                    { "data": "uom", "className": "text-center align-middle" },
+                    { "data": "condition", "className": "text-center align-middle" },
+                    { "data": "reason_return", "className": "align-middle", "defaultContent": "" },
+                    { "data": "name", "className": "align-middle" },
+                    { "data": "return_date", "className": "text-center align-middle" },
+                    {
+                        "data": "image_support",
+                        "className": "text-center align-middle",
+                        "render": function (data) {
+                            return data ? `<a href="javascript:void(0)" class="text-primary fw-bold" onclick="view_image('${data}')">View</a>` : "-";
+                        }
+                    },
+                    {
+                        "data": null,
+                        "className": "text-center align-middle",
+                        "render": function (data, type, row) {
+                            return `<button class="btn btn-sm btn-info text-white" style="font-size:9px; padding: 2px 8px;" onclick='open_receiver_modal(${JSON.stringify(row)})'>
+                                        <i class="fas fa-edit"></i> Process
+                                    </button>`;
+                        }
+                    }
+                ],
+                "drawCallback": function () {
+                    this.api().rows().every(function () {
+                        var rowNode = this.node();
+                        var data = this.data();
+                        let status = (data.status_desc || "").toLowerCase().trim();
+                        $(rowNode).find('td').css("background-color", "#edfcf1");
+                        let bg_color = "";
+                        if (status === "sent") bg_color = "bg-warning";
+                        else if (status === "approved") bg_color = "bg-success text-white";
+                        else if (status === "in transit") bg_color = "bg-info text-white";
+                        else if (status === "returned") bg_color = "bg-secondary text-white";
+                        $(rowNode).find('td:eq(0)').addClass(bg_color);
+                    });
+                },
+                "order": [[9, 'desc']]
+            });
+
+            $('input.filter_table, select.filter_table').on('keyup change', function () {
+                let trgt = $(this).attr('target');
+                if (table.column(trgt).search() !== this.value) {
+                    table.column(trgt).search(this.value).draw();
+                }
+            });
+
+            $("#form_receiver_update").submit(function (e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Confirmation',
+                    text: "Update return status?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    confirmButtonText: 'Yes, Update'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: "@Url.Action("UpdateStatusByReceiver", "User")",
+                            type: 'POST',
+                            data: $(this).serialize(),
+                            beforeSend: function () {
+                                Swal.fire({ title: 'Processing...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+                            },
+                            success: function (msg) {
+                                if (msg.trim().toUpperCase() === "OK") {
+                                    Swal.fire("Success!", "Status updated successfully.", "success");
+                                    $("#modal_receiver").modal("hide");
+                                    table.ajax.reload(null, false);
+                                } else {
+                                    Swal.fire("Error", msg, "error");
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+        });
+
+        function open_receiver_modal(row) {
+            $("#rec_id_return").val(row.id_return);
+            $("#lbl_po").text(row.po_no);
+            $("#lbl_part").text(row.partno);
+            $("#rec_status").val(row.status);
+            $("#modal_receiver").modal("show");
+        }
+
+        function view_image(file) {
+            var img = new Image();
+            var pathNew = "/Uploads/returns/" + file;
+            var pathOld = "/Uploads/" + file;
+            img.onload = function () {
+                $("#img_zoom").attr("src", pathNew);
+                $("#modal_view_image").modal("show");
+            };
+            img.onerror = function () {
+                $("#img_zoom").attr("src", pathOld);
+                $("#modal_view_image").modal("show");
+            };
+            img.src = pathNew;
+        }
+    </script>
+}

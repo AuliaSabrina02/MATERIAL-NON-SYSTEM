@@ -10,19 +10,15 @@
         string retValue = "";
         if (error_msg != "OK")
         {
-            retValue = "<i class='fas fa-exclamation-circle text-warning' data-bs-toggle='tooltip' data-bs-placement='top' title='"+error_msg+"'></i>";
+            retValue = "<i class='fas fa-exclamation-circle text-warning' data-bs-toggle='tooltip' data-bs-placement='top' title='" + error_msg + "'></i>";
         }
-
         return retValue;
     }
 }
-@* <div class="text-center">
-    <label>SRT Detai</label>
-</div> *@
 <div class="table-responsive">
     <table class="table table-sm table-bordered" id="table_temp_order" style="font-size:9pt;white-space:nowrap">
         <thead class="bg-info text-center">
-            <tr>                
+            <tr>
                 <th class="align-middle">Material Type<span class="text-danger">*</span></th>
                 <th class="align-middle">Part No<span class="text-danger">*</span></th>
                 <th class="align-middle">PO No<span class="text-danger">*</span></th>
@@ -33,10 +29,11 @@
                 <th class="align-middle">Storage Requirement<span class="text-danger">*</span></th>
                 <th class="align-middle">Supplier Name<span class="text-danger">*</span></th>
                 <th class="align-middle">Order Type<span class="text-danger">*</span></th>
+                <th class="align-middle">Unit Price<span class="text-danger">*</span></th>
+                <th class="align-middle">Priority Request<span class="text-danger">*</span></th>
                 <th class="align-middle">Length (mm)</th>
                 <th class="align-middle">Width (mm)</th>
                 <th class="align-middle">Height (mm)</th>
-                <th class="align-middle">Unit Price<span class="text-danger">*</span></th>
                 <th class="align-middle">Remark</th>
                 <th class="align-middle">Gatepass</th>
             </tr>
@@ -49,7 +46,7 @@
                 {
                     totalError++;
                 }
-                <tr class="text-center @(item.is_error==1 ? "bg-danger" : "")">
+                <tr class="text-center @(item.is_error == 1 ? "bg-danger" : "")">
                     <td>@item.material_type @Html.Raw(msg_error(item.material_type_msg ?? ""))</td>
                     <td>@item.partno @Html.Raw(msg_error(item.partno_msg ?? ""))</td>
                     <td>@item.po_no @Html.Raw(msg_error(item.po_no_msg ?? ""))</td>
@@ -60,16 +57,29 @@
                     <td>@item.storage_requirement @Html.Raw(msg_error(item.storage_requirement_msg ?? ""))</td>
                     <td>@item.supplier_name @Html.Raw(msg_error(item.supplier_name_msg ?? ""))</td>
                     <td>@item.order_type @Html.Raw(msg_error(item.order_type_msg ?? ""))</td>
+                    <td>@item.unit_price @Html.Raw(msg_error(item.unit_price_msg ?? ""))</td>
+                    <td>
+                        <input type="hidden" class="priority-request-val" value="@item.priority_request" />
+
+                        @{
+                            string priorityBadge = item.priority_request switch
+                            {
+                                "High" => "<span class='badge bg-danger'>High</span>",
+                                "Medium" => "<span class='badge bg-warning text-dark'>Medium</span>",
+                                "Low" => "<span class='badge bg-success'>Low</span>",
+                                _ => item.priority_request ?? ""
+                            };
+                        }
+                        @Html.Raw(priorityBadge) @Html.Raw(msg_error(item.priority_request_msg ?? ""))
+                    </td>
                     <td>@item.length_mm @Html.Raw(msg_error(item.length_mm_msg ?? ""))</td>
                     <td>@item.width_mm @Html.Raw(msg_error(item.width_mm_msg ?? ""))</td>
                     <td>@item.height_mm @Html.Raw(msg_error(item.height_mm_msg ?? ""))</td>
-                    <td>@item.unit_price @Html.Raw(msg_error(item.unit_price_msg ?? ""))</td>
                     <td>@item.remark</td>
                     <td>@item.gatepass</td>
                 </tr>
             }
         </tbody>
-
     </table>
     <input name="id_upload" value="@id_upload" hidden />
     <input name="total_upload" value="@totalUpload" hidden />

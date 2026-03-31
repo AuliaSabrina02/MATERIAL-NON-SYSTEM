@@ -13,7 +13,7 @@ namespace SEMB_ERP.Function
 {
     public class DatabaseAccessLayer
     {
-        public string ConnectionString = "Data Source=10.155.152.114;Initial Catalog=SEMB_ERP;Persist Security Info=True;User ID=dt;Password=Dt@123;MultipleActiveResultSets=true";
+        public string ConnectionString = @"Server=localhost\SQLEXPRESS;Database=SEMB_ERP_QAS;Trusted_Connection=True;TrustServerCertificate=True;";
         public string ConnectionStringBLP = "Data Source=10.155.129.223;Initial Catalog=DBBLP;Persist Security Info=True;User ID=semb;Password=Semb@123;MultipleActiveResultSets=true";
 
         public List<OrderTempListModel> GetTempOrder(string id_upload, string sesa_id)
@@ -55,6 +55,8 @@ namespace SEMB_ERP.Function
                             row.order_type_msg = reader["order_type_msg"].ToString();
                             row.unit_price = reader["unit_price"].ToString();
                             row.unit_price_msg = reader["unit_price_msg"].ToString();
+                            row.priority_request = reader["priority_request"].ToString();
+                            row.priority_request_msg = reader["priority_request_msg"].ToString();
                             row.length_mm = reader["length_mm"].ToString();
                             row.length_mm_msg = reader["length_mm_msg"].ToString();
                             row.width_mm = reader["width_mm"].ToString();
@@ -68,7 +70,6 @@ namespace SEMB_ERP.Function
                         }
                     }
                 }
-
                 conn.Close();
             }
             return dataList;
@@ -108,6 +109,225 @@ namespace SEMB_ERP.Function
             }
             return dataList;
         }
+
+        public string SaveOrderTemplate(OrderTemplateModel template)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    // Urutan kolom di bawah ini WAJIB sama dengan mapping di Bulk Insert
+                    string query = @"
+                INSERT INTO tbl_order_template (
+                    material_type,       -- Map ke Column 1
+                    partno,              -- Map ke Column 2
+                    po_no,               -- Map ke Column 3
+                    qty,                 -- Map ke Column 4
+                    uom,                 -- Map ke Column 5
+                    revision,            -- Map ke Column 6
+                    project_name,        -- Map ke Column 7
+                    storage_requirement, -- Map ke Column 8
+                    supplier_name,       -- Map ke Column 9
+                    order_type,          -- Map ke Column 10
+                    unit_price,          -- Map ke Column 11
+                    priority_request,    -- Map ke Column 12 (Sesuai Bulk)
+                    length_mm,           -- Map ke Column 13
+                    width_mm,            -- Map ke Column 14
+                    height_mm,           -- Map ke Column 15
+                    remark,              -- Map ke Column 16
+                    gatepass,            -- Map ke Column 17
+                    status_code, 
+                    created_date, 
+                    created_by
+                ) VALUES (
+                    @material_type, @partno, @po_no, @qty, @uom, @revision,
+                    @project_name, @storage_requirement, @supplier_name, @order_type,
+                    @unit_price, @priority_request, @length_mm, @width_mm, @height_mm,
+                    @remark, @gatepass, 'TEMPLATE', GETDATE(), @created_by
+                )";
+
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        // Mapping Parameter (Pastikan model OrderTemplateModel punya properti ini)
+                        cmd.Parameters.AddWithValue("@material_type", template.material_type ?? "");
+                        cmd.Parameters.AddWithValue("@partno", template.partno ?? "");
+                        cmd.Parameters.AddWithValue("@po_no", template.po_no ?? "");
+                        cmd.Parameters.AddWithValue("@qty", template.qty ?? "0");
+                        cmd.Parameters.AddWithValue("@uom", template.uom ?? "");
+                        cmd.Parameters.AddWithValue("@revision", template.revision ?? "");
+                        cmd.Parameters.AddWithValue("@project_name", template.project_name ?? "");
+                        cmd.Parameters.AddWithValue("@storage_requirement", template.storage_requirement ?? "");
+                        cmd.Parameters.AddWithValue("@supplier_name", template.supplier_name ?? "");
+                        cmd.Parameters.AddWithValue("@order_type", template.order_type ?? "");
+                        cmd.Parameters.AddWithValue("@unit_price", template.unit_price ?? "0");
+
+                        // Ini bagian krusial yang menyesuaikan Bulk Insert:
+                        cmd.Parameters.AddWithValue("@priority_request", template.priority_request ?? ""); // Kolom 12
+                        cmd.Parameters.AddWithValue("@length_mm", template.length_mm ?? "0");              // Kolom 13
+                        cmd.Parameters.AddWithValue("@width_mm", template.width_mm ?? "0");                // Kolom 14
+                        cmd.Parameters.AddWithValue("@height_mm", template.height_mm ?? "0");              // Kolom 15
+                        cmd.Parameters.AddWithValue("@remark", template.remark ?? "");                    // Kolom 16
+                        cmd.Parameters.AddWithValue("@gatepass", template.gatepass ?? "");                // Kolom 17
+
+                        cmd.Parameters.AddWithValue("@created_by", template.created_by ?? "");
+
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                return "success;Template saved successfully!";
+            }
+            catch (Exception ex)
+            {
+                return "error;" + ex.Message;
+            }
+        }
+
+        public List<OrderTemplateModel> GetOrderTemplates(string sesa_id)
+        {
+            List<OrderTemplateModel> templates = new List<OrderTemplateModel>();
+
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    string query = @"
+                SELECT * FROM tbl_order_template 
+                WHERE created_by = @sesa_id AND (is_deleted = 0 OR is_deleted IS NULL)
+                ORDER BY created_date DESC";
+
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                templates.Add(new OrderTemplateModel
+                                {
+                                    id_template = Convert.ToInt32(reader["id_template"]),
+                                    material_type = reader["material_type"].ToString(),
+                                    partno = reader["partno"].ToString(),
+                                    po_no = reader["po_no"].ToString(),
+                                    qty = reader["qty"].ToString(),
+                                    uom = reader["uom"].ToString(),
+                                    revision = reader["revision"].ToString(),
+                                    project_name = reader["project_name"].ToString(),
+                                    storage_requirement = reader["storage_requirement"].ToString(),
+                                    supplier_name = reader["supplier_name"].ToString(),
+                                    order_type = reader["order_type"].ToString(),
+                                    unit_price = reader["unit_price"].ToString(),
+                                    priority_request = reader["priority_request"]?.ToString(),
+                                    length_mm = reader["length_mm"].ToString(),
+                                    width_mm = reader["width_mm"].ToString(),
+                                    height_mm = reader["height_mm"].ToString(),
+                                    remark = reader["remark"]?.ToString(),
+                                    gatepass = reader["gatepass"]?.ToString(),
+                                    pic = reader["pic"]?.ToString(),
+                                    created_date = Convert.ToDateTime(reader["created_date"]),
+                                    created_by = reader["created_by"].ToString()
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error
+            }
+
+            return templates;
+        }
+
+        public OrderTemplateModel GetOrderTemplateDetail(int id_template, string sesa_id)
+        {
+            OrderTemplateModel template = null;
+
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    string query = @"
+                SELECT * FROM tbl_order_template 
+                WHERE id_template = @id_template AND created_by = @sesa_id";
+
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@id_template", id_template);
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                template = new OrderTemplateModel
+                                {
+                                    id_template = Convert.ToInt32(reader["id_template"]),
+                                    material_type = reader["material_type"].ToString(),
+                                    partno = reader["partno"].ToString(),
+                                    po_no = reader["po_no"].ToString(),
+                                    qty = reader["qty"].ToString(),
+                                    uom = reader["uom"].ToString(),
+                                    revision = reader["revision"].ToString(),
+                                    project_name = reader["project_name"].ToString(),
+                                    storage_requirement = reader["storage_requirement"].ToString(),
+                                    supplier_name = reader["supplier_name"].ToString(),
+                                    order_type = reader["order_type"].ToString(),
+                                    unit_price = reader["unit_price"].ToString(),
+                                    priority_request = reader["priority_request"]?.ToString(),
+                                    length_mm = reader["length_mm"].ToString(),
+                                    width_mm = reader["width_mm"].ToString(),
+                                    height_mm = reader["height_mm"].ToString(),
+                                    remark = reader["remark"]?.ToString(),
+                                    gatepass = reader["gatepass"]?.ToString(),
+                                    pic = reader["pic"]?.ToString(),
+                                    created_date = Convert.ToDateTime(reader["created_date"]),
+                                    created_by = reader["created_by"].ToString()
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error
+            }
+
+            return template;
+        }
+
+        public string DeleteOrderTemplate(int id_template, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    string query = @"
+                UPDATE tbl_order_template 
+                SET is_deleted = 1 
+                WHERE id_template = @id_template AND created_by = @sesa_id";
+
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@id_template", id_template);
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                return "success";
+            }
+            catch (Exception ex)
+            {
+                return "error;" + ex.Message;
+            }
+        }
+
         public List<UserDetailModel> GetUserRole(string sesa_id)
         {
             List<UserDetailModel> dataList = new List<UserDetailModel>();
@@ -161,6 +381,1001 @@ namespace SEMB_ERP.Function
             }
             return listPIC;
         }
+
+
+        public List<DiscussionModel> GetDiscussions(int id_order, string sesa_id)
+        {
+            List<DiscussionModel> discussions = new List<DiscussionModel>();
+
+            try
+            {
+                string query = @"
+            -- Cek apakah user berhak akses order ini
+            IF NOT EXISTS (
+                SELECT 1 FROM tbl_order o
+                WHERE o.id_order = @id_order 
+                AND (
+                    o.pic = @sesa_id  -- User adalah PIC/Requestor
+                    OR EXISTS (
+                        SELECT 1 FROM mst_users_role ur
+                        WHERE ur.sesa_id = @sesa_id
+                        AND ur.id_role IN (2, 3, 99)  -- Receiver, Plant Receiver, atau Admin
+                    )
+                )
+            )
+            BEGIN
+                RAISERROR('Access Denied: You do not have permission to view this discussion', 16, 1);
+                RETURN;
+            END
+            
+            -- Ambil discussions
+            SELECT 
+                d.id,
+                d.id_order,
+                d.sesa_id AS SesaId,
+                u.name AS UserName,
+                d.message AS Message,
+                d.parent_id AS ParentId,
+                d.created_date AS CreatedDate
+            FROM tbl_discussion d
+            LEFT JOIN mst_users u ON d.sesa_id = u.sesa_id
+            WHERE d.id_order = @id_order
+            ORDER BY d.created_date ASC";
+
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@id_order", id_order);
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+
+                        conn.Open();
+
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                discussions.Add(new DiscussionModel
+                                {
+                                    Id = reader.GetInt32(0),
+                                    IdOrder = reader.GetInt32(1),
+                                    SesaId = reader.GetString(2),
+                                    UserName = reader.IsDBNull(3) ? reader.GetString(2) : reader.GetString(3),
+                                    Message = reader.GetString(4),
+                                    ParentId = reader.IsDBNull(5) ? (int?)null : reader.GetInt32(5),
+                                    CreatedDate = reader.GetDateTime(6)
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error getting discussions: " + ex.Message);
+            }
+
+            return discussions;
+        }
+
+        public void MarkDiscussionAsRead(int id_order, string sesa_id)
+        {
+            try
+            {
+                string query = @"
+            MERGE tbl_discussion_read AS target
+            USING (SELECT @sesa_id AS sesa_id, GETDATE() AS last_read_date) AS source
+            ON target.sesa_id = source.sesa_id AND target.id_order = 0
+            WHEN MATCHED THEN
+                UPDATE SET last_read_date = source.last_read_date
+            WHEN NOT MATCHED THEN
+                INSERT (id_order, sesa_id, last_read_date)
+                VALUES (0, source.sesa_id, source.last_read_date);";
+
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        conn.Open();
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error marking discussion as read: {ex.Message}");
+            }
+        }
+
+        public string InsertDiscussion(int id_order, string sesa_id, string message, int? parent_id)
+        {
+            try
+            {
+                string query = @"
+                    INSERT INTO tbl_discussion (id_order, sesa_id, message, parent_id, created_date)
+                    VALUES (@id_order, @sesa_id, @message, @parent_id, GETDATE())";
+
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@id_order", id_order);
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        cmd.Parameters.AddWithValue("@message", message);
+                        cmd.Parameters.AddWithValue("@parent_id", (object)parent_id ?? DBNull.Value);
+
+                        conn.Open();
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+
+                return "OK";
+            }
+            catch (Exception ex)
+            {
+                return "Error: " + ex.Message;
+            }
+        }
+
+        public string CreateReturn(MaterialReturnModel model, IFormFile image_support_file, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+
+                    string fileName = null;
+                    if (image_support_file != null && image_support_file.Length > 0)
+                    {
+                        // FIX: path harus "uploads/returns" agar sesuai dengan view_image() di JS
+                        string uploadFolder = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "returns");
+                        if (!Directory.Exists(uploadFolder)) Directory.CreateDirectory(uploadFolder);
+                        fileName = Guid.NewGuid().ToString() + System.IO.Path.GetExtension(image_support_file.FileName);
+                        string filePath = System.IO.Path.Combine(uploadFolder, fileName);
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            image_support_file.CopyTo(stream);
+                        }
+                    }
+
+                    string query = @"
+                INSERT INTO material_return 
+                (request_no, project_name, po_no, partno, qty_return, uom, condition, 
+                 reason_return, storage_requirement, image_support, pic, return_date, status)
+                VALUES 
+                (@request_no, @project_name, @po_no, @partno, @qty_return, @uom, @condition, 
+                 @reason_return, @storage_requirement, @image_support, @pic, GETDATE(), 1)";
+
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@request_no", model.request_no ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@project_name", model.project_name ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@po_no", model.po_no ?? "");
+                    cmd.Parameters.AddWithValue("@partno", model.partno ?? "");
+                    cmd.Parameters.AddWithValue("@qty_return", model.qty_return);
+                    cmd.Parameters.AddWithValue("@uom", model.uom ?? "");
+                    cmd.Parameters.AddWithValue("@condition", model.condition ?? "");
+                    cmd.Parameters.AddWithValue("@reason_return", model.reason_return ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@storage_requirement", model.storage_requirement ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@image_support", fileName ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@pic", sesa_id ?? "");
+                    cmd.ExecuteNonQuery();
+                    return "OK";
+                }
+            }
+            catch (Exception ex)
+            {
+                return "error;" + ex.Message;
+            }
+        }
+        public dynamic GetReturnList(IFormCollection form)
+        {
+            try
+            {
+                int.TryParse(form["draw"].ToString(), out int draw);
+                int.TryParse(form["start"].ToString(), out int start);
+                if (!int.TryParse(form["length"].ToString(), out int length))
+                {
+                    length = 10;
+                }
+
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+
+                    string countQuery = "SELECT COUNT(*) FROM material_return";
+                    SqlCommand countCmd = new SqlCommand(countQuery, conn);
+                    int recordsTotal = (int)countCmd.ExecuteScalar();
+
+                    string whereClause = " WHERE 1=1 ";
+                    List<SqlParameter> parameters = new List<SqlParameter>();
+
+                    // Urutan sesuai kolom view:
+                    // 0=Status, 1=Request No, 2=PO Number, 3=Part Number, 4=Qty,
+                    // 5=UOM, 6=Condition, 7=Remark, 8=PIC, 9=Return Date, 10=Image(skip), 11=Action(skip)
+                    for (int i = 0; i <= 9; i++)
+                    {
+                        string colValue = form[$"columns[{i}][search][value]"];
+                        if (!string.IsNullOrEmpty(colValue))
+                        {
+                            switch (i)
+                            {
+                                case 0: // Status
+                                    whereClause += " AND CASE WHEN status = 1 THEN 'Sent' WHEN status = 2 THEN 'Approved' WHEN status = 3 THEN 'In Transit' WHEN status = 4 THEN 'Returned' ELSE 'Unknown' END LIKE @col0 ";
+                                    parameters.Add(new SqlParameter("@col0", "%" + colValue + "%"));
+                                    break;
+                                case 1: // Request No
+                                    whereClause += " AND request_no LIKE @col1 ";
+                                    parameters.Add(new SqlParameter("@col1", "%" + colValue + "%"));
+                                    break;
+                                case 2: // PO Number
+                                    whereClause += " AND po_no LIKE @col2 ";
+                                    parameters.Add(new SqlParameter("@col2", "%" + colValue + "%"));
+                                    break;
+                                case 3: // Part Number
+                                    whereClause += " AND partno LIKE @col3 ";
+                                    parameters.Add(new SqlParameter("@col3", "%" + colValue + "%"));
+                                    break;
+                                case 4: // Qty
+                                    whereClause += " AND CAST(qty_return AS VARCHAR) LIKE @col4 ";
+                                    parameters.Add(new SqlParameter("@col4", "%" + colValue + "%"));
+                                    break;
+                                case 5: // UOM
+                                    whereClause += " AND uom LIKE @col5 ";
+                                    parameters.Add(new SqlParameter("@col5", "%" + colValue + "%"));
+                                    break;
+                                case 6: // Condition
+                                    whereClause += " AND condition LIKE @col6 ";
+                                    parameters.Add(new SqlParameter("@col6", "%" + colValue + "%"));
+                                    break;
+                                case 7: // Remark (reason_return)
+                                    whereClause += " AND reason_return LIKE @col7 ";
+                                    parameters.Add(new SqlParameter("@col7", "%" + colValue + "%"));
+                                    break;
+                                case 8: // PIC
+                                    whereClause += " AND (SELECT name FROM mst_users WHERE sesa_id = material_return.pic) LIKE @col8 ";
+                                    parameters.Add(new SqlParameter("@col8", "%" + colValue + "%"));
+                                    break;
+                                case 9: // Return Date
+                                    whereClause += " AND CONVERT(VARCHAR, return_date, 23) LIKE @col9 ";
+                                    parameters.Add(new SqlParameter("@col9", "%" + colValue + "%"));
+                                    break;
+                                    // case 10 = Image → skip
+                                    // case 11 = Action → skip
+                            }
+                        }
+                    }
+
+                    string filteredCountQuery = "SELECT COUNT(*) FROM material_return " + whereClause;
+                    SqlCommand filteredCountCmd = new SqlCommand(filteredCountQuery, conn);
+                    filteredCountCmd.Parameters.AddRange(parameters.Select(p => (SqlParameter)((ICloneable)p).Clone()).ToArray());
+                    int recordsFiltered = (int)filteredCountCmd.ExecuteScalar();
+
+                    string query = $@"
+                SELECT 
+                    id_return, request_no, project_name, po_no, partno, 
+                    qty_return, uom, condition, image_support, pic,
+                    ISNULL((SELECT name FROM mst_users WHERE sesa_id = material_return.pic), '') as name,
+                    CONVERT(VARCHAR, return_date, 23) as return_date,
+                    status,
+                    CASE 
+                        WHEN status = 1 THEN 'Sent'
+                        WHEN status = 2 THEN 'Approved'
+                        WHEN status = 3 THEN 'In Transit'
+                        WHEN status = 4 THEN 'Returned'
+                        ELSE 'Unknown'
+                    END as status_desc,
+                    reason_return, storage_requirement
+                FROM material_return
+                {whereClause}
+                ORDER BY return_date DESC
+                OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY";
+
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    cmd.Parameters.AddRange(parameters.ToArray());
+                    cmd.Parameters.AddWithValue("@offset", start);
+                    cmd.Parameters.AddWithValue("@pageSize", length);
+
+                    SqlDataReader reader = cmd.ExecuteReader();
+                    List<MaterialReturnModel> data = new List<MaterialReturnModel>();
+
+                    while (reader.Read())
+                    {
+                        data.Add(new MaterialReturnModel
+                        {
+                            id_return = reader.GetInt32(0),
+                            request_no = reader.IsDBNull(1) ? "" : reader.GetString(1),
+                            project_name = reader.IsDBNull(2) ? "" : reader.GetString(2),
+                            po_no = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                            partno = reader.IsDBNull(4) ? "" : reader.GetString(4),
+                            qty_return = reader.GetDecimal(5),
+                            uom = reader.IsDBNull(6) ? "" : reader.GetString(6),
+                            condition = reader.IsDBNull(7) ? "" : reader.GetString(7),
+                            image_support = reader.IsDBNull(8) ? "" : reader.GetString(8),
+                            pic = reader.IsDBNull(9) ? "" : reader.GetString(9),
+                            name = reader.IsDBNull(10) ? "" : reader.GetString(10),
+                            return_date = reader.IsDBNull(11) ? null : (DateTime?)DateTime.Parse(reader.GetString(11)),
+                            status = reader.GetInt32(12),
+                            status_desc = reader.IsDBNull(13) ? "" : reader.GetString(13),
+                            reason_return = reader.IsDBNull(14) ? "" : reader.GetString(14),
+                            storage_requirement = reader.IsDBNull(15) ? "" : reader.GetString(15)
+                        });
+                    }
+
+                    return new { draw, recordsTotal, recordsFiltered, data };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new { draw = 0, recordsTotal = 0, recordsFiltered = 0, data = new List<MaterialReturnModel>(), error = ex.Message };
+            }
+        }
+        public string UpdateReturn(MaterialReturnModel model, IFormFile image_support_file, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+
+                    string fileName = null;
+                    if (image_support_file != null && image_support_file.Length > 0)
+                    {
+                        // Menggunakan System.IO secara eksplisit untuk menghindari error 'Path'
+                        string uploadFolder = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Uploads");
+                        if (!Directory.Exists(uploadFolder)) Directory.CreateDirectory(uploadFolder);
+
+                        fileName = Guid.NewGuid().ToString() + System.IO.Path.GetExtension(image_support_file.FileName);
+                        string filePath = System.IO.Path.Combine(uploadFolder, fileName);
+
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            image_support_file.CopyTo(stream);
+                        }
+                    }
+
+                    // Query diperbarui: pic_updater dihapus agar tidak error
+                    string query = @"
+                UPDATE material_return 
+                SET request_no = @request_no,
+                    project_name = @project_name,
+                    po_no = @po_no, 
+                    partno = @partno, 
+                    qty_return = @qty_return, 
+                    uom = @uom, 
+                    condition = @condition, 
+                    reason_return = @reason_return,
+                    storage_requirement = @storage_requirement,
+                    update_date = GETDATE() " +
+                            (fileName != null ? ", image_support = @image_support " : "") +
+                        " WHERE id_return = @id_return";
+
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@id_return", model.id_return);
+                    cmd.Parameters.AddWithValue("@request_no", model.request_no ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@project_name", model.project_name ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@po_no", model.po_no ?? "");
+                    cmd.Parameters.AddWithValue("@partno", model.partno ?? "");
+                    cmd.Parameters.AddWithValue("@qty_return", model.qty_return);
+                    cmd.Parameters.AddWithValue("@uom", model.uom ?? "");
+                    cmd.Parameters.AddWithValue("@condition", model.condition ?? "");
+                    cmd.Parameters.AddWithValue("@reason_return", model.reason_return ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@storage_requirement", model.storage_requirement ?? (object)DBNull.Value);
+
+                    if (fileName != null) cmd.Parameters.AddWithValue("@image_support", fileName);
+
+                    int rowsAffected = cmd.ExecuteNonQuery();
+                    return rowsAffected > 0 ? "OK" : "No changes made.";
+                }
+            }
+            catch (Exception ex)
+            {
+                return "error;" + ex.Message;
+            }
+        }
+
+
+        public string UpdateReturnStatus(int id_return, int status)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    string query = "UPDATE material_return SET status = @status, update_date = GETDATE() WHERE id_return = @id_return";
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@status", status);
+                    cmd.Parameters.AddWithValue("@id_return", id_return);
+                    cmd.ExecuteNonQuery();
+                    return "OK";
+                }
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+
+
+
+        }
+
+        public (List<PalletProblem> data, int totalRecords) GetPalletProblems(
+       int start,
+       int length,
+       string searchValue,
+       string sortColumn,
+       string sortDirection)
+        {
+            var palletProblems = new List<PalletProblem>();
+            int totalRecords = 0;
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+
+                // Get total count
+                string countQuery = @"
+                    SELECT COUNT(*) 
+                    FROM pallet_problems 
+                    WHERE (@search IS NULL OR @search = '' OR 
+                           pallet_no LIKE '%' + @search + '%' OR 
+                           req_no LIKE '%' + @search + '%' OR 
+                           issue LIKE '%' + @search + '%' OR 
+                           created_by LIKE '%' + @search + '%')";
+
+                using (SqlCommand countCmd = new SqlCommand(countQuery, conn))
+                {
+                    countCmd.Parameters.AddWithValue("@search", string.IsNullOrEmpty(searchValue) ? DBNull.Value : (object)searchValue);
+                    totalRecords = (int)countCmd.ExecuteScalar();
+                }
+
+                // Get data with pagination
+                string orderBy = "created_date DESC";
+                switch (sortColumn)
+                {
+                    case "1":
+                        orderBy = $"pallet_no {sortDirection}";
+                        break;
+                    case "2":
+                        orderBy = $"req_no {sortDirection}";
+                        break;
+                    case "3":
+                        orderBy = $"date {sortDirection}";
+                        break;
+                }
+
+                string dataQuery = $@"
+                    SELECT * FROM (
+                        SELECT ROW_NUMBER() OVER (ORDER BY {orderBy}) AS RowNum, *
+                        FROM pallet_problems
+                        WHERE (@search IS NULL OR @search = '' OR 
+                               pallet_no LIKE '%' + @search + '%' OR 
+                               req_no LIKE '%' + @search + '%' OR 
+                               issue LIKE '%' + @search + '%' OR 
+                               created_by LIKE '%' + @search + '%')
+                    ) AS RowConstrainedResult
+                    WHERE RowNum > @start AND RowNum <= @start + @length
+                    ORDER BY RowNum";
+
+                using (SqlCommand dataCmd = new SqlCommand(dataQuery, conn))
+                {
+                    dataCmd.Parameters.AddWithValue("@search", string.IsNullOrEmpty(searchValue) ? DBNull.Value : (object)searchValue);
+                    dataCmd.Parameters.AddWithValue("@start", start);
+                    dataCmd.Parameters.AddWithValue("@length", length);
+
+                    using (SqlDataReader reader = dataCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            palletProblems.Add(new PalletProblem
+                            {
+                                id = reader.GetInt32(reader.GetOrdinal("id")),
+                                pallet_no = reader.GetString(reader.GetOrdinal("pallet_no")),
+                                req_no = reader.GetString(reader.GetOrdinal("req_no")),
+                                date = reader.GetDateTime(reader.GetOrdinal("date")),
+                                issue = reader.GetString(reader.GetOrdinal("issue")),
+                                created_by = reader.IsDBNull(reader.GetOrdinal("created_by")) ? null : reader.GetString(reader.GetOrdinal("created_by")),
+                                created_date = reader.GetDateTime(reader.GetOrdinal("created_date")),
+                                updated_by = reader.IsDBNull(reader.GetOrdinal("updated_by")) ? null : reader.GetString(reader.GetOrdinal("updated_by")),
+                                updated_date = reader.IsDBNull(reader.GetOrdinal("updated_date")) ? null : (DateTime?)reader.GetDateTime(reader.GetOrdinal("updated_date")),
+                                status = reader.GetString(reader.GetOrdinal("status"))
+                            });
+                        }
+                    }
+                }
+            }
+
+            return (palletProblems, totalRecords);
+        }
+
+        public bool CheckPalletNoExists(string palletNo, int? excludeId = null)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                string query = "SELECT COUNT(*) FROM pallet_problems WHERE pallet_no = @pallet_no";
+
+                if (excludeId.HasValue)
+                {
+                    query += " AND id != @id";
+                }
+
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@pallet_no", palletNo);
+
+                if (excludeId.HasValue)
+                {
+                    cmd.Parameters.AddWithValue("@id", excludeId.Value);
+                }
+
+                conn.Open();
+                int count = (int)cmd.ExecuteScalar();
+                return count > 0;
+            }
+        }
+
+        public bool AddPalletProblem(PalletProblem palletProblem)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                string query = @"
+                    INSERT INTO pallet_problems 
+                    (pallet_no, req_no, date, issue, created_by, created_date, status)
+                    VALUES 
+                    (@pallet_no, @req_no, @date, @issue, @created_by, @created_date, @status)";
+
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@pallet_no", palletProblem.pallet_no);
+                cmd.Parameters.AddWithValue("@req_no", palletProblem.req_no);
+                cmd.Parameters.AddWithValue("@date", palletProblem.date);
+                cmd.Parameters.AddWithValue("@issue", palletProblem.issue);
+                cmd.Parameters.AddWithValue("@created_by", palletProblem.created_by ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue("@created_date", palletProblem.created_date);
+                cmd.Parameters.AddWithValue("@status", palletProblem.status);
+
+                conn.Open();
+                int rowsAffected = cmd.ExecuteNonQuery();
+                return rowsAffected > 0;
+            }
+        }
+
+
+        public bool UpdatePalletProblem(PalletProblem palletProblem)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                string query = @"
+                    UPDATE pallet_problems 
+                    SET pallet_no = @pallet_no,
+                        req_no = @req_no,
+                        date = @date,
+                        issue = @issue,
+                        updated_by = @updated_by,
+                        updated_date = @updated_date
+                    WHERE id = @id";
+
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@id", palletProblem.id);
+                cmd.Parameters.AddWithValue("@pallet_no", palletProblem.pallet_no);
+                cmd.Parameters.AddWithValue("@req_no", palletProblem.req_no);
+                cmd.Parameters.AddWithValue("@date", palletProblem.date);
+                cmd.Parameters.AddWithValue("@issue", palletProblem.issue);
+                cmd.Parameters.AddWithValue("@updated_by", palletProblem.updated_by ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue("@updated_date", palletProblem.updated_date ?? (object)DBNull.Value);
+
+                conn.Open();
+                int rowsAffected = cmd.ExecuteNonQuery();
+                return rowsAffected > 0;
+            }
+        }
+
+        public bool DeletePalletProblem(int id)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                string query = "DELETE FROM pallet_problems WHERE id = @id";
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@id", id);
+
+                conn.Open();
+                int rowsAffected = cmd.ExecuteNonQuery();
+                return rowsAffected > 0;
+            }
+        }
+
+        public PalletProblem GetPalletProblemById(int id)
+        {
+            PalletProblem palletProblem = null;
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                string query = "SELECT * FROM pallet_problems WHERE id = @id";
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@id", id);
+
+                conn.Open();
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        palletProblem = new PalletProblem
+                        {
+                            id = reader.GetInt32(reader.GetOrdinal("id")),
+                            pallet_no = reader.GetString(reader.GetOrdinal("pallet_no")),
+                            req_no = reader.GetString(reader.GetOrdinal("req_no")),
+                            date = reader.GetDateTime(reader.GetOrdinal("date")),
+                            issue = reader.GetString(reader.GetOrdinal("issue")),
+                            created_by = reader.IsDBNull(reader.GetOrdinal("created_by")) ? null : reader.GetString(reader.GetOrdinal("created_by")),
+                            created_date = reader.GetDateTime(reader.GetOrdinal("created_date")),
+                            updated_by = reader.IsDBNull(reader.GetOrdinal("updated_by")) ? null : reader.GetString(reader.GetOrdinal("updated_by")),
+                            updated_date = reader.IsDBNull(reader.GetOrdinal("updated_date")) ? null : (DateTime?)reader.GetDateTime(reader.GetOrdinal("updated_date")),
+                            status = reader.GetString(reader.GetOrdinal("status"))
+                        };
+                    }
+                }
+            }
+
+            return palletProblem;
+        }
+
+        public (List<PalletProblem> data, int totalRecords) GetPalletList(
+      int start,
+      int length,
+      string searchValue,
+      string sortColumn,
+      string sortDirection)
+        {
+            var palletList = new List<PalletProblem>();
+            int totalRecords = 0;
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+
+                // 1. Hapus 'receiver' dari Count Query agar tidak error saat searching
+                string countQuery = @"
+            SELECT COUNT(*) 
+            FROM pallet_problems 
+            WHERE (@search IS NULL OR @search = '' OR 
+                   pallet_no LIKE '%' + @search + '%' OR 
+                   req_no LIKE '%' + @search + '%' OR 
+                   issue LIKE '%' + @search + '%')";
+
+                using (SqlCommand countCmd = new SqlCommand(countQuery, conn))
+                {
+                    countCmd.Parameters.AddWithValue("@search", string.IsNullOrEmpty(searchValue) ? DBNull.Value : (object)searchValue);
+                    totalRecords = (int)countCmd.ExecuteScalar();
+                }
+
+                // 2. Sesuaikan switch case berdasarkan indeks kolom di View terbaru
+                // Indeks: 0:No, 1:Pallet No, 2:Request No, 3:Date, 4:Issue, 5:Action
+                string orderBy = "created_date DESC";
+                switch (sortColumn)
+                {
+                    case "1":
+                        orderBy = $"pallet_no {sortDirection}";
+                        break;
+                    case "2":
+                        orderBy = $"req_no {sortDirection}";
+                        break;
+                    case "3":
+                        orderBy = $"date {sortDirection}";
+                        break;
+                    case "4":
+                        orderBy = $"issue {sortDirection}";
+                        break;
+                        // Case "5" dihapus karena sekarang kolom 5 adalah 'Action' yang tidak bisa di-sort
+                }
+
+                // 3. Hapus 'receiver' dari Data Query
+                string dataQuery = $@"
+            SELECT * FROM (
+                SELECT ROW_NUMBER() OVER (ORDER BY {orderBy}) AS RowNum, *
+                FROM pallet_problems
+                WHERE (@search IS NULL OR @search = '' OR 
+                       pallet_no LIKE '%' + @search + '%' OR 
+                       req_no LIKE '%' + @search + '%' OR 
+                       issue LIKE '%' + @search + '%')
+            ) AS RowConstrainedResult
+            WHERE RowNum > @start AND RowNum <= @start + @length
+            ORDER BY RowNum";
+
+                using (SqlCommand dataCmd = new SqlCommand(dataQuery, conn))
+                {
+                    dataCmd.Parameters.AddWithValue("@search", string.IsNullOrEmpty(searchValue) ? DBNull.Value : (object)searchValue);
+                    dataCmd.Parameters.AddWithValue("@start", start);
+                    dataCmd.Parameters.AddWithValue("@length", length);
+
+                    using (SqlDataReader reader = dataCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            palletList.Add(new PalletProblem
+                            {
+                                id = reader.GetInt32(reader.GetOrdinal("id")),
+                                pallet_no = reader.GetString(reader.GetOrdinal("pallet_no")),
+                                req_no = reader.GetString(reader.GetOrdinal("req_no")),
+                                date = reader.GetDateTime(reader.GetOrdinal("date")),
+                                issue = reader.GetString(reader.GetOrdinal("issue")),
+                                created_by = reader.IsDBNull(reader.GetOrdinal("created_by")) ? null : reader.GetString(reader.GetOrdinal("created_by")),
+                                created_date = reader.GetDateTime(reader.GetOrdinal("created_date")),
+                                updated_by = reader.IsDBNull(reader.GetOrdinal("updated_by")) ? null : reader.GetString(reader.GetOrdinal("updated_by")),
+                                updated_date = reader.IsDBNull(reader.GetOrdinal("updated_date")) ? null : (DateTime?)reader.GetDateTime(reader.GetOrdinal("updated_date")),
+                                status = reader.GetString(reader.GetOrdinal("status"))
+                                // Properti receiver di model tidak perlu diisi karena kolomnya sudah tidak ada
+                            });
+                        }
+                    }
+                }
+            }
+
+            return (palletList, totalRecords);
+        }
+
+        public dynamic GetReservationList(IFormCollection form, string sesa_id)
+        {
+            try
+            {
+                int.TryParse(form["draw"].ToString(), out int draw);
+                int.TryParse(form["start"].ToString(), out int start);
+                if (!int.TryParse(form["length"].ToString(), out int length))
+                {
+                    length = 10;
+                }
+                string searchValue = form["search[value]"];
+
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+
+                    string countQuery = "SELECT COUNT(*) FROM material_reservation";
+                    SqlCommand countCmd = new SqlCommand(countQuery, conn);
+                    int recordsTotal = (int)countCmd.ExecuteScalar();
+
+                    string whereClause = " WHERE 1=1 ";
+                    List<SqlParameter> parameters = new List<SqlParameter>();
+
+                    // ⭐ COLUMN-SPECIFIC FILTERS (dari filter_table)
+                    for (int i = 0; i < 22; i++) // Jumlah kolom yang bisa difilter
+                    {
+                        string colValue = form[$"columns[{i}][search][value]"];
+                        if (!string.IsNullOrEmpty(colValue))
+                        {
+                            switch (i)
+                            {
+                                case 0: // Status
+                                    whereClause += " AND CASE WHEN ISNULL(status, 1) = 1 THEN 'Submission' WHEN status = 2 THEN 'Approved' WHEN status = 3 THEN 'Cancelled' ELSE 'Unknown' END LIKE @col0 ";
+                                    parameters.Add(new SqlParameter("@col0", "%" + colValue + "%"));
+                                    break;
+                                case 1: // Material Type
+                                    whereClause += " AND material_type LIKE @col1 ";
+                                    parameters.Add(new SqlParameter("@col1", "%" + colValue + "%"));
+                                    break;
+                                case 2: // Part No
+                                    whereClause += " AND partno LIKE @col2 ";
+                                    parameters.Add(new SqlParameter("@col2", "%" + colValue + "%"));
+                                    break;
+                                case 3: // PO No
+                                    whereClause += " AND po_no LIKE @col3 ";
+                                    parameters.Add(new SqlParameter("@col3", "%" + colValue + "%"));
+                                    break;
+                                case 4: // Reserved Qty
+                                    whereClause += " AND CAST(reserved_qty AS VARCHAR) LIKE @col4 ";
+                                    parameters.Add(new SqlParameter("@col4", "%" + colValue + "%"));
+                                    break;
+                                case 5: // Available Qty
+                                    whereClause += " AND CAST(available_qty AS VARCHAR) LIKE @col5 ";
+                                    parameters.Add(new SqlParameter("@col5", "%" + colValue + "%"));
+                                    break;
+                                case 6: // UOM
+                                    whereClause += " AND uom LIKE @col6 ";
+                                    parameters.Add(new SqlParameter("@col6", "%" + colValue + "%"));
+                                    break;
+                                case 7: // Revision
+                                    whereClause += " AND revision LIKE @col7 ";
+                                    parameters.Add(new SqlParameter("@col7", "%" + colValue + "%"));
+                                    break;
+                                case 8: // Project Name
+                                    whereClause += " AND project_name LIKE @col8 ";
+                                    parameters.Add(new SqlParameter("@col8", "%" + colValue + "%"));
+                                    break;
+                                case 9: // Storage Requirement
+                                    whereClause += " AND storage_requirement LIKE @col9 ";
+                                    parameters.Add(new SqlParameter("@col9", "%" + colValue + "%"));
+                                    break;
+                                case 10: // Supplier Name
+                                    whereClause += " AND supplier_name LIKE @col10 ";
+                                    parameters.Add(new SqlParameter("@col10", "%" + colValue + "%"));
+                                    break;
+                                case 11: // PIC Name
+                                    whereClause += " AND (SELECT name FROM mst_users WHERE sesa_id = material_reservation.pic) LIKE @col11 ";
+                                    parameters.Add(new SqlParameter("@col11", "%" + colValue + "%"));
+                                    break;
+                                case 12: // Order Type
+                                    whereClause += " AND order_type LIKE @col12 ";
+                                    parameters.Add(new SqlParameter("@col12", "%" + colValue + "%"));
+                                    break;
+                                case 13: // Unit Price
+                                    whereClause += " AND CAST(unit_price AS VARCHAR) LIKE @col13 ";
+                                    parameters.Add(new SqlParameter("@col13", "%" + colValue + "%"));
+                                    break;
+                                case 14: // Priority
+                                    whereClause += " AND priority_request LIKE @col14 ";
+                                    parameters.Add(new SqlParameter("@col14", "%" + colValue + "%"));
+                                    break;
+                                case 15: // Reservation Date
+                                    whereClause += " AND CONVERT(VARCHAR, reservation_date, 120) LIKE @col15 ";
+                                    parameters.Add(new SqlParameter("@col15", "%" + colValue + "%"));
+                                    break;
+                                case 16: // Order Date
+                                    whereClause += " AND CONVERT(VARCHAR, order_date, 23) LIKE @col16 ";
+                                    parameters.Add(new SqlParameter("@col16", "%" + colValue + "%"));
+                                    break;
+                                case 18: // Length
+                                    whereClause += " AND CAST(length_mm AS VARCHAR) LIKE @col18 ";
+                                    parameters.Add(new SqlParameter("@col18", "%" + colValue + "%"));
+                                    break;
+                                case 19: // Width
+                                    whereClause += " AND CAST(width_mm AS VARCHAR) LIKE @col19 ";
+                                    parameters.Add(new SqlParameter("@col19", "%" + colValue + "%"));
+                                    break;
+                                case 20: // Height
+                                    whereClause += " AND CAST(height_mm AS VARCHAR) LIKE @col20 ";
+                                    parameters.Add(new SqlParameter("@col20", "%" + colValue + "%"));
+                                    break;
+                            }
+                        }
+                    }
+
+                    // Global search (opsional, bisa dihapus jika hanya pakai column filter)
+                    if (!string.IsNullOrEmpty(searchValue))
+                    {
+                        whereClause += " AND (partno LIKE @globalSearch OR po_no LIKE @globalSearch OR supplier_name LIKE @globalSearch) ";
+                        parameters.Add(new SqlParameter("@globalSearch", "%" + searchValue + "%"));
+                    }
+
+                    string filteredCountQuery = "SELECT COUNT(*) FROM material_reservation " + whereClause;
+                    SqlCommand filteredCountCmd = new SqlCommand(filteredCountQuery, conn);
+                    filteredCountCmd.Parameters.AddRange(parameters.Select(p => (SqlParameter)((ICloneable)p).Clone()).ToArray());
+                    int recordsFiltered = (int)filteredCountCmd.ExecuteScalar();
+
+                    string orderBy = " ORDER BY reservation_date DESC ";
+
+                    string query = $@"
+SELECT 
+    id_reservation, material_type, partno, po_no,
+    ISNULL(reserved_qty, 0), ISNULL(available_qty, 0), uom, revision,
+    project_name, storage_requirement, supplier_name, pic,
+    ISNULL((SELECT name FROM mst_users WHERE sesa_id = material_reservation.pic), '') as pic_name,
+    order_type, ISNULL(unit_price, 0), priority_request, reservation_date,
+    order_date, file_support, ISNULL(length_mm, 0), ISNULL(width_mm, 0),
+    ISNULL(height_mm, 0), remark, ISNULL(status, 1) as status,
+    CASE 
+        WHEN ISNULL(status, 1) = 1 THEN 'Submission'
+        WHEN status = 2 THEN 'Approved'
+        WHEN status = 3 THEN 'Cancelled'
+        ELSE 'Unknown'
+    END as status_desc,
+    decline_reason
+FROM material_reservation 
+{whereClause} {orderBy}
+OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY";
+
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    cmd.Parameters.AddRange(parameters.ToArray());
+                    cmd.Parameters.AddWithValue("@offset", start);
+                    cmd.Parameters.AddWithValue("@pageSize", length);
+
+                    SqlDataReader reader = cmd.ExecuteReader();
+                    List<MaterialReservationModel> data = new List<MaterialReservationModel>();
+
+                    while (reader.Read())
+                    {
+                        data.Add(new MaterialReservationModel
+                        {
+                            id_reservation = reader.GetInt32(0),
+                            material_type = reader.IsDBNull(1) ? "" : reader.GetString(1),
+                            partno = reader.IsDBNull(2) ? "" : reader.GetString(2),
+                            po_no = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                            reserved_qty = reader.GetDecimal(4),
+                            available_qty = reader.GetDecimal(5),
+                            uom = reader.IsDBNull(6) ? "" : reader.GetString(6),
+                            revision = reader.IsDBNull(7) ? "" : reader.GetString(7),
+                            project_name = reader.IsDBNull(8) ? "" : reader.GetString(8),
+                            storage_requirement = reader.IsDBNull(9) ? "" : reader.GetString(9),
+                            supplier_name = reader.IsDBNull(10) ? "" : reader.GetString(10),
+                            pic = reader.IsDBNull(11) ? "" : reader.GetString(11),
+                            pic_name = reader.IsDBNull(12) ? "" : reader.GetString(12),
+                            order_type = reader.IsDBNull(13) ? "" : reader.GetString(13),
+                            unit_price = reader.GetDecimal(14),
+                            priority_request = reader.IsDBNull(15) ? "" : reader.GetString(15),
+                            reservation_date = reader.IsDBNull(16) ? DateTime.MinValue : reader.GetDateTime(16),
+                            order_date = reader.IsDBNull(17) ? (DateTime?)null : reader.GetDateTime(17),
+                            file_support = reader.IsDBNull(18) ? "" : reader.GetString(18),
+                            length_mm = reader.GetDecimal(19),
+                            width_mm = reader.GetDecimal(20),
+                            height_mm = reader.GetDecimal(21),
+                            remark = reader.IsDBNull(22) ? "" : reader.GetString(22),
+                            status = reader.GetInt32(23),
+                            status_desc = reader.IsDBNull(24) ? "" : reader.GetString(24),
+                            decline_reason = reader.IsDBNull(25) ? "" : reader.GetString(25)
+                        });
+                    }
+                    return new { draw, recordsTotal, recordsFiltered, data };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new { draw = 0, recordsTotal = 0, recordsFiltered = 0, data = new List<MaterialReservationModel>(), error = ex.Message };
+            }
+        }
+
+        public DataTable GetUserSchedules(string sesaId)
+        {
+            DataTable dt = new DataTable();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand("dbo.get_user_schedules", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@sesa_id", sesaId);
+
+                    SqlDataAdapter da = new SqlDataAdapter(cmd);
+                    da.Fill(dt);
+                }
+            }
+
+            return dt;
+        }
+
+         public int CreateSchedule(string sesaId, string email, DateTime date, string title, string desc)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand("dbo.create_schedule", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@sesa_id", (object)sesaId ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@user_email", (object)email ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@scheduled_date", date);
+                    cmd.Parameters.AddWithValue("@title", title);
+                    cmd.Parameters.AddWithValue("@description", (object)desc ?? DBNull.Value);
+
+                    conn.Open();
+                    var result = cmd.ExecuteScalar();
+                    return result != null ? Convert.ToInt32(result) : 0;
+                }
+            }
+        }
+
+        public bool SendDiscussionEmailNotification(int id_order, string sender_sesa_id, string message)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    using (SqlCommand cmd = new SqlCommand("SEND_EMAIL_DISCUSSION_NOTIFICATION", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.CommandTimeout = 120;
+
+                        cmd.Parameters.AddWithValue("@id_order", id_order);
+                        cmd.Parameters.AddWithValue("@sender_sesa_id", sender_sesa_id);
+                        cmd.Parameters.AddWithValue("@message", message);
+                        conn.Open();
+                        int result = cmd.ExecuteNonQuery();
+
+                        return result > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error sending discussion email: {ex.Message}");
+                return false;
+            }
+        }
         public List<string> GetStatus()
         {
             List<string> dataStatus = new List<string>();
@@ -169,16 +1384,11 @@ namespace SEMB_ERP.Function
                 conn.Open();
                 using (SqlCommand cmd = new SqlCommand("SELECT status_desc FROM mst_status ORDER BY status_code", conn))
                 {
-                    //cmd.CommandType = CommandType.StoredProcedure;
-                    //cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
                     using SqlDataReader reader = cmd.ExecuteReader();
                     if (reader.HasRows)
                     {
                         while (reader.Read())
                         {
-                            //UserDetailModel row = new UserDetailModel();
-                            //row.role = reader["role_name"].ToString();
-                            //dataList.Add(row);
                             dataStatus.Add(reader["status_desc"].ToString() ?? "");
                         }
                     }
@@ -196,16 +1406,11 @@ namespace SEMB_ERP.Function
                 conn.Open();
                 using (SqlCommand cmd = new SqlCommand("SELECT status_desc FROM mst_status_request ORDER BY status_code", conn))
                 {
-                    //cmd.CommandType = CommandType.StoredProcedure;
-                    //cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
                     using SqlDataReader reader = cmd.ExecuteReader();
                     if (reader.HasRows)
                     {
                         while (reader.Read())
                         {
-                            //UserDetailModel row = new UserDetailModel();
-                            //row.role = reader["role_name"].ToString();
-                            //dataList.Add(row);
                             dataStatus.Add(reader["status_desc"].ToString() ?? "");
                         }
                     }
@@ -222,13 +1427,11 @@ namespace SEMB_ERP.Function
                 conn.Open();
                 using (SqlCommand cmd = new SqlCommand("SELECT TOP 1 ISNULL(plant,'-') as plant FROM mst_users WHERE sesa_id=@sesa_id", conn))
                 {
-                    //cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
 
                     string plant = (string)cmd.ExecuteScalar();
 
                     return plant;
-                    //cmd.ExecuteScalar();
                 }
             }
         }
@@ -247,7 +1450,6 @@ namespace SEMB_ERP.Function
                     cmd.Parameters.AddWithValue("@manager_sesa_id", manager_sesa_id);
                     cmd.Parameters.AddWithValue("@manager_name", manager_name);
                     cmd.ExecuteNonQuery();
-                    //cmd.ExecuteScalar();
                     return "success";
                 }
             }
@@ -265,8 +1467,6 @@ namespace SEMB_ERP.Function
                 conn.Open();
                 using (SqlCommand cmd = new SqlCommand(qry_printer, conn))
                 {
-                    //cmd.CommandType = CommandType.StoredProcedure;
-                    //cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
                     using SqlDataReader reader = cmd.ExecuteReader();
                     if (reader.HasRows)
                     {
@@ -299,8 +1499,8 @@ namespace SEMB_ERP.Function
             }
         }
         public string SubmitOrder(string id_upload, string material_type, string partno, string po_no, double qty, string uom, string revision, string project_name,
-            string storage_requirement, string supplier_name, string pic, string order_type, double unit_price, double length_mm, double width_mm, double height_mm,
-            string remark, string gatepass, string file_support, string sesa_id)
+             string storage_requirement, string supplier_name, string pic, string order_type, double unit_price, string priority_request, double length_mm, double width_mm, double height_mm,
+             string remark, string gatepass, string file_support, string sesa_id)
         {
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
@@ -321,6 +1521,7 @@ namespace SEMB_ERP.Function
                     cmd.Parameters.AddWithValue("@pic", pic);
                     cmd.Parameters.AddWithValue("@order_type", order_type);
                     cmd.Parameters.AddWithValue("@unit_price", unit_price);
+                    cmd.Parameters.AddWithValue("@priority_request", priority_request ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@length_mm", length_mm);
                     cmd.Parameters.AddWithValue("@width_mm", width_mm);
                     cmd.Parameters.AddWithValue("@height_mm", height_mm);
@@ -329,20 +1530,109 @@ namespace SEMB_ERP.Function
                     cmd.Parameters.AddWithValue("@file_support", file_support);
                     cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
                     cmd.ExecuteNonQuery();
-                    //cmd.ExecuteScalar();
                     return "success";
                 }
             }
         }
 
-        public string UpdateOrder(string id_order, string id_upload, string material_type, string partno, string po_no, double qty, string uom, string revision, string project_name,
-    string storage_requirement, string supplier_name, string order_type, double unit_price, double length_mm, double width_mm, double height_mm,
-    string remark, string gatepass, string file_support, string sesa_id)
+        public int GetUnreadDiscussionCount(string sesa_id)
         {
-            if (file_support == "")
+            int count = 0;
+
+            try
+            {
+                string query = @"
+            -- Hitung JUMLAH DISCUSSION baru, bukan jumlah order
+            SELECT COUNT(d.id)
+            FROM tbl_discussion d
+            INNER JOIN tbl_order o ON d.id_order = o.id_order
+            WHERE d.sesa_id != @sesa_id  -- Bukan dari user sendiri
+            AND d.created_date > ISNULL((
+                -- Ambil tanggal terakhir user baca discussion
+                SELECT MAX(last_read_date) 
+                FROM tbl_discussion_read 
+                WHERE sesa_id = @sesa_id
+            ), '1900-01-01')
+            AND (
+                -- User harus punya akses
+                o.pic = @sesa_id
+                OR EXISTS (
+                    SELECT 1 FROM mst_users_role ur
+                    WHERE ur.sesa_id = @sesa_id
+                    AND ur.id_role IN (2, 3, 99)
+                )
+                OR EXISTS (
+                    SELECT 1 FROM tbl_discussion d2
+                    WHERE d2.id_order = o.id_order 
+                    AND d2.sesa_id = @sesa_id
+                )
+            )";
+
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+                        conn.Open();
+
+                        object result = cmd.ExecuteScalar();
+                        count = result != null ? Convert.ToInt32(result) : 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting unread discussion count: {ex.Message}");
+            }
+
+            return count;
+        }
+
+
+        public int GetOrderIdByUploadId(string id_upload)
+        {
+            int id = 0;
+            try
+            {
+                System.Diagnostics.Debug.WriteLine($"[GetOrderIdByUploadId] START - id_upload: {id_upload}");
+
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    string q = "SELECT TOP 1 id_order FROM tbl_order WHERE id_upload = @id";
+                    SqlCommand cmd = new SqlCommand(q, conn);
+                    cmd.Parameters.AddWithValue("@id", id_upload);
+                    conn.Open();
+
+                    var res = cmd.ExecuteScalar();
+
+                    if (res != null)
+                    {
+                        id = Convert.ToInt32(res);
+                        System.Diagnostics.Debug.WriteLine($"[GetOrderIdByUploadId] Found id_order: {id}");
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[GetOrderIdByUploadId] NOT FOUND for id_upload: {id_upload}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[GetOrderIdByUploadId] ERROR: {ex.Message}");
+            }
+
+            return id;
+        }
+
+        public string UpdateOrder(string id_order, string id_upload, string material_type, string partno, string po_no, double qty, string uom, string revision, string project_name,
+        string storage_requirement, string supplier_name, string order_type, double unit_price, string priority_request, double length_mm, double width_mm, double height_mm,
+        string remark, string gatepass, string file_support, string sesa_id)
+        {
+            if (string.IsNullOrEmpty(file_support))
             {
                 file_support = null;
             }
+
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
                 conn.Open();
@@ -362,19 +1652,38 @@ namespace SEMB_ERP.Function
                     cmd.Parameters.AddWithValue("@supplier_name", supplier_name);
                     cmd.Parameters.AddWithValue("@order_type", order_type);
                     cmd.Parameters.AddWithValue("@unit_price", unit_price);
+                    cmd.Parameters.AddWithValue("@priority_request", priority_request ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@length_mm", length_mm);
                     cmd.Parameters.AddWithValue("@width_mm", width_mm);
                     cmd.Parameters.AddWithValue("@height_mm", height_mm);
                     cmd.Parameters.AddWithValue("@remark", remark ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@gatepass", gatepass ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@file_support", file_support);
+                    cmd.Parameters.AddWithValue("@file_support", file_support ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+
                     cmd.ExecuteNonQuery();
-                    //cmd.ExecuteScalar();
+
+                    if (!string.IsNullOrEmpty(priority_request) && priority_request.Trim().Equals("High", StringComparison.OrdinalIgnoreCase))
+                    {
+                        try
+                        {
+                            int idOrderInt = int.Parse(id_order);
+                            TriggerUrgentReceiverEmail(idOrderInt, sesa_id);
+
+                            System.Diagnostics.Debug.WriteLine($"[UpdateOrder] Notifikasi High Priority terkirim untuk ID: {id_order}");
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[UpdateOrder] Gagal mengirim email: {ex.Message}");
+                        }
+                    }
+
                     return "success";
                 }
             }
         }
+
+
 
         public List<OrderListModel> GetDataGR(string id_order_string)
         {
@@ -756,19 +2065,69 @@ namespace SEMB_ERP.Function
             }
         }
 
-        public string ConfirmBinItem(string binId, string sesa_id)
+        public string ConfirmBinItem(string binId, string sesa_id, out List<int> orderIds)
         {
-            using (SqlConnection conn = new SqlConnection(ConnectionStringBLP))
+            orderIds = new List<int>();
+
+            try
             {
-                conn.Open();
-                using (SqlCommand cmd = new SqlCommand("UPDATE_BIN", conn))
+                // ✅ STEP 1: Ambil id_order dari packagedetail SEBELUM SP dijalankan
+                using (SqlConnection connBLP = new SqlConnection(ConnectionStringBLP))
                 {
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@input", binId);
-                    cmd.Parameters.AddWithValue("@user", sesa_id);
-                    cmd.ExecuteNonQuery();
-                    return "OK";
+                    connBLP.Open();
+
+                    string queryGetOrders = @"
+                SELECT DISTINCT pd.erp_id_order
+                FROM DBBLP.dbo.packagedetail pd
+                WHERE pd.erp_id_order IS NOT NULL 
+                  AND pd.PKG_ID2 IN (
+                      SELECT PartName 
+                      FROM SEMB_DT.SEMB_ERP_QAS.dbo.tmp_bin_matrial 
+                      WHERE DoneBy = @user
+                  )";
+
+                    using (SqlCommand cmdGet = new SqlCommand(queryGetOrders, connBLP))
+                    {
+                        cmdGet.Parameters.AddWithValue("@user", sesa_id);
+
+                        using (SqlDataReader reader = cmdGet.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                if (!reader.IsDBNull(0))
+                                {
+                                    orderIds.Add(reader.GetInt32(0));
+                                }
+                            }
+                        }
+                    }
+
+                    System.Diagnostics.Debug.WriteLine($"✅ Found {orderIds.Count} orders before UPDATE_BIN_V1");
+                    foreach (var id in orderIds)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"   - id_order: {id}");
+                    }
                 }
+
+                // ✅ STEP 2: Jalankan SP UPDATE_BIN_V1
+                using (SqlConnection conn = new SqlConnection(ConnectionStringBLP))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("UPDATE_BIN_V1", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@input", binId);
+                        cmd.Parameters.AddWithValue("@user", sesa_id);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+
+                return "OK";
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ ConfirmBinItem Error: {ex.Message}");
+                return "NOK;" + ex.Message;
             }
         }
 
@@ -852,6 +2211,48 @@ namespace SEMB_ERP.Function
             }
 
             return tempList;
+        }
+
+        public List<Tuple<int, int>> GetAffectedOrdersBeforeSubmit(string sesa_id)
+        {
+            List<Tuple<int, int>> orders = new List<Tuple<int, int>>();
+
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                string query = @"
+            SELECT DISTINCT 
+                tr.id_order,
+                tr.qty as picking_qty,
+                ISNULL(vo.available_qty, 0) as available_qty,
+                CASE 
+                    WHEN (ISNULL(vo.available_qty, 0) - tr.qty) <= 0 THEN 5
+                    ELSE 4
+                END as new_status_code
+            FROM temp_request tr
+            INNER JOIN v_order vo ON tr.id_order = vo.id_order
+            WHERE tr.added_by = @sesa_id
+        ";
+
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@sesa_id", sesa_id);
+
+                conn.Open();
+                SqlDataReader dr = cmd.ExecuteReader();
+
+                while (dr.Read())
+                {
+                    int id_order = Convert.ToInt32(dr["id_order"]);
+                    int new_status_code = Convert.ToInt32(dr["new_status_code"]);
+
+                    Console.WriteLine($"[DAL] Order {id_order} → Status {new_status_code}");
+
+                    orders.Add(new Tuple<int, int>(id_order, new_status_code));
+                }
+
+                dr.Close();
+            }
+
+            return orders;
         }
         public string DeleteTempReq(int id_temp)
         {
@@ -2581,6 +3982,130 @@ namespace SEMB_ERP.Function
             }
         }
 
+        public List<(int id, string priority)> GetAllOrderIdsByUploadId(string id_upload)
+        {
+            var result = new List<(int id, string priority)>();
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    string q = "SELECT id_order, priority_request FROM tbl_order WHERE id_upload = @id";
+                    SqlCommand cmd = new SqlCommand(q, conn);
+                    cmd.Parameters.AddWithValue("@id", id_upload);
+                    conn.Open();
+                    SqlDataReader dr = cmd.ExecuteReader();
+                    while (dr.Read())
+                    {
+                        int id = Convert.ToInt32(dr["id_order"]);
+                        string priority = dr["priority_request"] != DBNull.Value ? dr["priority_request"].ToString() : "";
+                        System.Diagnostics.Debug.WriteLine($"[GetAllOrderIdsByUploadId] id={id}, priority='{priority}'");
+                        result.Add((id, priority));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[GetAllOrderIdsByUploadId] ERROR: {ex.Message}");
+            }
+            return result;
+        }
+
+        public bool TriggerStatusUpdateEmail(int id_order, string receiver_id, int new_status_code)
+        {
+            try
+            {
+                Console.WriteLine($"      [DAL] ========================================");
+                Console.WriteLine($"      [DAL] EMAIL TRIGGER START");
+                Console.WriteLine($"      [DAL] ========================================");
+                Console.WriteLine($"      [DAL] id_order: {id_order}");
+                Console.WriteLine($"      [DAL] receiver_id: {receiver_id}");
+                Console.WriteLine($"      [DAL] new_status_code: {new_status_code}");
+
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    Console.WriteLine($"      [DAL] Creating SP command...");
+                    SqlCommand cmd = new SqlCommand("SEND_EMAIL_STATUS_UPDATE_NOTIFICATION", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    Console.WriteLine($"      [DAL] Adding parameters...");
+                    cmd.Parameters.AddWithValue("@id_order", id_order);
+                    cmd.Parameters.AddWithValue("@receiver_sesa_id", receiver_id);
+                    cmd.Parameters.AddWithValue("@new_status_code", new_status_code);
+
+                    Console.WriteLine($"      [DAL] Opening connection...");
+                    conn.Open();
+                    Console.WriteLine($"      [DAL] ✅ Connection opened! State: {conn.State}");
+
+                    Console.WriteLine($"      [DAL] Executing SP: SEND_EMAIL_STATUS_UPDATE_NOTIFICATION");
+                    cmd.ExecuteNonQuery();
+                    Console.WriteLine($"      [DAL] ✅✅✅ SP EXECUTED SUCCESSFULLY!");
+
+                    conn.Close();
+                    Console.WriteLine($"      [DAL] Connection closed.");
+                }
+
+                Console.WriteLine($"      [DAL] ========================================");
+                Console.WriteLine($"      [DAL] EMAIL TRIGGER END (SUCCESS)");
+                Console.WriteLine($"      [DAL] ========================================");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"      [DAL] ❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌");
+                Console.WriteLine($"      [DAL] EMAIL TRIGGER ERROR!");
+                Console.WriteLine($"      [DAL] ❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌");
+                Console.WriteLine($"      [DAL] Error Message: {ex.Message}");
+                Console.WriteLine($"      [DAL] Error Source: {ex.Source}");
+                Console.WriteLine($"      [DAL] Stack Trace:");
+                Console.WriteLine($"      {ex.StackTrace}");
+
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"      [DAL] Inner Exception: {ex.InnerException.Message}");
+                }
+
+                return false;
+            }
+        }
+
+        public void TriggerUrgentReceiverEmail(int idOrder, string sesaId)
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine($"[TriggerUrgentReceiverEmail] START - idOrder: {idOrder}, sesaId: {sesaId}");
+
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    System.Diagnostics.Debug.WriteLine("[TriggerUrgentReceiverEmail] Connection opened");
+
+                    // Enable InfoMessage untuk tangkap PRINT dari SQL
+                    conn.InfoMessage += (sender, e) =>
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[SQL PRINT] {e.Message}");
+                    };
+
+                    using (SqlCommand cmd = new SqlCommand("SEND_EMAIL_URGENT_REQUEST_NOTIFICATION", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@id_order", idOrder);
+                        cmd.Parameters.AddWithValue("@sender_sesa_id", sesaId);
+
+                        System.Diagnostics.Debug.WriteLine("[TriggerUrgentReceiverEmail] Executing SP...");
+                        cmd.ExecuteNonQuery();
+                        System.Diagnostics.Debug.WriteLine("[TriggerUrgentReceiverEmail] SP executed successfully");
+                    }
+                }
+
+                System.Diagnostics.Debug.WriteLine("[TriggerUrgentReceiverEmail] COMPLETED");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[TriggerUrgentReceiverEmail] ERROR: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[TriggerUrgentReceiverEmail] Stack: {ex.StackTrace}");
+                throw;
+            }
+        }
         public string DeleteShipment(string id_shipment, string sesa_id)
         {
             try

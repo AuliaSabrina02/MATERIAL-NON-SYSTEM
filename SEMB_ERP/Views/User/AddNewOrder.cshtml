@@ -31,8 +31,8 @@
     }
 
     /* .content {
-        font-family: Verdana
-    } */
+            font-family: Verdana
+        } */
 
 </style>
 
@@ -73,7 +73,7 @@
 
                                             <div class="form-group">
                                                 <label>Supporting Documents (Excel or PDF)</label>
-                                                <input type="file" class="form-control" name="file_support" >
+                                                <input type="file" class="form-control" name="file_support">
                                             </div>
                                         </div>
                                     </div>
@@ -159,6 +159,15 @@
                                                 <label>Price<span class="text-danger">*</span></label>
                                                 <input class="form-control" type="number" name="unit_price" placeholder="Price" autocomplete="off" step="any" required />
                                             </div>
+                                            <div class="form-group">
+                                                <label>Priority Request<span class="text-danger">*</span></label>
+                                                <select class="form-select" name="priority_request" required>
+                                                    <option value="">--SELECT--</option>
+                                                    <option value="High">High</option>
+                                                    <option value="Medium">Medium</option>
+                                                    <option value="Low">Low</option>
+                                                </select>
+                                            </div>
                                             <div class="row">
                                                 <div class="col-4">
                                                     <div class="form-group">
@@ -194,6 +203,9 @@
                                         </div>
                                         <div class="col-12">
                                             <div class="form-group text-center">
+                                                <button type="button" class="btn btn-info mt-2" id="btn_save_template">
+                                                <i class="fas fa-file-excel"></i> Save as Template
+                                                </button>
                                                 <button type="submit" class="btn btn-success mt-2" name="btn_confirm">Submit Order <i class="fa fa-arrow-right"></i></button>
                                             </div>
                                         </div>
@@ -208,6 +220,7 @@
     </div>
 </div>
 
+<!-- MODAL REVIEW ORDER -->
 <div id="modal_temp_order" class="modal fade">
     <div class="modal-dialog" role="document" style="min-width:80%">
         <div class="modal-content">
@@ -228,6 +241,7 @@
     </div>
 </div>
 
+
 @section Scripts
 {
     <script>
@@ -236,7 +250,127 @@
 
         $(document).ready(function () {
 
-            $("form#form_upload_order").submit(function (e) {
+
+              $("#btn_save_template").click(function(e) {
+            e.preventDefault();
+
+            // 1. Ambil data dari form input
+            let materialType = $("select[name='material_type']").val();
+            let partNo = $("input[name='partno']").val();
+            let poNo = $("input[name='po_no']").val();
+            let qty = $("input[name='qty']").val();
+            let uom = $("input[name='uom']").val();
+            let revision = $("input[name='revision']").val();
+            let projectName = $("input[name='project_name']").val();
+            let storageReq = $("select[name='storage_requirement']").val();
+            let supplierName = $("input[name='supplier_name']").val();
+            let orderType = $("select[name='order_type']").val();
+            let price = $("input[name='unit_price']").val();
+
+            // Pastikan select name='priority_request' ada di HTML Anda
+            let priority = $("select[name='priority_request']").val();
+
+            let lengthMm = $("input[name='length_mm']").val() || '0';
+            let widthMm = $("input[name='width_mm']").val() || '0';
+            let heightMm = $("input[name='height_mm']").val() || '0';
+            let remark = $("textarea[name='remark']").val();
+            let gatepass = $("input[name='gatepass']").val();
+            let pic = $("input[name='pic']").val();
+
+            // 2. Validasi minimal ada satu data terisi
+            let hasData = materialType || partNo || poNo || qty || uom || revision ||
+                          projectName || storageReq || supplierName || orderType || price || priority;
+
+            if (!hasData) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Data',
+                    text: 'Please fill at least one field before saving as template!'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Save as Template?',
+                text: "Current form data will be saved to database and downloaded as Excel",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#17a2b8',
+                confirmButtonText: 'Yes, Save & Download!',
+            }).then((result) => {
+                if (result.isConfirmed) {
+
+                    // 3. Siapkan data untuk dikirim ke C# Controller
+                    let formData = {
+                        material_type: materialType,
+                        partno: partNo,
+                        po_no: poNo,
+                        qty: qty,
+                        uom: uom,
+                        revision: revision,
+                        project_name: projectName,
+                        storage_requirement: storageReq,
+                        supplier_name: supplierName,
+                        order_type: orderType,
+                        unit_price: price,
+                        priority_request: priority, // Dikirim ke model.priority_request
+                        length_mm: lengthMm,
+                        width_mm: widthMm,
+                        height_mm: heightMm,
+                        remark: remark,
+                        gatepass: gatepass,
+                        pic: pic,
+                        status_code: "TEMPLATE"
+                    };
+
+                    $.ajax({
+                        url: "@Url.Action("SaveAsTemplate", "User")",
+                        type: "POST",
+                        data: formData,
+                        success: function (res) {
+                            // 4. Generate Excel dengan struktur kolom yang SINKRON (Priority di Kolom 12)
+                            let wsData = [
+                                [
+                                    'Material Type*', 'Part No*', 'PO No*', 'Qty*', 'UOM*',
+                                    'Revision*', 'Project Name*', 'Storage Requirement*', 'Supplier Name*',
+                                    'Order Type*', 'Price ($)*', 'Priority Request*', 'Length (mm)',
+                                    'Width (mm)', 'Height (mm)', 'Remark', 'Gatepass'
+                                ],
+                                [
+                                    materialType || '', partNo || '', poNo || '', qty || '', uom || '',
+                                    revision || '', projectName || '', storageReq || '', supplierName || '',
+                                    orderType || '', price || '', priority || 'Low', lengthMm || '0',
+                                    widthMm || '0', heightMm || '0', remark || '', gatepass || ''
+                                ]
+                            ];
+
+                            let wb = XLSX.utils.book_new();
+                            let ws = XLSX.utils.aoa_to_sheet(wsData);
+
+                            // Setup lebar kolom (Total 17 Kolom)
+                            ws['!cols'] = [
+                                { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 8 }, { wch: 8 },
+                                { wch: 10 }, { wch: 15 }, { wch: 20 }, { wch: 15 }, { wch: 12 },
+                                { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
+                                { wch: 20 }, { wch: 15 }
+                            ];
+
+                            XLSX.utils.book_append_sheet(wb, ws, "Order Template");
+                            let timestamp = new Date().toISOString().slice(0,19).replace(/:/g,'-');
+                            XLSX.writeFile(wb, `Order_Template_${timestamp}.xlsx`);
+
+                            Swal.fire("Success!", "Template saved and downloaded", "success");
+                        },
+                        error: function (xhr) {
+                            Swal.fire("Error!", "Failed to save template: " + xhr.responseText, "error");
+                        }
+                    });
+                }
+            });
+        });
+
+
+          $("form#form_upload_order").submit(function (e) {
                 e.preventDefault();
                 $("div#body_temp_order").html("<div class='text-center'>" + loading + "</div>");
                 $("div#modal_temp_order").modal("show");
@@ -247,57 +381,17 @@
                     data: formData,
                     cache: false,
                     contentType: false,
-                    processData: false
-                }).done(function (res) {
-                    $("div#body_temp_order").html(res);
-                    // Swal.fire({
-                    //     icon: 'success',
-                    //     title: 'Done!!',
-                    //     html: res,
-                    //     width: 800
-                    // }).then(function () {
-                    //     location.reload();
-                    // })
-                }).fail(function (err) {
-                    swal.fire("Error", "Upload Failed -> " + err, "error");
-                })
-                // Swal.fire({
-                //     title: 'Confirm',
-                //     text: "Are you sure ?",
-                //     icon: 'warning',
-                //     showCancelButton: true,
-                //     confirmButtonColor: '#28a745',
-                //     cancelButtonColor: '#dc3545',
-                //     confirmButtonText: 'Yes!',
-                //     cancelButtonText: 'No!',
-                //     showLoaderOnConfirm: true,
-                //     preConfirm: function () {
-                //         return new Promise(function (resolve, reject) {
-                //             $.ajax({
-                //                 url: "@Url.Action("UploadOrder")",
-                //                 type: 'POST',
-                //                 data: formData,
-                //                 cache: false,
-                //                 contentType: false,
-                //                 processData: false
-                //             }).done(function (res) {
-                //                 $("div#body_temp_order").html(res);
-                //                 // Swal.fire({
-                //                 //     icon: 'success',
-                //                 //     title: 'Done!!',
-                //                 //     html: res,
-                //                 //     width: 800
-                //                 // }).then(function () {
-                //                 //     location.reload();
-                //                 // })
-                //             }).fail(function (err) {
-                //                 swal.fire("Error", "Upload Failed -> " + err, "error");
-                //             })
-                //         })
-                //     },
-                //     allowOutsideClick: () => !Swal.isLoading()
-                // })
-            })
+                    processData: false,
+                    success: function(res) {
+                        $("div#body_temp_order").html(res);
+                    },
+                    error: function(xhr, status, error) {
+                        Swal.fire("Error", "Upload Failed", "error");
+                        $("div#modal_temp_order").modal("hide");
+                    }
+                });
+            });
+
 
             $("button[name=btn_confirm_order]").click(function(){
                 let total_error = $("input[name=total_error]").val();
@@ -378,7 +472,7 @@
                                 contentType: false,
                                 processData: false
                             }).done(function (msg) {
-                                let arr = msg.split(";");
+                                let arr = msg.split(";");   
                                 if (arr[0] == "success") {
                                     swal.fire("Success!", arr[1], "success").then(function () {
                                         location.reload();

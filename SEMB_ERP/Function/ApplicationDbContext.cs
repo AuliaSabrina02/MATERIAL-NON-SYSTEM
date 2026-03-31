@@ -22,6 +22,7 @@ namespace SEMB_ERP.Function
         public DbSet<AgingMovementModel> v_order_aging { get; set; }
         public DbSet<ShipmentModel> v_shipment { get; set; }
 
+        public DbSet<ScheduledRequest> ScheduledRequests { get; set; }
     }
 
   

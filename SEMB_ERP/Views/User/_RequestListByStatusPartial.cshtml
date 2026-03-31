@@ -1,0 +1,134 @@
+﻿@model List<dynamic>
+@{
+    var statusFilter = ViewBag.StatusFilter;
+    var totalRecords = ViewBag.TotalRecords;
+}
+
+<div class="modal-body">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <h6><i class="fas fa-filter"></i> Filtered by: <span class="badge bg-warning text-dark">@statusFilter</span></h6>
+        </div>
+        <div class="col-md-6 text-end">
+            <h6>Total Records: <span class="badge bg-success">@totalRecords</span></h6>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped table-sm" id="tbl_filtered_requests">
+            <thead class="bg-warning text-dark text-center">
+                <tr>
+                    <th>Request No</th>
+                    <th>Status</th>
+                    <th>Requested By</th>
+                    <th>Request Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Count > 0)
+                {
+                    foreach (var item in Model)
+                    {
+                        string statusDesc = item.status_desc?.ToString() ?? "";
+                        string statusLower = statusDesc.ToLower();
+                        var statusClass = "";
+
+                        if (statusLower == "request") statusClass = "bg-light";
+                        else if (statusLower == "start picking") statusClass = "bg-warning";
+                        else if (statusLower == "picking") statusClass = "bg-warning";
+                        else if (statusLower == "done picking") statusClass = "bg-info text-white";
+                        else if (statusLower == "consolidation") statusClass = "bg-info text-white";
+                        else if (statusLower == "transfering") statusClass = "bg-primary text-white";
+                        else if (statusLower == "plant received") statusClass = "bg-success text-white";
+                        else if (statusLower == "supplied") statusClass = "bg-success text-white";
+                        else if (statusLower == "close") statusClass = "bg-secondary text-white";
+
+                        <tr>
+                            <td><strong>@(item.request_no?.ToString() ?? "-")</strong></td>
+                            <td class="@statusClass text-center">@(statusDesc != "" ? statusDesc : "-")</td>
+                            <td>@(item.requested_by_name?.ToString() ?? "-")</td>
+                            <td>@(item.record_date?.ToString() ?? "-")</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-info"
+                                        onclick="open_detail(@item.id_request)">
+                                    <i class="fas fa-eye"></i> Detail
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">No data available for this status</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+        <i class="fas fa-times"></i> Close
+    </button>
+</div>
+<script>
+    $(document).ready(function() {
+        // ✅ Destroy dulu kalau sudah ada DataTable
+        if ($.fn.DataTable.isDataTable('#tbl_filtered_requests')) {
+            $('#tbl_filtered_requests').DataTable().destroy();
+        }
+
+        // ✅ Init DataTable
+        $('#tbl_filtered_requests').DataTable({
+            "pageLength": 10,
+            "ordering": true,
+            "searching": true,
+            "order": [[3, 'desc']]
+        });
+    });
+
+    // ✅ Open detail - FIXED VERSION
+    function open_detail(id_request) {
+        // Tutup modal filtered requests dulu
+        $('#modal_filtered_requests').modal('hide');
+
+        // Tunggu sampai modal benar-benar tertutup
+        $('#modal_filtered_requests').one('hidden.bs.modal', function() {
+            // Baru tampilkan loading di modal detail
+            $("#body_req_detail_dashboard").html(`
+                <div class="text-center p-5">
+                    <i class="fas fa-spinner fa-spin fa-3x text-success"></i>
+                    <p class="mt-3">Loading detail...</p>
+                </div>
+            `);
+
+            // Buka modal detail
+            $("#modal_req_detail_dashboard").modal("show");
+
+            // Fetch data detail
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetReqDetail", "User")",
+                data: { id_request: id_request },
+                success: function(res) {
+                    $("#body_req_detail_dashboard").html(res);
+                },
+                error: function(xhr, status, error) {
+                    $("#modal_req_detail_dashboard").modal("hide");
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: 'Failed to load request detail',
+                        footer: '<small>Error: ' + error + '</small>'
+                    });
+
+                    console.error('Error loading detail:', xhr.responseText);
+                }
+            });
+        });
+    }
+</script>

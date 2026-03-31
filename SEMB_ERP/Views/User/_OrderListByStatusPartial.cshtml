@@ -1,0 +1,133 @@
+﻿@model List<SEMB_ERP.Models.OrderListModel>
+@{
+    var statusFilter = ViewBag.StatusFilter;
+    var totalRecords = ViewBag.TotalRecords;
+    var userRoles = ViewBag.UserRoles as List<string>;
+    var sesaId = ViewBag.SesaId;
+}
+
+<div class="modal-body">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <h6><i class="fas fa-filter"></i> Filtered by: <span class="badge bg-primary">@statusFilter</span></h6>
+        </div>
+        <div class="col-md-6 text-end">
+            <h6>Total Records: <span class="badge bg-success">@totalRecords</span></h6>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped table-sm" id="tbl_filtered_orders">
+            <thead class="bg-info text-center">
+                <tr>
+                    <th>Status</th>
+                    <th>Material Type</th>
+                    <th>Part No</th>
+                    <th>PO NO</th>
+                    <th>Qty</th>
+                    <th>Pick.Qty</th>
+                    <th>Avai.Qty</th>
+                    <th>UOM</th>
+                    <th>Revision</th>
+                    <th>Project Name</th>
+                    <th>Storage Req</th>
+                    <th>Supplier</th>
+                    <th>PIC</th>
+                    <th>Order Type</th>
+                    <th>Unit Price</th>
+                    <th>Priority</th>
+                    <th>Gatepass</th>
+                    <th>Order Date</th>
+                    <th>File Support</th>
+                    <th>L(mm)</th>
+                    <th>W(mm)</th>
+                    <th>H(mm)</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Count > 0)
+                {
+                    foreach (var item in Model)
+                    {
+                        var statusClass = "";
+                        if (item.status_desc?.ToUpper() == "SUBMISSION") statusClass = "bg-warning";
+                        else if (item.status_desc?.ToUpper() == "RECEIVED") statusClass = "bg-success text-white";
+                        else if (item.status_desc?.ToUpper() == "PUTAWAY") statusClass = "bg-info text-white";
+                        else if (item.status_desc?.ToUpper() == "PARTIALLY PICKED") statusClass = "bg-info text-white";
+                        else if (item.status_desc?.ToUpper() == "CLOSED") statusClass = "bg-secondary text-white";
+
+                        var priorityBadge = "";
+                        if (item.priority_request == "High") priorityBadge = "badge bg-danger";
+                        else if (item.priority_request == "Medium") priorityBadge = "badge bg-warning text-dark";
+                        else if (item.priority_request == "Low") priorityBadge = "badge bg-success";
+
+                        <tr style="background-color: #edfcf1;">
+                            <td class="@statusClass">@item.status_desc</td>
+                            <td>@item.material_type</td>
+                            <td><strong>@item.partno</strong></td>
+                            <td>@item.po_no</td>
+                            <td class="text-center">@item.qty</td>
+                            <td class="text-center">@item.picked_qty</td>
+                            <td class="text-center @(item.available_qty > 0 ? "bg-warning" : "bg-secondary text-white")">
+                                @item.available_qty
+                            </td>
+                            <td>@item.uom</td>
+                            <td>@item.revision</td>
+                            <td>@item.project_name</td>
+                            <td>@item.storage_requirement</td>
+                            <td>@item.supplier_name</td>
+                            <td>@item.pic_name</td>
+                            <td>@item.order_type</td>
+                            <td>@item.unit_price</td>
+                            <td class="text-center">
+                                @if (!string.IsNullOrEmpty(item.priority_request))
+                                {
+                                    <span class="@priorityBadge">@item.priority_request</span>
+                                }
+                            </td>
+                            <td>@item.gatepass</td>
+                            <td>@(item.record_date.HasValue? item.record_date.Value.ToString("dd-MM-yyyy HH:mm") : "")</td>
+                            <td class="text-center">
+                                @if (!string.IsNullOrEmpty(item.file_support))
+                                {
+                                    <a href="@item.file_support" target="_blank" class="btn btn-xs btn-info">
+                                        <i class="fas fa-file"></i>
+                                    </a>
+                                }
+                            </td>
+                            <td>@item.length_mm</td>
+                            <td>@item.width_mm</td>
+                            <td>@item.height_mm</td>
+
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="22" class="text-center text-muted">No data available for this status</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+        <i class="fas fa-times"></i> Close
+    </button>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#tbl_filtered_orders').DataTable({
+            "pageLength": 10,
+            "ordering": true,
+            "searching": true,
+            "order": [[20, 'desc']],
+            "scrollX": true
+        });
+    });
+</script>

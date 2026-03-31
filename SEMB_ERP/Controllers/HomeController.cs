@@ -180,31 +180,34 @@ namespace SEMB_ERP.Controllers
         {
             string user_level = User.FindFirst("semb_erp_level")?.Value;
             List<string> user_roles = User.Claims
-                        .Where(c => c.Type == "semb_erp_role")
-                        .Select(c => c.Value)
-                        .ToList();
+                                       .Where(c => c.Type == "semb_erp_role")
+                                       .Select(c => c.Value)
+                                       .ToList();
+
             if (user_level != null)
             {
-                if (user_roles.HasAnyRole("plant_receiver"))
+                // Prioritas pengecekan role
+                if (user_roles.Contains("plant_receiver"))
                 {
-                    return RedirectToAction("PalletTransferOpen", "User");
+                    return RedirectToAction("DashboardPalletReceiver", "User");
+                }
+                else if (user_roles.Contains("receiver"))
+                {
+                    return RedirectToAction("DashboardReceiver", "User");
+                }
+                else if (user_roles.Contains("requestor"))
+                {
+                    return RedirectToAction("DashboardRequestor", "User");
                 }
                 else
                 {
+                    // Default jika role tidak terdaftar di atas tapi memiliki level
                     return RedirectToAction("OrderList", "User");
                 }
-                //switch (user_level.ToLower())
-                //{
-                //    case "user":
-                //        return RedirectToAction("OrderList", "User");
-                //    case "admin":
-                //        return RedirectToAction("Index", "Admin");
-                //    default:
-                //        return RedirectToAction("Index", "Home");
-                //}
             }
             else
             {
+                // Jika tidak punya level/akses
                 return RedirectToAction("Index", "Home");
             }
         }
