@@ -14,7 +14,7 @@ namespace SEMB_ERP.Function
     public class DatabaseAccessLayer
     {
         public string ConnectionString = @"Server=localhost\SQLEXPRESS;Database=SEMB_ERP_QAS;Trusted_Connection=True;TrustServerCertificate=True;";
-        public string ConnectionStringBLP = "Data Source=10.155.129.223;Initial Catalog=DBBLP;Persist Security Info=True;User ID=semb;Password=Semb@123;MultipleActiveResultSets=true";
+        public string ConnectionStringBLP = @"Server=localhost\SQLEXPRESS;Database=DBBLP;Trusted_Connection=True;TrustServerCertificate=True;";
 
         public List<OrderTempListModel> GetTempOrder(string id_upload, string sesa_id)
         {
@@ -709,6 +709,38 @@ namespace SEMB_ERP.Function
             catch (Exception ex)
             {
                 return new { draw = 0, recordsTotal = 0, recordsFiltered = 0, data = new List<MaterialReturnModel>(), error = ex.Message };
+            }
+        }
+
+
+        public string DeleteReturn(int id_return, string sesa_id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+
+                    // Cek status dulu sebelum delete
+                    string checkQuery = "SELECT status FROM material_return WHERE id_return = @id_return";
+                    SqlCommand checkCmd = new SqlCommand(checkQuery, conn);
+                    checkCmd.Parameters.AddWithValue("@id_return", id_return);
+                    var status = checkCmd.ExecuteScalar()?.ToString();
+
+                    if (status == null) return "Data not found.";
+                    if (status != "1") return "Cannot delete. Status already updated.";
+
+                    string query = "DELETE FROM material_return WHERE id_return = @id_return";
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@id_return", id_return);
+
+                    int rowsAffected = cmd.ExecuteNonQuery();
+                    return rowsAffected > 0 ? "OK" : "No changes made.";
+                }
+            }
+            catch (Exception ex)
+            {
+                return "error;" + ex.Message;
             }
         }
         public string UpdateReturn(MaterialReturnModel model, IFormFile image_support_file, string sesa_id)
@@ -2082,7 +2114,7 @@ OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY";
                 WHERE pd.erp_id_order IS NOT NULL 
                   AND pd.PKG_ID2 IN (
                       SELECT PartName 
-                      FROM SEMB_DT.SEMB_ERP_QAS.dbo.tmp_bin_matrial 
+                      FROM SEMB_ERP_QAS.dbo.tmp_bin_matrial 
                       WHERE DoneBy = @user
                   )";
 

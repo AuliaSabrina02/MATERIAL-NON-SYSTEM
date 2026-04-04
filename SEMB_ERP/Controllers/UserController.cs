@@ -173,6 +173,13 @@ namespace SEMB_ERP.Controllers
             return db.GetReturnList(form);
         }
 
+        [HttpPost]
+        public string DeleteReturn(int id_return)
+        {
+            string sesa_id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            return db.DeleteReturn(id_return, sesa_id);
+        }
 
 
         [HttpPost]
@@ -2788,6 +2795,10 @@ namespace SEMB_ERP.Controllers
                 throw;
             }
         }
+
+
+
+
         [HttpPost]
         public IActionResult OpenBlockBin(string partno, string sbin)
         {

@@ -239,17 +239,27 @@
                     {
                         "data": "image_support",
                         "className": "text-center align-middle",
-                        "render": function(data) {
-                            return data ? `<a href="javascript:void(0)" class="text-primary fw-bold" onclick="view_image('${data}')">View</a>` : "-";
-                        }
-                    },
-                    {
-                        "data": null,
-                        "className": "text-center align-middle",
-                        "render": function (data, type, row) {
-                            return row.status_desc === "Sent" ? `<button class="btn btn-sm btn-warning" onclick='open_modal_edit(${JSON.stringify(row)})'><i class="fas fa-edit"></i></button>` : `<i class="fas fa-lock text-muted"></i>`;
-                        }
-                    }
+                              "render": function(data) {
+            return data ? `<a href="javascript:void(0)" class="text-primary fw-bold" onclick="view_image('${data}')">View</a>` : "-";
+        }
+        },
+        {
+            "data": null,
+            "className": "text-center align-middle",
+            "render": function (data, type, row) {
+                if (row.status_desc === "Sent") {
+                    return `
+                        <button class="btn btn-sm btn-warning me-1" onclick='open_modal_edit(${JSON.stringify(row)})'>
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick='delete_return(${row.id_return})'>
+                            <i class="fas fa-trash"></i>
+                        </button>`;
+                } else {
+                    return `<i class="fas fa-lock text-muted"></i>`;
+                }
+            }
+        }
                 ],
                 "drawCallback": function () {
                     this.api().rows().every(function () {
@@ -312,6 +322,32 @@
             $("#modal_return").modal("show");
         }
 
+                function delete_return(id) {
+            Swal.fire({
+                title: 'Delete Confirmation!',
+                text: "Are you sure want to delete this data?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Yes, Delete!',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '@Url.Action("DeleteReturn", "User")',
+                        type: 'POST',
+                        data: { id_return: id },
+                        success: function (msg) {
+                            if (msg.trim().toUpperCase() === "OK") {
+                                Swal.fire("Deleted!", "Data has been deleted.", "success");
+                                table.ajax.reload(null, false);
+                            } else {
+                                Swal.fire("Failed!", msg, "error");
+                            }
+                        }
+                    });
+                }
+            });
+        }
                function view_image(file) {
             var img = new Image();
             var pathNew = "/Uploads/returns/" + file;
