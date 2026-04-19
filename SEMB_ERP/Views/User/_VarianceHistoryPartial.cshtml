@@ -1,0 +1,106 @@
+﻿@model IEnumerable<dynamic>
+<style>
+    .professional-table-variance {
+        font-size: 12px;
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        background-color: white;
+        overflow: hidden;
+        min-width: 600px;
+        width: 100%;
+        table-layout: auto;
+    }
+
+        .professional-table-variance thead th {
+            background-color: #2f3d57;
+            color: white;
+            font-weight: 600;
+            padding: 8px 12px;
+            text-align: center;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .professional-table-variance tbody td {
+            padding: 6px 10px;
+            border: 1px solid #f0f0f0;
+            vertical-align: middle;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .professional-table-variance tbody tr:hover {
+            background-color: #f0faf2 !important;
+        }
+</style>
+<!-- Summary Bar -->
+<div class="d-flex align-items-center justify-content-between mb-3 p-3"
+     style="background: #f8f9fa; border-radius: 10px; border: 1px solid #e9ecef;">
+    <div>
+        <span style="font-size: 11px; color: #6c757d; text-transform: uppercase; font-weight: 600;">
+            <i class="fas fa-exclamation-triangle me-1" style="color: #3DCD58;"></i> Recent Variance
+        </span>
+        <div>
+            <span class="badge" style="background-color: #2f3d57; font-size: 12px; padding: 5px 12px; border-radius: 6px;">
+                Top 10 Latest
+            </span>
+        </div>
+    </div>
+    <div class="text-end">
+        <span style="font-size: 11px; color: #6c757d; text-transform: uppercase; font-weight: 600;">
+            Total Records
+        </span>
+        <div>
+            <span class="badge" style="background-color: #3DCD58; font-size: 12px; padding: 5px 12px; border-radius: 6px;">
+                @(Model != null ? Model.Count() : 0)
+            </span>
+        </div>
+    </div>
+</div>
+<!-- Table -->
+<div style="overflow-x: auto; width: 100%;">
+    <table class="table table-bordered table-striped professional-table-variance">
+        <thead>
+            <tr>
+                <th>Partno</th>
+                <th>Sbin</th>
+                <th>Qty</th>
+                <th>Req. No</th>
+                <th>Name</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@(item.partno ?? "Not Available")</td>
+                        <td>@(item.sbin ?? "Not Available")</td>
+                        <td class="text-center">
+                            <span class="badge" style="background-color: #dc3545; font-size: 11px; padding: 4px 10px; border-radius: 5px;">
+                                @item.qty
+                            </span>
+                        </td>
+                        <td class="text-center"><b>@(item.request_no ?? "Not Available")</b></td>
+                        <td>@(item.name ?? "Not Available")</td>
+                        <td class="text-center"><small>@(item.record_date ?? "Not Available")</small></td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6" style="text-align: center; color: #999; padding: 12px; font-size: 13px;">
+                        Not Available
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

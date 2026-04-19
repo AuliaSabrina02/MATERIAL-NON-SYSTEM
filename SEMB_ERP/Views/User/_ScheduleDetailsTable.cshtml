@@ -1,0 +1,161 @@
+﻿@model IEnumerable<dynamic>
+@{
+    var status = ViewBag.Category as string;
+    var totalRecords = Model != null ? Model.Count() : 0;
+}
+
+<style>
+    .professional-table-schedule {
+        font-size: 12px;
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        background-color: white;
+        overflow: hidden;
+        min-width: 800px; /* Disesuaikan agar tidak terlalu lebar tapi tetap pro */
+        width: 100%;
+        table-layout: auto;
+    }
+
+        .professional-table-schedule thead th {
+            background-color: #2f3d57;
+            color: white;
+            font-weight: 600;
+            padding: 8px 12px;
+            text-align: center;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .professional-table-schedule tbody td {
+            padding: 6px 10px;
+            border: 1px solid #f0f0f0;
+            vertical-align: middle;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .professional-table-schedule tbody tr:hover {
+            background-color: #f0faf2 !important; /* Hijau soft Schneider */
+        }
+
+    /* DataTables Custom Style */
+    .dataTables_wrapper .dataTables_filter input {
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        padding: 4px 8px;
+        margin-left: 5px;
+    }
+</style>
+
+<div class="modal-body p-3">
+    <div class="d-flex align-items-center justify-content-between mb-3 p-3"
+         style="background: #f8f9fa; border-radius: 10px; border: 1px solid #e9ecef;">
+        <div>
+            <span style="font-size: 11px; color: #6c757d; text-transform: uppercase; font-weight: 600;">
+                <i class="fas fa-filter me-1" style="color: #3DCD58;"></i> Schedule Filter
+            </span>
+            <div>
+                <span class="badge" style="background-color: #2f3d57; font-size: 12px; padding: 5px 12px; border-radius: 6px;">
+                    @status
+                </span>
+            </div>
+        </div>
+        <div class="text-end">
+            <span style="font-size: 11px; color: #6c757d; text-transform: uppercase; font-weight: 600;">
+                Total Records
+            </span>
+            <div>
+                <span class="badge" style="background-color: #3DCD58; font-size: 12px; padding: 5px 12px; border-radius: 6px;">
+                    @totalRecords
+                </span>
+            </div>
+        </div>
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="text-center text-muted py-4">
+            <i class="fas fa-inbox fa-2x mb-2 d-block" style="color: #dee2e6;"></i>
+            No schedules found for: <strong>@status</strong>
+        </div>
+    }
+    else
+    {
+        <div style="overflow-x: auto; width: 100%;">
+            <table class="table table-bordered table-striped professional-table-schedule" id="tbl_schedule_filtered">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th class="text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        bool isCompleted = item.is_completed != null && Convert.ToBoolean(item.is_completed);
+                        DateTime sDate = Convert.ToDateTime(item.scheduled_date);
+
+                        <tr>
+                            <td class="text-center">@sDate.ToString("dd-MM-yyyy")</td>
+                            <td class="text-center">@sDate.ToString("HH:mm")</td>
+                            <td><strong>@(item.title ?? "-")</strong></td>
+                            <td style="white-space: normal;">@(item.description ?? "-")</td>
+                            <td class="text-center">
+                                @if (isCompleted)
+                                {
+                                    <span class="badge bg-success" style="width: 70px;">Done</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark" style="width: 70px;">Pending</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<div class="modal-footer" style="background: #f8f9fa; border-top: 1px solid #e9ecef;">
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">
+        <i class="fas fa-times me-1"></i> Close
+    </button>
+</div>
+
+<script>
+    $(function () {
+        if ($.fn.DataTable.isDataTable('#tbl_schedule_filtered')) {
+            $('#tbl_schedule_filtered').DataTable().destroy();
+        }
+
+        if (@totalRecords > 0) {
+            $('#tbl_schedule_filtered').DataTable({
+                paging: true,
+                pageLength: 5,
+                searching: true,
+                ordering: true,
+                info: true,
+                autoWidth: false,
+                order: [[0, 'desc']], // Sort berdasarkan tanggal terbaru
+                language: {
+                    search: "Search:",
+                    lengthMenu: "Show _MENU_",
+                    info: "Showing _START_ to _END_ of _TOTAL_",
+                    paginate: { next: "Next", previous: "Prev" }
+                },
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                     '<"row"<"col-sm-12"tr>>' +
+                     '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>'
+            });
+        }
+    });
+</script>

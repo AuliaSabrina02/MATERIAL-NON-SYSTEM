@@ -173,13 +173,6 @@ namespace SEMB_ERP.Controllers
             return db.GetReturnList(form);
         }
 
-        [HttpPost]
-        public string DeleteReturn(int id_return)
-        {
-            string sesa_id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var db = new DatabaseAccessLayer();
-            return db.DeleteReturn(id_return, sesa_id);
-        }
 
 
         [HttpPost]
@@ -194,13 +187,13 @@ namespace SEMB_ERP.Controllers
             return db.UpdateReturn(model, image_support_file, sesa_id);
         }
 
-        [HttpGet]
-        public IActionResult PalletProblem()
-        {
+        //[HttpGet]
+        //public IActionResult PalletProblem()
+        //{
 
 
-            return View();
-        }
+        //    return View();
+        //}
 
         [HttpPost]
         public JsonResult GetPalletProblems()
@@ -230,6 +223,21 @@ namespace SEMB_ERP.Controllers
             catch (Exception ex)
             {
                 return Json(new { error = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public IActionResult UpdatePalletProblemStatus(int id, string status)
+        {
+            try
+            {
+                string sesa_id = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+                var result = _dal.UpdatePalletProblemStatus(id, status, sesa_id);
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                return Json("error;" + ex.Message);
             }
         }
 
@@ -386,7 +394,18 @@ namespace SEMB_ERP.Controllers
                 return Content($"error;{ex.Message}");
             }
         }
+        public IActionResult PalletProblem()
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            string plant = db.GetUserPlant(sesa_id);
+            string name = User.FindFirst("semb_erp_name")?.Value;
 
+            ViewBag.sesa_id = sesa_id;
+            ViewBag.name = name;
+            ViewBag.plant = plant;
+            return View();
+        }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult UpdatePalletProblem(IFormCollection form)
@@ -688,7 +707,7 @@ namespace SEMB_ERP.Controllers
                 }
                 else
                 {
-                    return result; 
+                    return result;
                 }
             }
             catch (Exception ex)
@@ -733,6 +752,8 @@ namespace SEMB_ERP.Controllers
             }
         }
 
+
+
         [HttpPost]
         public IActionResult GetPalletStatusChartData()
         {
@@ -763,13 +784,14 @@ namespace SEMB_ERP.Controllers
             var db = new DatabaseAccessLayer();
             string plant = db.GetUserPlant(sesa_id);
 
-            // Ambil data header pallet sesuai status
             var data = (from Pallet in _context.v_pallet_header
                         where Pallet.status_pallet == status.ToUpper()
                         && (Pallet.plant == "ALL" || Pallet.plant == plant)
                         select Pallet).ToList();
 
-            // Pastikan nama file ini sesuai dengan yang dibuat di poin nomor 2
+            ViewBag.StatusFilter = status.ToUpper();  // ✅ Tambahkan ini
+            ViewBag.TotalRecords = data.Count;        // ✅ Tambahkan ini
+
             return PartialView("_PalletListPartial", data);
         }
 
@@ -849,6 +871,31 @@ namespace SEMB_ERP.Controllers
             {
                 return Json(new { error = ex.Message });
             }
+        }
+
+        public IActionResult GetRecentPalletHistory()
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var db = new DatabaseAccessLayer();
+            string plant = db.GetUserPlant(sesa_id);
+
+            var data = (from Pallet in _context.v_pallet_header
+                        where (Pallet.plant == "ALL" || Pallet.plant == plant)
+                        orderby Pallet.record_date descending
+                        select new
+                        {
+                            Pallet.id_pallet,
+                            Pallet.pallet_no,
+                            Pallet.request_no,
+                            Pallet.status_pallet,
+                            record_date = Pallet.record_date != null ? Pallet.record_date.Value.ToString("yyyy-MM-dd HH:mm") : "-",
+                            transfer_date = Pallet.receive_date != null ? Pallet.receive_date.Value.ToString("yyyy-MM-dd HH:mm") : "-",
+                            supplied_date = Pallet.supply_date != null ? Pallet.supply_date.Value.ToString("yyyy-MM-dd HH:mm") : "-"
+                        })
+                        .Take(10)
+                        .ToList<dynamic>();
+
+            return PartialView("_PalletHistoryPartial", data);
         }
         private void SendEmail(string toEmail, string subject, string body)
         {
@@ -1389,12 +1436,12 @@ namespace SEMB_ERP.Controllers
                     worksheet.Cell(2, 9).Value = template.supplier_name;
                     worksheet.Cell(2, 10).Value = template.order_type;
                     worksheet.Cell(2, 11).Value = template.unit_price;
-                    worksheet.Cell(2, 12).Value = template.priority_request;  
-                    worksheet.Cell(2, 13).Value = template.length_mm;       
-                    worksheet.Cell(2, 14).Value = template.width_mm;  
-                    worksheet.Cell(2, 15).Value = template.height_mm;   
-                    worksheet.Cell(2, 16).Value = template.remark;     
-                    worksheet.Cell(2, 17).Value = template.gatepass;        
+                    worksheet.Cell(2, 12).Value = template.priority_request;
+                    worksheet.Cell(2, 13).Value = template.length_mm;
+                    worksheet.Cell(2, 14).Value = template.width_mm;
+                    worksheet.Cell(2, 15).Value = template.height_mm;
+                    worksheet.Cell(2, 16).Value = template.remark;
+                    worksheet.Cell(2, 17).Value = template.gatepass;
 
                     worksheet.Columns().AdjustToContents();
 
@@ -1403,6 +1450,70 @@ namespace SEMB_ERP.Controllers
                         workbook.SaveAs(stream);
                         var content = stream.ToArray();
                         string fileName = $"Template_{template.partno}_{DateTime.Now:yyyyMMdd}.xlsx";
+                        return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return Content("Error: " + ex.Message);
+            }
+        }
+
+
+        [Authorize(Policy = "RequireRequestor")]
+        [HttpGet]
+        public IActionResult DownloadOrderDetail(int id_order)
+        {
+            try
+            {
+                var db = new DatabaseAccessLayer();
+                var order = db.GetOrderDetail(id_order);
+
+                if (order == null)
+                {
+                    return Content("Error: Data tidak ditemukan.");
+                }
+
+                using (var workbook = new XLWorkbook())
+                {
+                    var worksheet = workbook.Worksheets.Add("Order Detail");
+                    string[] headers = {
+                "Material Type*", "Part No*", "PO No*", "Qty*", "UOM*", "Revision*",
+                "Project Name*", "Storage Requirement*", "Supplier Name*", "Order Type*",
+                "Price ($)*", "Priority Request*", "Length (mm)", "Width (mm)", "Height (mm)", "Remark", "Gatepass"
+            };
+
+                    for (int i = 0; i < headers.Length; i++)
+                    {
+                        worksheet.Cell(1, i + 1).Value = headers[i];
+                    }
+
+                    worksheet.Cell(2, 1).Value = order.material_type;
+                    worksheet.Cell(2, 2).Value = order.partno;
+                    worksheet.Cell(2, 3).Value = order.po_no;
+                    worksheet.Cell(2, 4).Value = order.qty;
+                    worksheet.Cell(2, 5).Value = order.uom;
+                    worksheet.Cell(2, 6).Value = order.revision;
+                    worksheet.Cell(2, 7).Value = order.project_name;
+                    worksheet.Cell(2, 8).Value = order.storage_requirement;
+                    worksheet.Cell(2, 9).Value = order.supplier_name;
+                    worksheet.Cell(2, 10).Value = order.order_type;
+                    worksheet.Cell(2, 11).Value = order.unit_price;
+                    worksheet.Cell(2, 12).Value = order.priority_request;
+                    worksheet.Cell(2, 13).Value = order.length_mm;
+                    worksheet.Cell(2, 14).Value = order.width_mm;
+                    worksheet.Cell(2, 15).Value = order.height_mm;
+                    worksheet.Cell(2, 16).Value = order.remark;
+                    worksheet.Cell(2, 17).Value = order.gatepass;
+
+                    worksheet.Columns().AdjustToContents();
+
+                    using (var stream = new MemoryStream())
+                    {
+                        workbook.SaveAs(stream);
+                        var content = stream.ToArray();
+                        string fileName = $"Order_{order.partno}_{DateTime.Now:yyyyMMdd}.xlsx";
                         return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
                     }
                 }
@@ -1855,7 +1966,7 @@ namespace SEMB_ERP.Controllers
                 int skip = start != null ? Convert.ToInt32(start) : 0;
                 int recordsTotal = 0;
                 var mstData = (from NonConfList in _context.V_NON_CONF
-                               where NonConfList.pic==sesa_id
+                               where NonConfList.pic == sesa_id
                                select
                                    new
                                    {
@@ -2170,6 +2281,29 @@ namespace SEMB_ERP.Controllers
             }
         }
 
+
+        [HttpPost]
+        public IActionResult DeleteReturn(int id)
+        {
+            try
+            {
+                var db = new DatabaseAccessLayer();
+                string result = db.DeleteMaterialReturn(id);
+
+                if (result == "OK")
+                {
+                    return Content("OK");
+                }
+                else
+                {
+                    return Content(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                return Content(ex.Message);
+            }
+        }
 
         [HttpGet]
         public IActionResult GetOrderListByStatus(string status)
@@ -2510,35 +2644,82 @@ namespace SEMB_ERP.Controllers
             // Return the result directly
             return Content(deleteResult, "text/plain");
         }
+        //[HttpPost]
+        //public IActionResult SubmitReqPicking(string remark, string plant)
+        //{
+        //    string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        //    var db = new DatabaseAccessLayer();
+        //    string submit = db.SubmitReqPicking(remark ?? "", sesa_id, plant);
+        //    return Content(submit, "text/plain");
+        //}
+        //public IActionResult RequestMonitoring()
+        //{
+        //    return this.CheckSession(() =>
+        //    {
+        //        string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        //        List<string> userRoles = User.Claims
+        //                                    .Where(c => c.Type == "semb_erp_role")
+        //                                    .Select(c => c.Value)
+        //                                    .ToList();
+        //        //sesa_id = "SESA126011";
+        //        var db = new DatabaseAccessLayer();
+        //        List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+        //        List<string> listStatus = db.GetStatusRequest();
+        //        string name = User.FindFirst("semb_erp_name")?.Value;
+        //        ViewBag.name = name;
+        //        ViewBag.sesa_id = sesa_id;
+        //        ViewBag.listStatus = listStatus;
+        //        ViewBag.userRoles = userRoles;
+        //        return View(userDetail);
+        //    });
+        //}
+
         [HttpPost]
         public IActionResult SubmitReqPicking(string remark, string plant)
         {
             string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            var db = new DatabaseAccessLayer();
-            string submit = db.SubmitReqPicking(remark ?? "", sesa_id, plant);
-            return Content(submit, "text/plain");
-        }
-        public IActionResult RequestMonitoring()
-        {
-            return this.CheckSession(() =>
+            if (string.IsNullOrEmpty(sesa_id))
             {
-                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                List<string> userRoles = User.Claims
-                                            .Where(c => c.Type == "semb_erp_role")
-                                            .Select(c => c.Value)
-                                            .ToList();
-                //sesa_id = "SESA126011";
-                var db = new DatabaseAccessLayer();
-                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
-                List<string> listStatus = db.GetStatusRequest();
-                string name = User.FindFirst("semb_erp_name")?.Value;
-                ViewBag.name = name;
-                ViewBag.sesa_id = sesa_id;
-                ViewBag.listStatus = listStatus;
-                ViewBag.userRoles = userRoles;
-                return View(userDetail);
-            });
+                return Content("Session Timeout, Please relogin!!", "text/plain");
+            }
+
+            var db = new DatabaseAccessLayer();
+            var affectedOrders = db.GetAffectedOrdersBeforeSubmit(sesa_id);
+            string submit = db.SubmitReqPicking(remark ?? "", sesa_id, plant);
+            if (submit.StartsWith("OK;"))
+            {
+                _ = Task.Run(() =>
+                {
+                    try
+                    {
+                        Console.WriteLine("===== EMAIL TRIGGER START =====");
+                        Console.WriteLine($"Affected orders: {affectedOrders.Count}");
+
+                        var dalEmail = new DatabaseAccessLayer();
+
+                        foreach (var orderInfo in affectedOrders)
+                        {
+                            int id_order = orderInfo.Item1;
+                            int new_status_code = orderInfo.Item2;
+
+                            Console.WriteLine($"Sending email: Order {id_order} → Status {new_status_code}");
+
+                            dalEmail.TriggerStatusUpdateEmail(id_order, sesa_id, new_status_code);
+                        }
+
+                        Console.WriteLine("===== EMAIL TRIGGER END =====");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"❌ Email trigger error: {ex.Message}");
+                        Console.WriteLine($"Stack: {ex.StackTrace}");
+                    }
+                });
+            }
+
+            return Content(submit, "text/plain");
         }
         public IActionResult GetRequestList()
         {
@@ -2567,7 +2748,7 @@ namespace SEMB_ERP.Controllers
                 int skip = start != null ? Convert.ToInt32(start) : 0;
                 int recordsTotal = 0;
                 var mstData = (from RequestList in _context.v_request
-                               where RequestList.requested_by==sesa_id || user_roles.HasAnyRole("admin","receiver")
+                               where RequestList.requested_by == sesa_id || user_roles.HasAnyRole("admin", "receiver")
                                orderby RequestList.status_request ascending
                                select
                                    new
@@ -2636,6 +2817,25 @@ namespace SEMB_ERP.Controllers
             //return Content("Upload Success!!", "text/plain");
 
             return PartialView("_TableRequestDetail", dataList);
+        }
+
+
+        public IActionResult GetRecentVariance()
+        {
+            var data = _context.v_picking_variance
+                .OrderByDescending(x => x.record_date)
+                .Take(10)
+                .Select(x => new {
+                    x.partno,
+                    x.sbin,
+                    x.qty,
+                    x.request_no,
+                    x.name,
+                    x.record_date
+                })
+                .ToList<dynamic>();
+
+            return PartialView("_VarianceHistoryPartial", data);
         }
         [HttpGet]
         public IActionResult ExportRequestList()
@@ -2795,10 +2995,6 @@ namespace SEMB_ERP.Controllers
                 throw;
             }
         }
-
-
-
-
         [HttpPost]
         public IActionResult OpenBlockBin(string partno, string sbin)
         {
@@ -3797,6 +3993,19 @@ namespace SEMB_ERP.Controllers
                         }
                     }
                 }
+                var agingCategory = Request.Form["aging_category"].FirstOrDefault();
+                if (!string.IsNullOrEmpty(agingCategory))
+                {
+                    if (agingCategory == "<= 3 Months")
+                        mstData = mstData.Where(m => m.aging <= 90);
+                    else if (agingCategory == "<= 6 Months")
+                        mstData = mstData.Where(m => m.aging > 90 && m.aging <= 180);
+                    else if (agingCategory == "<= 12 Months")
+                        mstData = mstData.Where(m => m.aging > 180 && m.aging <= 365);
+                    else if (agingCategory == "> 1 Year")
+                        mstData = mstData.Where(m => m.aging > 365);
+                }
+
                 recordsTotal = mstData.Count();
                 var data = mstData.Skip(skip).Take(pageSize).ToList();
                 var jsonData = new { draw = draw, recordsFiltered = recordsTotal, recordsTotal = recordsTotal, data = data };
@@ -3807,6 +4016,13 @@ namespace SEMB_ERP.Controllers
                 throw;
             }
         }
+
+        public IActionResult AgingMovementPartial(string agingCategory)
+        {
+            ViewBag.AgingCategory = agingCategory;
+            return PartialView("_AgingMovementPartial");
+        }
+
 
         public IActionResult RequestSchedule()
         {
@@ -3873,10 +4089,8 @@ namespace SEMB_ERP.Controllers
         {
             try
             {
-                // Log awal
                 System.Diagnostics.Debug.WriteLine("=== GetSchedules CALLED ===");
 
-                // Ambil SESA ID
                 string fullIdentity = User.Identity?.Name ?? "";
                 string sesaId = fullIdentity.Contains("\\")
                     ? fullIdentity.Split('\\')[1]
@@ -3891,23 +4105,19 @@ namespace SEMB_ERP.Controllers
                 System.Diagnostics.Debug.WriteLine($"SESA ID: {sesaId}");
 
                 if (string.IsNullOrEmpty(sesaId))
-                {
                     return Json(new { success = false, message = "User not authenticated" });
-                }
 
-                // Query database
                 DatabaseAccessLayer dal = new DatabaseAccessLayer();
                 var schedules = dal.GetUserSchedules(sesaId);
 
                 System.Diagnostics.Debug.WriteLine($"Rows fetched: {schedules.Rows.Count}");
 
-                // Build response
                 var data = new List<object>();
-
                 foreach (DataRow row in schedules.Rows)
                 {
                     var scheduledDate = Convert.ToDateTime(row["scheduled_date"]);
-                    var formattedDate = scheduledDate.ToString("yyyy-MM-ddTHH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+                    var formattedDate = scheduledDate.ToString("yyyy-MM-ddTHH:mm:ss",
+                        System.Globalization.CultureInfo.InvariantCulture);
 
                     System.Diagnostics.Debug.WriteLine($"Schedule: {row["title"]} at {formattedDate}");
 
@@ -3915,13 +4125,13 @@ namespace SEMB_ERP.Controllers
                     {
                         id = Convert.ToInt32(row["id"]),
                         title = row["title"].ToString(),
-                        start = formattedDate, // ✅ Format ISO dengan InvariantCulture
-                        description = row["description"]?.ToString() ?? ""
+                        start = formattedDate,
+                        description = row["description"]?.ToString() ?? "",
+                        isCompleted = Convert.ToBoolean(row["is_completed"])  // ← tambah ini
                     });
                 }
 
                 System.Diagnostics.Debug.WriteLine($"Total mapped: {data.Count}");
-
                 return Json(new { success = true, data = data });
             }
             catch (Exception ex)
@@ -3929,7 +4139,73 @@ namespace SEMB_ERP.Controllers
                 System.Diagnostics.Debug.WriteLine($"ERROR: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine($"STACK: {ex.StackTrace}");
                 return Json(new { success = false, message = ex.Message });
+            }
+        }
+        [HttpGet]
+        public IActionResult GetScheduleDetailsPartial(string category)
+        {
+            // 1. Ambil SESA ID
+            string fullIdentity = User.Identity?.Name ?? "";
+            string sesaId = fullIdentity.Contains("\\") ? fullIdentity.Split('\\')[1] : fullIdentity;
+            if (string.IsNullOrEmpty(sesaId))
+            {
+                sesaId = User.FindFirstValue("sesa_id") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+            }
 
+            try
+            {
+                var list = new List<dynamic>(); // Ganti DataTable jadi List
+
+                using (SqlConnection conn = new SqlConnection(_context.Database.GetDbConnection().ConnectionString))
+                {
+                    string sql = @"SELECT [id], [scheduled_date], [title], [description], [is_completed]
+                           FROM [dbo].[scheduled_requests]
+                           WHERE [sesa_id] = @sesa_id";
+
+                    if (category == "UPCOMING")
+                    {
+                        sql += " AND is_completed = 0 AND scheduled_date >= GETDATE() ORDER BY scheduled_date ASC";
+                    }
+                    else if (category == "COMPLETED")
+                    {
+                        sql += " AND is_completed = 1 ORDER BY scheduled_date DESC";
+                    }
+                    else
+                    {
+                        sql += " ORDER BY scheduled_date DESC";
+                    }
+
+                    using (SqlCommand cmd = new SqlCommand(sql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@sesa_id", sesaId);
+                        if (conn.State == ConnectionState.Closed) conn.Open();
+
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                // Kita bungkus ke dynamic object supaya sinkron sama Model di UI kamu
+                                list.Add(new
+                                {
+                                    id = reader["id"],
+                                    scheduled_date = reader["scheduled_date"],
+                                    title = reader["title"].ToString(),
+                                    description = reader["description"]?.ToString(),
+                                    is_completed = reader["is_completed"]
+                                });
+                            }
+                        }
+                    }
+                }
+
+                ViewBag.Category = category;
+                // Sekarang ini sudah jadi IEnumerable<dynamic>, UI kamu bakal aman
+                return PartialView("_ScheduleDetailsTable", list);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching schedule details");
+                return Content("<div class='alert alert-danger'>Error: " + ex.Message + "</div>");
             }
         }
 
@@ -4011,7 +4287,7 @@ namespace SEMB_ERP.Controllers
         public IActionResult GetAgingMovementChart()
         {
             var db = new DatabaseAccessLayer();
-            List <ChartModel> result = db.GetAgingMovementChart();
+            List<ChartModel> result = db.GetAgingMovementChart();
 
             return Json(result);
         }
@@ -4436,6 +4712,29 @@ namespace SEMB_ERP.Controllers
             }
         }
 
+        public IActionResult GetRecentNonConf()
+        {
+            string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var data = _context.V_NON_CONF
+                .Where(x => x.pic == sesa_id)
+                .OrderByDescending(x => x.id_non_conf)
+                .Take(5)
+                .Select(x => new {
+                    x.id_non_conf,
+                    x.partno,
+                    x.qty,
+                    x.uom,
+                    x.supplier_name,
+                    x.category_issue,
+                    x.detail_issue,
+                    x.file_doc
+                })
+                .ToList<dynamic>();
+
+            return PartialView("_NonConfPartial", data);
+        }
+
         [HttpPost]
         public IActionResult BinningShipment(string id_shipment, string storage_dest, string gatepass_no)
         {
@@ -4454,7 +4753,7 @@ namespace SEMB_ERP.Controllers
 
         [Authorize(Policy = "RequireRequestor")]
         [HttpPost]
-        public IActionResult AddShipmentManual(string project_name, string stage_name, string wo_no, 
+        public IActionResult AddShipmentManual(string project_name, string stage_name, string wo_no,
             string partno, string revision, decimal qty, string is_coated, DateTime ship_date)
         {
             DateTime now = DateTime.Now;
@@ -4469,7 +4768,7 @@ namespace SEMB_ERP.Controllers
                 try
                 {
                     var db = new DatabaseAccessLayer();
-                    string result = db.InsertShipmentManual(id_upload, project_name, stage_name, wo_no, partno, 
+                    string result = db.InsertShipmentManual(id_upload, project_name, stage_name, wo_no, partno,
                         revision, qty, is_coated, ship_date, sesa_id);
                     return Content(result, "text/plain");
                 }

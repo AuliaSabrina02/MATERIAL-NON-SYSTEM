@@ -63,7 +63,8 @@
                 </li>
                 <!-- judul tengah -->
                 <li class="nav-item mx-auto">
-                    <img src="~/images/logo/semb_materialnon.svg" alt="Logo" class="nav-logo">
+                    <img src="~/images/logo/mns_logo_fixed.svg" alt="Logo" class="nav-logo"
+                         width="160" height="40">
                 </li>
             </ul>
             <div class="ml-auto d-flex align-items-center">
@@ -151,9 +152,9 @@
         <aside class="main-sidebar sidebar-dark-success elevation-5">
             <a href="#" class="brand-link text-center">
                 <img id="sidebar-brand-img"
-                     src="@Url.Content("~/images/icon/sewhite.svg")"
+                     src="@Url.Content("~/images/icon/sewhite2.svg")"
                      alt="Schneider Logo"
-                     style="opacity: .8; transition: opacity 0.3s ease; max-height: 30px;">
+                     style="opacity: .8; transition: opacity 0.3s ease; height: 30px; max-width: 110px; object-fit: contain;">
             </a>
             <div class="sidebar">
                 <nav class="mt-3 small">
@@ -193,7 +194,7 @@
                                     </a>
                                 </li>
                             }
-                            if (user_roles.HasAnyRole("requestor","admin"))
+                            if (user_roles.HasAnyRole("requestor", "admin"))
                             {
                                 string checkMenuShipment = Html.IsMenuopen("User", "AddNewShipment") + Html.IsMenuopen("User", "ShipmentList");
                                 string checkActiveShipment = Html.IsActive("User", "AddNewShipment") + Html.IsMenuopen("User", "ShipmentList"); ;
@@ -242,13 +243,13 @@
                                         <span id="discussion-badge" class="badge badge-danger"
                                               style="display:none;
                                          position: absolute;
-                                         top: 10px;
-                                         right: 15px;
+                                         top: 0px;
+                                         right: 10px;
                                          font-size: 0.65rem;
                                          padding: 2px 4px;
                                          border-radius: 50%;
                                          z-index: 999;
-                                         border: 1px solid white;">
+                                            ">
                                             0
                                         </span>
                                     </a>
@@ -348,7 +349,7 @@
                                     </a>
                                 </li>
                             }
-                            if (user_roles.HasAnyRole("receiver","admin"))
+                            if (user_roles.HasAnyRole("receiver", "admin"))
                             {
                                 <li class="nav-item">
                                     <a href="@Url.Action("RequestDetail", "User")" class="nav-link @Html.IsActive("User","RequestDetail")">
@@ -370,11 +371,11 @@
                                     </a>
                                 </li>
                             }
-                               @if (user_roles.HasAnyRole("requestor", "admin"))
+                            @if (user_roles.HasAnyRole("requestor", "admin"))
                             {
                                 <li class="nav-item" style="position: relative;">
                                     <a href="@Url.Action("RequestSchedule", "User")" class="nav-link @Html.IsActive("User", "RequestSchedule")" style="position: relative;">
-                                        <i class="nav-icon fas fa-calendar-alt"></i>    
+                                        <i class="nav-icon fas fa-calendar-alt"></i>
                                         <p>
                                             Request Schedule
                                         </p>
@@ -388,13 +389,13 @@
                                  padding: 2px 4px;
                                  border-radius: 50%;
                                  z-index: 999;
-                                 border: 1px solid white;">
+                                         ">
                                             0
                                         </span>
                                     </a>
                                 </li>
                             }
-          
+
                             if (user_roles.HasAnyRole("requestor", "receiver", "plant_receiver", "admin"))
                             {
                                 <li class="nav-item">
@@ -524,7 +525,7 @@
             @RenderBody()
         </div>
         <footer class="main-footer">
-            <strong>Copyright &copy; 2025 <a class="text-success" href="http://se.com">Schneider Electric</a>.</strong>
+            <strong>Copyright &copy; 2025 <a class="text-success">Material Non System App.</a></strong>
             All rights reserved.
             <div class="float-right d-none d-sm-inline-block">
                 <b>Version</b> 1.0.0
@@ -576,8 +577,8 @@
             const $sidebar = $('.main-sidebar');
             const $img = $('#sidebar-brand-img');
 
-            const imgOpen = '@Url.Content("~/images/icon/sewhite.svg")';
-            const imgClosed = '@Url.Content("~/images/icon/icon_se.svg")';
+            const imgOpen = '@Url.Content("~/images/icon/sewhite2.svg")';
+            const imgClosed = '@Url.Content("~/images/icon/icon2.svg")';
 
             function updateSidebarLogo() {
                 if ($body.hasClass('sidebar-collapse') && !$body.hasClass('sidebar-open')) {
@@ -666,7 +667,8 @@
     }
 
     .nav-logo {
-        height: 40px; /* sesuaikan agar sejajar dengan icon */
+        height: 40px;
+        max-width: 160px;
         object-fit: contain;
         display: block;
     }
@@ -674,6 +676,7 @@
     @@media (max-width: 768px) {
         .nav-logo {
             width: 120px;
+            max-width: 120px; /* tambahkan ini */
         }
 
         .nav-link i.fa-bars {
@@ -710,6 +713,7 @@
         width: 100%;
         color: white;
     }
+
     .bg-navy-custom {
         background-color: #366886 !important;
         color: #E3E3E3;
@@ -735,7 +739,7 @@
         color: white;
     }
 
-    
+
 
     #table_order tbody tr.row_body:hover {
         background-color: #95db72;
@@ -760,7 +764,7 @@
         }
 
 
-     #table_req tbody tr.row_body:hover {
+    #table_req tbody tr.row_body:hover {
         background-color: #95db72;
         color: white;
     }
@@ -781,4 +785,12 @@
             border: none !important;
             font-size: 12px;
         }
+
+    .brand-link {
+        padding: 10px 15px !important;
+        min-height: 57px;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+    }
 </style>

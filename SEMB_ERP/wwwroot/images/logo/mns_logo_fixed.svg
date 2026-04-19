@@ -1,0 +1,8 @@
+<svg width="400" height="100" viewBox="0 0 400 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <text x="10" y="70" font-family="Arial, sans-serif" font-weight="bold" font-size="70" fill="#1A1A1A">MNS</text>
+  
+  <rect x="180" y="15" width="210" height="70" rx="15" fill="#32D74B"/>
+  
+  <text x="195" y="45" font-family="Arial, sans-serif" font-weight="bold" font-size="22" fill="white">MATERIAL</text>
+  <text x="195" y="75" font-family="Arial, sans-serif" font-weight="bold" font-size="22" fill="white">NON SYSTEM</text>
+</svg>

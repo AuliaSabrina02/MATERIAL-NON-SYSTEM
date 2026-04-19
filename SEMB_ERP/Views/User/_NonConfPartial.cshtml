@@ -1,0 +1,129 @@
+﻿@model IEnumerable<dynamic>
+
+<style>
+    .professional-table-nonconf {
+        font-size: 12px;
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        background-color: white;
+        overflow: hidden;
+        min-width: 600px;
+        width: 100%;
+        table-layout: auto;
+    }
+
+        .professional-table-nonconf thead th {
+            background-color: #2f3d57;
+            color: white;
+            font-weight: 600;
+            padding: 8px 12px;
+            text-align: center;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .professional-table-nonconf tbody td {
+            padding: 6px 10px;
+            border: 1px solid #f0f0f0;
+            vertical-align: middle;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .professional-table-nonconf tbody tr:hover {
+            background-color: #fff3f3 !important;
+        }
+</style>
+
+<!-- Summary Bar -->
+<div class="d-flex align-items-center justify-content-between mb-3 p-3"
+     style="background: #f8f9fa; border-radius: 10px; border: 1px solid #e9ecef;">
+    <div>
+        <span style="font-size: 11px; color: #6c757d; text-transform: uppercase; font-weight: 600;">
+            <i class="fas fa-exclamation-circle me-1" style="color: #dc3545;"></i> Recent Non-Conformance
+        </span>
+        <div>
+            <span class="badge" style="background-color: #2f3d57; font-size: 12px; padding: 5px 12px; border-radius: 6px;">
+                Top 5 Latest
+            </span>
+        </div>
+    </div>
+    <div class="text-end">
+        <span style="font-size: 11px; color: #6c757d; text-transform: uppercase; font-weight: 600;">
+            Total Records
+        </span>
+        <div>
+            <span class="badge" style="background-color: #dc3545; font-size: 12px; padding: 5px 12px; border-radius: 6px;">
+                @(Model != null ? Model.Count() : 0)
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Table -->
+<div style="overflow-x: auto; width: 100%;">
+    <table class="table table-bordered table-striped professional-table-nonconf">
+        <thead>
+            <tr>
+                <th>Part No</th>
+                <th>Category Issue</th>
+                <th>Detail Issue</th>
+                <th>Qty</th>
+                <th>Supplier</th>
+                <th>File</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var item in Model)
+                {
+                    string fileDoc = item.file_doc?.ToString() ?? "";
+                    <tr>
+                        <td><b>@(item.partno ?? "Not Available")</b></td>
+                        <td>@(item.category_issue ?? "Not Available")</td>
+                        <td>@(item.detail_issue ?? "Not Available")</td>
+                        <td class="text-center">
+                            <span class="badge" style="background-color: #dc3545; font-size: 11px; padding: 4px 10px; border-radius: 5px;">
+                                @(item.qty ?? 0) @(item.uom ?? "")
+                            </span>
+                        </td>
+                        <td>@(item.supplier_name ?? "Not Available")</td>
+                        <td class="text-center">
+                            @if (!string.IsNullOrEmpty(fileDoc))
+                            {
+                                <a href="@fileDoc" target="_blank" class="btn btn-xs btn-outline-primary"
+                                   style="font-size: 10px; padding: 2px 8px;">
+                                    <i class="fas fa-paperclip"></i> File
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-muted" style="font-size: 10px;">Not Available</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <a href="/User/NonConfMenu" class="btn btn-xs btn-danger"
+                               style="font-size: 10px; padding: 2px 8px;">
+                                <i class="fas fa-eye"></i> Detail
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="7" style="text-align: center; color: #999; padding: 12px; font-size: 13px;">
+                        Not Available
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

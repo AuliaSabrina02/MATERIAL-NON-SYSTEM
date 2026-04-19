@@ -91,18 +91,24 @@
                         else if (statusUpper == "RECEIVED") badgeColor = "#17a2b8";
                         else if (statusUpper == "CREATION") badgeColor = "#6c757d";
 
-                        <tr>
-                            <td class="text-center"><strong>@(item.pallet_no?.ToString() ?? "Not Available")</strong></td>
-                            <td class="text-center">@(item.request_no?.ToString() ?? "Not Available")</td>
-                            <td class="text-center">
-                                <span class="badge" style="background-color: @badgeColor; font-size: 11px; padding: 4px 10px; border-radius: 5px;">
+                        // Parse record_date safely
+                        string recordDateDisplay = "Not Available";
+                        string recordDateRaw = item.record_date?.ToString() ?? "";
+                        if (DateTime.TryParse(recordDateRaw, out DateTime parsedDate))
+                        {
+                            recordDateDisplay = parsedDate.ToString("dd-MMM-yyyy HH:mm");
+                        }
+
+                                <tr>
+                                    <td class="text-center"><strong>@(item.pallet_no?.ToString() ?? "Not Available")</strong></td>
+                                    <td class="text-center">@(item.request_no?.ToString() ?? "Not Available")</td>
+                                    <td class="text-center">
+                                        <span class="badge" style="background-color: @badgeColor; font-size: 11px; padding: 4px 10px; border-radius: 5px;">
                                     @(status != "" ? status : "Not Available")
-                                </span>
-                            </td>
-                            <td class="text-center">
-                                @(item.record_date != null ? item.record_date.ToString("dd-MMM-yyyy HH:mm") : "Not Available")
-                            </td>
-                        </tr>
+                                        </span>
+                                    </td>
+                                    <td class="text-center">@recordDateDisplay</td>
+                                </tr>
                     }
                 }
             </tbody>

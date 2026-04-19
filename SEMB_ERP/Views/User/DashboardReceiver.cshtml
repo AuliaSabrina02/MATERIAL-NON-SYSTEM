@@ -1,10 +1,145 @@
 ﻿@model List<UserDetailModel>
 @{
-    ViewData["Title"] = "Dashboard Requestor";
+    ViewData["Title"] = "Dashboard Receiver";
     var user = Model.First();
 }
 
 <style>
+    .kpi-card-wh {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-bottom: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        border: 1px solid #e9ecef;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 100%;
+    }
+
+        .kpi-card-wh:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        }
+
+    .kpi-icon-wh {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        flex-shrink: 0;
+    }
+
+        .kpi-icon-wh i {
+            color: #fff;
+        }
+
+    .kpi-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .kpi-label-wh {
+        font-size: 9.5px;
+        font-weight: 600;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        white-space: normal;
+        word-break: break-word;
+        line-height: 1.3;
+        margin-bottom: 2px;
+    }
+
+    .kpi-value-wh {
+        font-size: 18px;
+        font-weight: 700;
+        color: #2c3e50;
+        line-height: 1;
+    }
+
+    .kpi-col {
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+    }
+
+    .card {
+        margin-bottom: 0;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .card-header {
+        background-color: #2f3d57;
+        border-radius: 12px 12px 0 0 !important;
+    }
+
+        .card-header h3.card-title,
+        .card-header .card-title {
+            color: #ffffff !important;
+        }
+
+        .card-header i {
+            color: #3DCD58 !important;
+        }
+
+        .card-header .btn-outline-secondary {
+            color: #ffffff;
+            border-color: rgba(255,255,255,0.4);
+        }
+
+            .card-header .btn-outline-secondary:hover {
+                background-color: rgba(255,255,255,0.1);
+            }
+
+        .card-header .btn-tool {
+            color: rgba(255,255,255,0.7);
+        }
+
+            .card-header .btn-tool:hover {
+                color: #ffffff;
+            }
+
+    .hero {
+        min-height: 70px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        color: #fff;
+        margin-bottom: 15px;
+    }
+
+        .hero .inner {
+            background: rgba(0,0,0,0.7);
+            height: 70px;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0 1rem;
+        }
+
+    .hero-title-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        width: 100%;
+    }
+
+        .hero-title-container h3 {
+            margin-bottom: 0;
+            font-weight: 700;
+            font-size: 1.75rem;
+        }
+
     .status-badge {
         padding: 5px 10px;
         border-radius: 15px;
@@ -15,421 +150,412 @@
     .table-sm td, .table-sm th {
         font-size: 0.9rem;
     }
-
-   
 </style>
-<section id="hero1" class="hero bg-dark position-relative">
-    <div class="inner d-flex justify-content-between align-items-center px-3 py-2 w-100">
 
-        <div class="extract-info">
-            <small class="text-muted"><i class="fas fa-clock"></i> <span id="current-time"></span></small>
-        </div>
-
-        <div class="position-absolute top-50 start-50 translate-middle text-center">
-            <h3 class="text-white mb-0">
-                <i class="fas fa-chart-pie text-success"></i>
-                <b> Dashboard Receiver</b>
+<section id="hero" class="hero bg-dark position-relative"
+         style="background: url('@Url.Content("~/images/background/bg-am.jpg")') center center / cover no-repeat fixed;">
+    <div class="inner">
+        <div></div>
+        <div class="hero-title-container">
+            <h3 class="text-white">
+                <i class="fas fa-chart-pie text-success me-2"></i>
+                Dashboard Receiver
             </h3>
         </div>
-
-        @* <nav aria-label="breadcrumb" class="text-end ms-auto breadcrumb-sm">
-            <ol class="breadcrumb mb-0 d-inline-flex flex-nowrap align-items-center bg-transparent">
-                <li class="breadcrumb-item small"><a href="#">Home</a></li>
-                <li class="breadcrumb-item small text-white active" aria-current="page">Dashboard</li>
-            </ol>
-        </nav> *@
+        <div class="ms-auto"></div>
     </div>
 </section>
 
-<section class="content">
-    <div class="container-fluid">
+<div class="container-fluid px-2 pb-4">
 
-        <!-- Small Boxes (Stats) -->
-        <div class="row pt-3">
-            <div class="col-lg col-md-4 col-6">
-                <div class="small-box bg-secondary" style="min-height: 85px;">
-                    <div class="inner" style="padding: 10px;">
-                        <h3 id="total-submission" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0;">0</h3>
-                        <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin-top: 5px;">Submission</p>
-                    </div>
-                    <div class="icon" style="top: 5px; right: 15px;">
-                        <i class="fas fa-file-import" style="font-size: 45px; opacity: 0.3;"></i>
-                    </div>
+    <!-- KPI Cards -->
+    <div class="row flex-nowrap overflow-auto mb-2 pb-1" style="margin-left: 0; margin-right: 0;">
+
+        <!-- Submission -->
+        <div class="kpi-col" style="min-width: 155px; flex: 1;">
+            <div class="kpi-card-wh" onclick="filterTableByStatus('Submission')">
+                <div class="kpi-icon-wh" style="background-color: #6c757d;">
+                    <i class="fas fa-file-import"></i>
+                </div>
+                <div class="kpi-body">
+                    <div class="kpi-label-wh">Submission</div>
+                    <div class="kpi-value-wh" id="total-submission">0</div>
                 </div>
             </div>
+        </div>
 
-            <div class="col-lg col-md-4 col-6">
-                <div class="small-box bg-primary" style="min-height: 85px;">
-                    <div class="inner" style="padding: 10px;">
-                        <h3 id="total-received" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0;">0</h3>
-                        <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin-top: 5px;">Received</p>
-                    </div>
-                    <div class="icon" style="top: 5px; right: 15px;">
-                        <i class="fas fa-box-open" style="font-size: 45px; opacity: 0.3;"></i>
-                    </div>
+        <!-- Received -->
+        <div class="kpi-col" style="min-width: 155px; flex: 1;">
+            <div class="kpi-card-wh" onclick="filterTableByStatus('Received')">
+                <div class="kpi-icon-wh" style="background-color: #007bff;">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <div class="kpi-body">
+                    <div class="kpi-label-wh">Received</div>
+                    <div class="kpi-value-wh" id="total-received">0</div>
                 </div>
             </div>
+        </div>
 
-            <div class="col-lg col-md-4 col-6">
-                <div class="small-box bg-warning" style="min-height: 85px;">
-                    <div class="inner" style="padding: 10px;">
-                        <h3 id="total-putaway" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0;">0</h3>
-                        <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin-top: 5px;">Putaway</p>
-                    </div>
-                    <div class="icon" style="top: 5px; right: 15px;">
-                        <i class="fas fa-warehouse" style="font-size: 45px; opacity: 0.3;"></i>
-                    </div>
+        <!-- Putaway -->
+        <div class="kpi-col" style="min-width: 155px; flex: 1;">
+            <div class="kpi-card-wh" onclick="filterTableByStatus('Putaway')">
+                <div class="kpi-icon-wh" style="background-color: #ffc107;">
+                    <i class="fas fa-warehouse"></i>
+                </div>
+                <div class="kpi-body">
+                    <div class="kpi-label-wh">Putaway</div>
+                    <div class="kpi-value-wh" id="total-putaway">0</div>
                 </div>
             </div>
+        </div>
 
-            <div class="col-lg col-md-6 col-6">
-                <div class="small-box bg-orange" style="min-height: 85px;">
-                    <div class="inner" style="padding: 10px;">
-                        <h3 id="total-partially-picked" class="text-white" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0;">0</h3>
-                        <p class="text-white" style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin-top: 5px;">Partially Picked</p>
-                    </div>
-                    <div class="icon" style="top: 5px; right: 15px;">
-                        <i class="fas fa-tasks" style="font-size: 45px; opacity: 0.3;"></i>
-                    </div>
+        <!-- Partially Picked -->
+        <div class="kpi-col" style="min-width: 155px; flex: 1;">
+            <div class="kpi-card-wh" onclick="filterTableByStatus('Partial')">
+                <div class="kpi-icon-wh" style="background-color: #fd7e14;">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <div class="kpi-body">
+                    <div class="kpi-label-wh">Partially Picked</div>
+                    <div class="kpi-value-wh" id="total-partially-picked">0</div>
                 </div>
             </div>
+        </div>
 
-            <div class="col-lg col-md-6 col-12">
-                <div class="small-box bg-success" style="min-height: 85px;">
-                    <div class="inner" style="padding: 10px;">
-                        <h3 id="total-closed" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0;">0</h3>
-                        <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin-top: 5px;">Closed</p>
+        <!-- Closed -->
+        <div class="kpi-col" style="min-width: 155px; flex: 1;">
+            <div class="kpi-card-wh" onclick="filterTableByStatus('Closed')">
+                <div class="kpi-icon-wh" style="background-color: #28a745;">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="kpi-body">
+                    <div class="kpi-label-wh">Closed</div>
+                    <div class="kpi-value-wh" id="total-closed">0</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Chart Cards -->
+    <div class="row g-3 px-1 mb-3">
+
+        <!-- Request Status -->
+        <div class="col-6">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center" style="min-height: 56px; padding: 12px 20px;">
+                    <h3 class="card-title fw-bold" style="margin: 0;">
+                        <i class="fas fa-chart-bar me-1"></i> Request Status
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div id="bar_chart" style="width:100%; height:300px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Picking Progress -->
+        <div class="col-6">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center" style="min-height: 56px; padding: 12px 20px;">
+                    <h3 class="card-title fw-bold" style="margin: 0;">
+                        <i class="fas fa-chart-pie me-1"></i> Picking Progress
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div id="pie_chart" style="width:100%; height:300px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Block Bin Summary -->
+        <div class="col-6">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center" style="min-height: 56px; padding: 12px 20px;">
+                    <h3 class="card-title fw-bold" style="margin: 0;">
+                        <i class="fas fa-ban me-1"></i> Block Bin Summary (Top 10 Part Numbers)
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div id="block_bin_chart" style="width:100%; height:300px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Return Status -->
+        <div class="col-6">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center" style="min-height: 56px; padding: 12px 20px;">
+                    <h3 class="card-title fw-bold" style="margin: 0;">
+                        <i class="fas fa-undo me-1"></i> Return Status
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div id="return_chart" style="width:100%; height:280px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pallet Problem Trend -->
+        <div class="col-6">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center" style="min-height: 56px; padding: 12px 20px;">
+                    <h3 class="card-title fw-bold" style="margin: 0;">
+                        <i class="fas fa-pallet me-1"></i> Pallet Problem Trend
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div id="pallet_problem_chart" style="width:100%; height:300px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aging Movement Chart -->
+        <div class="col-6">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center" style="min-height: 56px; padding: 12px 20px;">
+                    <h3 class="card-title fw-bold" style="margin: 0;">
+                        <i class="fas fa-chart-line me-1"></i> Aging Movement Chart
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div id="aging_chart" style="width:100%; height:300px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Variance History -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex align-items-center" style="min-height: 56px; padding: 12px 20px;">
+                    <h3 class="card-title fw-bold" style="margin: 0;">
+                        <i class="fas fa-exclamation-triangle me-1"></i> Recent Variance History
+                    </h3>
+                    <div class="card-tools ms-auto">
+                        <a href="@Url.Action("VarianceHistory", "User")" class="btn btn-sm btn-outline-secondary">
+                            View All
+                        </a>
                     </div>
-                    <div class="icon" style="top: 5px; right: 15px;">
-                        <i class="fas fa-check-circle" style="font-size: 45px; opacity: 0.3;"></i>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" id="variance-table-container">
+                        <!-- ✅ Ganti ini -->
+                        <div class="text-center p-3">
+                            <i class="fas fa-spinner fa-spin"></i> Loading...
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-
-        <!-- Picking Volume & Percentage Charts -->
-        <div class="row">
-            <div class="col-lg-6">
-                <div class="card card-success card-outline">
-                    <div class="card-header">
-                        <h5>
-                            <i class="fas fa-chart-bar"></i>
-                            Request Status
-                        </h5>
+        <!-- Recent Non-Conf -->
+        <!-- Recent Non-Conf -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex align-items-center" style="min-height: 56px; padding: 12px 20px;">
+                    <h3 class="card-title fw-bold" style="margin: 0;">
+                        <i class="fas fa-exclamation-circle me-1"></i> Recent Non-Conf
+                    </h3>
+                    <div class="card-tools ms-auto">
+                        <a href="@Url.Action("NonConfList", "User")" class="btn btn-sm btn-outline-secondary">
+                            View All
+                        </a>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div id="bar_chart" style="width:100%; height:300px;"></div>
+                </div>
+                <div class="card-body">
+                    <div id="nonconf-table-container">
+                        <!-- ✅ Ganti ini -->
+                        <div class="text-center p-3">
+                            <i class="fas fa-spinner fa-spin"></i> Loading...
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="col-lg-6">
-                <div class="card card-success card-outline">
-                    <div class="card-header">
-                        <h5>
-                            <i class="fas fa-chart-pie"></i>
-                            Picking Progress
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div id="pie_chart" style="width:100%; height:300px;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Return Charts -->
-        <div class="row">
-            <div class="col-lg-6">
-                <div class="card card-success card-outline">
-                    <div class="card-header">
-                        <h5>
-                            <i class="fas fa-ban"></i>
-                            Block Bin Summary (Top 10 Part Numbers)
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="block_bin_chart" style="width:100%; height:300px;"></div>
-                    </div>
-                </div>
-            </div>
-
-
-            <div class="col-lg-6">
-                <div class="card card-success card-outline">
-                    <div class="card-header">
-                        <h5>
-                            <i class="fas fa-undo"></i>
-                            Return Status
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div id="return_chart" style="width:100%; height:280px;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-
-            <div class="col-lg-6">
-                <div class="card card-success card-outline">
-                    <div class="card-header">
-                        <h5>
-                            <i class="fas fa-pallet"></i>
-                            Pallet Problem Trend
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="pallet_problem_chart" style="width:100%; height:300px;"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-6">
-                <div class="card card-success card-outline">
-                    <div class="card-header">
-                        <h5>
-                            <i class="fas fa-chart-line"></i>
-                            Aging Movement Chart
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="aging_chart" style="width:100%; height:300px;"></div>
-                    </div>
-                </div>
-            </div>
-
-            </div>
-        </div>
-
-        <!-- Recent Picking & Non-Conf Tables -->
-        <div class="row"> <div class="col-lg-6">
-        <div class="card card-danger card-outline">
-            <div class="card-header">
-                <h5>
-                    <i class="fas fa-exclamation-triangle"></i>
-                    Recent Variance History
-                </h5>
-                <div class="card-tools">
-                    <a href="@Url.Action("VarianceHistory", "User")" class="btn btn-tool btn-sm">View All</a>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-12 table-responsive">
-                        <table class="table table-striped table-valign-middle mb-0 table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Partno</th>
-                                    <th>Sbin</th>
-                                    <th>Qty</th>
-                                    <th>Req. No</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody id="table-variance-body">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div> <div class="col-lg-6">
-        <div class="card card-success card-outline">
-            <div class="card-header">
-                <h5>
-                    <i class="fas fa-exclamation-circle"></i>
-                    Recent Non-Conf
-                </h5>
-                <div class="card-tools">
-                    <a href="@Url.Action("NonConfList", "User")" class="btn btn-tool btn-sm">View All</a>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-12 table-responsive">
-                        <table class="table table-striped table-valign-middle mb-0 table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Part No</th>
-                                    <th>Issue</th>
-                                    <th>Qty</th>
-                                    <th class="text-center">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="table-nonconf-body">
-                                <tr><td colspan="4" class="text-center">Loading...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-                <!-- Modal untuk Filtered Orders -->
-                <div class="modal fade" id="modal_filtered_orders" tabindex="-1" aria-labelledby="modalFilteredOrdersLabel" aria-hidden="true">
-                <div class="modal-dialog modal-xl" style="max-width: 85%;">
-                        <div class="modal-content">
-                            <div class="modal-header bg-success text-white">
-                                <h5 class="modal-title" id="modalFilteredOrdersLabel">
-                                    <i class="fas fa-list"></i> Order List by Status
-                                </h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div id="body_filtered_orders">
-                                <div class="text-center p-5">
-                                    <i class="fas fa-spinner fa-spin fa-3x"></i>
-                                    <p class="mt-3">Loading...</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-
-                <!-- Modal untuk Filtered Requests (Picking Status) -->
-                <div class="modal fade" id="modal_filtered_requests" tabindex="-1" aria-labelledby="modalFilteredRequestsLabel" aria-hidden="true">
-                <div class="modal-dialog modal-xl" style="max-width: 85%;">
-                        <div class="modal-content">
-                            <div class="modal-header bg-warning text-dark">
-                                <h5 class="modal-title" id="modalFilteredRequestsLabel">
-                                    <i class="fas fa-list"></i> Request List by Picking Status
-                                </h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div id="body_filtered_requests">
-                                <div class="text-center p-5">
-                                    <i class="fas fa-spinner fa-spin fa-3x"></i>
-                                    <p class="mt-3">Loading...</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal fade" id="modal_req_detail_dashboard" tabindex="-1">
-                <div class="modal-dialog modal-xl" style="max-width: 85%;">
-                        <div class="modal-content">
-                            <div class="modal-header bg-success text-white">
-                                <h5 class="modal-title"><i class="fas fa-list"></i> Request Detail</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div id="body_req_detail_dashboard">
-                                <div class="text-center p-5">
-                                    <i class="fas fa-spinner fa-spin fa-3x"></i>
-                                    <p class="mt-3">Loading...</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Modal untuk Reservation Detail by Status -->
-                <div class="modal fade" id="modal_filtered_reservations" tabindex="-1" aria-labelledby="modalFilteredReservationsLabel" aria-hidden="true">
-                <div class="modal-dialog modal-xl" style="max-width: 85%;">
-                        <div class="modal-content">
-                            <div class="modal-header bg-info text-white">
-                                <h5 class="modal-title" id="modalFilteredReservationsLabel">
-                                    <i class="fas fa-box"></i> Reservation List by Status
-                                </h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div id="body_filtered_reservations">
-                                <div class="text-center p-5">
-                                    <i class="fas fa-spinner fa-spin fa-3x"></i>
-                                    <p class="mt-3">Loading...</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Modal untuk Return Detail by Status -->
-                <div class="modal fade" id="modal_filtered_returns" tabindex="-1" aria-labelledby="modalFilteredReturnsLabel" aria-hidden="true">
-                <div class="modal-dialog modal-xl" style="max-width: 85%;">
-                        <div class="modal-content">
-                            <div class="modal-header bg-warning text-dark">
-                                <h5 class="modal-title" id="modalFilteredReturnsLabel">
-                                    <i class="fas fa-undo"></i> Return List by Status
-                                </h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div id="body_filtered_returns">
-                                <div class="text-center p-5">
-                                    <i class="fas fa-spinner fa-spin fa-3x"></i>
-                                    <p class="mt-3">Loading...</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Modal untuk Block Bin Detail -->
-                <div class="modal fade" id="modal_filtered_blockbin" tabindex="-1" aria-labelledby="modalFilteredBlockBinLabel" aria-hidden="true">
-                <div class="modal-dialog modal-xl" style="max-width: 85%;">
-                        <div class="modal-content">
-                            <div class="modal-header bg-danger text-white">
-                                <h5 class="modal-title" id="modalFilteredBlockBinLabel">
-                                    <i class="fas fa-ban"></i> Block Bin Detail
-                                </h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div id="body_filtered_blockbin">
-                                <div class="text-center p-5">
-                                    <i class="fas fa-spinner fa-spin fa-3x"></i>
-                                    <p class="mt-3">Loading...</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal fade" id="modal_pallet_container" tabindex="-1" role="dialog" aria-hidden="true">
-                    <div class="modal-dialog modal-xl" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header bg-danger text-white">
-                                <h5 class="modal-title">
-                                    <i class="fas fa-pallet"></i> Pallet Problem Detail
-                                </h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div id="modal_content_detail">
-                                <div class="text-center p-5">
-                                    <i class="fas fa-spinner fa-spin fa-3x"></i>
-                                    <p class="mt-3">Loading...</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
     </div>
+</div>
 
+<!-- Modal Filtered Orders -->
+<div class="modal fade" id="modal_filtered_orders" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width: 85%;">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-list"></i> Order List by Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="body_filtered_orders">
+                <div class="text-center p-5">
+                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                    <p class="mt-3">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-</section>
+<!-- Modal Filtered Requests -->
+<div class="modal fade" id="modal_filtered_requests" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width: 85%;">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="fas fa-list"></i> Request List by Picking Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="body_filtered_requests">
+                <div class="text-center p-5">
+                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                    <p class="mt-3">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Request Detail -->
+<div class="modal fade" id="modal_req_detail_dashboard" tabindex="-1">
+    <div class="modal-dialog modal-xl" style="max-width: 85%;">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-list"></i> Request Detail</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="body_req_detail_dashboard">
+                <div class="text-center p-5">
+                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                    <p class="mt-3">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Filtered Reservations -->
+<div class="modal fade" id="modal_filtered_reservations" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width: 85%;">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="fas fa-box"></i> Reservation List by Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="body_filtered_reservations">
+                <div class="text-center p-5">
+                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                    <p class="mt-3">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Filtered Returns -->
+<div class="modal fade" id="modal_filtered_returns" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width: 85%;">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="fas fa-undo"></i> Return List by Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="body_filtered_returns">
+                <div class="text-center p-5">
+                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                    <p class="mt-3">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Block Bin Detail -->
+<div class="modal fade" id="modal_filtered_blockbin" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width: 85%;">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-ban"></i> Block Bin Detail</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="body_filtered_blockbin">
+                <div class="text-center p-5">
+                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                    <p class="mt-3">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Pallet Problem Detail -->
+<div class="modal fade" id="modal_pallet_container" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-pallet"></i> Pallet Problem Detail</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="modal_content_detail">
+                <div class="text-center p-5">
+                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                    <p class="mt-3">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal_aging_movement" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width: 85%;">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="fas fa-undo"></i> Aging - <span id="aging-modal-title"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="aging-modal-content-wrapper">
+                <div class="text-center p-5">
+                    <i class="fas fa-spinner fa-spin fa-3x text-warning"></i>
+                    <p class="mt-3">Preparing data...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+                    </section>
 @section Scripts {
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/modules/heatmap.js"></script>
 
     <script>
         $(document).ready(function () {
+
+                 Highcharts.setOptions({
+            chart: {
+                style: { fontFamily: 'inherit' }
+            },
+            legend: {
+                itemStyle: {
+                    color: '#000000',
+                    fontFamily: 'inherit',
+                    fontWeight: 'bold'
+                }
+            },
+            xAxis: {
+                labels: { style: { color: '#000000', fontFamily: 'inherit' } }
+            },
+            yAxis: {
+                labels: { style: { color: '#000000', fontFamily: 'inherit' } },
+                title: { style: { color: '#000000', fontFamily: 'inherit' } }
+            },
+            tooltip: {
+                style: { fontFamily: 'inherit' }
+            }
+        });
             loadData();
             loadReserveReturnData();
             loadNonConfData();
             loadAgingMovementChart();
             loadBlockBinChart();
             loadPalletProblemChart();
+             loadRecentVariance(); // ✅ Tambahkan ini
+
 
             setInterval(function() {
                 loadData();
@@ -438,17 +564,19 @@
                 loadAgingMovementChart();
                 loadBlockBinChart();
                 loadPalletProblemChart();
+                 loadRecentVariance(); // ✅ Tambahkan ini
+
             }, 300000);
         });
 
         // ✅ FUNGSI BARU: Filter dengan Modal + Partial View
         function filterTableByStatus(statusName) {
             const statusMapping = {
-                'Submission': 'SUBMISSION',
-                'Received': 'RECEIVED',
-                'Putaway': 'PUTAWAY',
-                'Partial': 'PARTIALLY PICKED',
-                'Closed': 'CLOSED'
+                    'Submission': 'SUBMISSION',
+        'Received': 'RECEIVED',
+        'Putaway': 'PUTAWAY',
+        'Partial': 'PARTIALLY PICKED',
+        'Closed': 'CLOSED'
             };
 
             const statusValue = statusMapping[statusName] || statusName;
@@ -539,7 +667,7 @@
             });
         }
 
-            function loadData() {
+                 function loadData() {
             $.post('@Url.Action("GetReceiverSummary", "User")', function (data) {
                 // Update Box Angka
                 $('#total-submission').text(data.submission);
@@ -551,29 +679,31 @@
                 // Update Charts
                 renderCharts(data);
 
-                // Update Tabel Variance
-                var html = '';
-                if (data.recentVariance && data.recentVariance.length > 0) {
-                    $.each(data.recentVariance, function(i, item) {
-                        html += `<tr>
-                            <td>${item.partno}</td>
-                            <td>${item.sbin}</td>
-                            <td><span class="badge badge-danger">${item.qty}</span></td>
-                            <td><b>${item.request_no}</b></td>
-                            <td><small>${item.record_date}</small></td>
-                        </tr>`;
-                    });
-                } else {
-                    html = '<tr><td colspan="5" class="text-center">No recent variance found</td></tr>';
-                }
-
-                $('#table-variance-body').html(html);
+                // ✅ Bagian variance dihapus, sudah dipindah ke loadRecentVariance()
 
             }).fail(function(xhr, status, error) {
                 console.error("❌ AJAX Error:", error);
             });
         }
 
+
+
+                function loadRecentVariance() {
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetRecentVariance", "User")",
+                success: function (response) {
+                    $('#variance-table-container').html(response);
+                },
+                error: function () {
+                    $('#variance-table-container').html(`
+                        <div class="alert alert-danger m-2">
+                            <i class="fas fa-exclamation-triangle"></i> Failed to load variance data
+                        </div>
+                    `);
+                }
+            });
+        }
             function filterBlockBinByPartNo(partNo) {
             console.log('Loading block bin detail for part:', partNo);
 
@@ -809,58 +939,20 @@
                 }
             });
         }
+             // ✅ Ganti loadNonConfData() lama dengan ini
         function loadNonConfData() {
             $.ajax({
-                url: '@Url.Action("GET_NON_CONF_LIST", "User")',
-                type: 'POST',
-                data: {
-                    draw: 1,
-                    start: 0,
-                    length: 5,
-                    'order[0][column]': 0,
-                    'order[0][dir]': 'desc',
-                    'columns[0][data]': 'material_type',
-                    'columns[0][searchable]': true,
-                    'columns[1][data]': 'partno',
-                    'columns[1][searchable]': true,
-                    'columns[2][data]': 'po_no',
-                    'columns[2][searchable]': true,
-                    'columns[3][data]': 'qty',
-                    'columns[3][searchable]': true,
-                    'columns[4][data]': 'uom',
-                    'columns[4][searchable]': true,
-                    'columns[5][data]': 'supplier_name',
-                    'columns[5][searchable]': true,
-                    'columns[6][data]': 'pic',
-                    'columns[6][searchable]': true,
-                    'columns[7][data]': 'category_issue',
-                    'columns[7][searchable]': true,
-                    'columns[8][data]': 'detail_issue',
-                    'columns[8][searchable]': true
+                type: "GET",
+                url: "@Url.Action("GetRecentNonConf", "User")",
+                success: function (response) {
+                    $('#nonconf-table-container').html(response);
                 },
-                success: function(response) {
-                    var html = '';
-                    if (response.data && response.data.length > 0) {
-                        $.each(response.data, function(i, item) {
-                            html += `<tr>
-                                <td><b>${item.partno || '-'}</b></td>
-                                <td>${item.category_issue || '-'}</td>
-                                <td class="text-center">${item.qty || 0} ${item.uom || ''}</td>
-                                <td class="text-center">
-                                    <button onclick="window.location.href='/User/NonConfMenu'" class="btn btn-xs btn-danger">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </td>
-                            </tr>`;
-                        });
-                    } else {
-                        html = '<tr><td colspan="4" class="text-center">No data available in table</td></tr>';
-                    }
-                    $('#table-nonconf-body').html(html);
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error loading Non-Conf data:', error);
-                    $('#table-nonconf-body').html('<tr><td colspan="4" class="text-center text-danger">Error loading data</td></tr>');
+                error: function () {
+                    $('#nonconf-table-container').html(`
+                        <div class="alert alert-danger m-2">
+                            <i class="fas fa-exclamation-triangle"></i> Failed to load non-conformance data
+                        </div>
+                    `);
                 }
             });
         }
@@ -888,65 +980,53 @@
         }
 
         function loadAgingMovementChart() {
-            $.ajax({
-                type: "GET",
-                url: "@Url.Action("GetAgingMovementChart", "User")",
-                success: function (res) {
-                    var categories = [];
-                    var series1 = [];
-                    var series2 = [];
-                    var series3 = [];
-                    var series4 = [];
-
-                    $.each(res, function (i, item) {
-                        categories.push(item.label);
-                        series1.push(item.value1);
-                        series2.push(item.value2);
-                        series3.push(item.value3);
-                        series4.push(item.value4);
-                    });
-
-                    Highcharts.chart('aging_chart', {
-                        chart: { type: 'column' },
-                        title: { text: '' },
-                        credits: { enabled: false },
-                        xAxis: { categories: categories },
-                        yAxis: {
-                            min: 0,
-                            title: { text: 'Total' },
-                            stackLabels: { enabled: false }
-                        },
-                        legend: {
-                            align: 'center',
-                            verticalAlign: 'bottom',
-                            itemStyle: {
-                                fontSize: '11px',
-                                fontWeight: 'normal'
-                            }
-                        },
-                        tooltip: {
-                            headerFormat: '<b>{point.key}</b><br/>',
-                            pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
-                        },
-                        plotOptions: {
-                            column: {
-                                stacking: 'normal',
-                                dataLabels: { enabled: true }
-                            }
-                        },
-                        series: [
-                            { name: '<= 3 Months', data: series1, color: '#bcff47' },
-                            { name: '<= 6 Months', data: series2, color: '#ff9147' },
-                            { name: '<= 12 Months', data: series3, color: '#ff478a' },
-                            { name: '> 1 Year', data: series4, color: '#c247ff' }
-                        ]
-                    });
-                },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    console.error("Error loading Aging Movement Chart:", textStatus, errorThrown);
-                }
-            });
-        }
+             $.ajax({
+                 type: "GET",
+                 url: "@Url.Action("GetAgingMovementChart", "User")",
+                 success: function (res) {
+                     var categories = [], series1 = [], series2 = [], series3 = [], series4 = [];
+                     $.each(res, function (i, item) {
+                         categories.push(item.label);
+                         series1.push(item.value1);
+                         series2.push(item.value2);
+                         series3.push(item.value3);
+                         series4.push(item.value4);
+                     });
+                     Highcharts.chart('aging_chart', {
+                         chart: { type: 'column' },
+                         title: { text: '' },
+                         credits: { enabled: false },
+                         xAxis: { categories: categories },
+                         yAxis: { min: 0, title: { text: 'Total' }, stackLabels: { enabled: false } },
+                         legend: { align: 'center', verticalAlign: 'bottom', itemStyle: { fontSize: '11px', fontWeight: 'normal' } },
+                         tooltip: { headerFormat: '<b>{point.key}</b><br/>', pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}' },
+                          plotOptions: {
+             column: {
+                 stacking: 'normal',
+                 dataLabels: { enabled: true },
+                 cursor: 'pointer',
+                 point: {
+                     events: {
+                         click: function () {
+                             openAgingModal(this.series.name);
+                         }
+                     }
+                 }
+             }
+         },
+                         series: [
+                             { name: '<= 3 Months', data: series1, color: '#bcff47' },
+                             { name: '<= 6 Months', data: series2, color: '#ff9147' },
+                             { name: '<= 12 Months', data: series3, color: '#ff478a' },
+                             { name: '> 1 Year', data: series4, color: '#c247ff' }
+                         ]
+                     });
+                 },
+                 error: function (jqXHR, textStatus, errorThrown) {
+                     console.error("Error loading Aging Movement Chart:", textStatus, errorThrown);
+                 }
+             });
+         }
 
         function processReservationChart(data) {
             let statusCount = {
@@ -1036,6 +1116,48 @@
                         </div>
                     `);
                     console.error('Error:', error);
+                }
+            });
+        }
+
+         function openAgingModal(agingCategory) {
+            $('#aging-modal-title').text(agingCategory);
+
+            // 1. Munculkan spinner di wrapper sebelum AJAX jalan
+            $('#aging-modal-content-wrapper').html(`
+                <div class="text-center p-5">
+                    <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                    <p class="mt-3">Loading ${agingCategory} data...</p>
+                </div>
+            `);
+
+            $('#modal_aging_movement').modal('show');
+
+            // 2. Eksekusi AJAX
+            $.ajax({
+                type: 'GET',
+                url: '@Url.Action("AgingMovementPartial", "User")',
+                data: { agingCategory: agingCategory },
+                success: function (res) {
+                    // Beri sedikit delay agar spinner tidak "kelap-kelip" terlalu cepat
+                    setTimeout(function() {
+                        // Update konten modal
+                        $('#aging-modal-content-wrapper').html(res);
+
+                        // 3. Tampilkan Alert setelah konten muncul
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Data Loaded',
+                            text: 'Showing ' + agingCategory + ' aging data',
+                            timer: 1500,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end'
+                        });
+                    }, 400); // 400ms cukup untuk transisi yang smooth
+                },
+                error: function () {
+                    $('#aging-modal-content-wrapper').html('<div class="alert alert-danger m-3">Gagal load data.</div>');
                 }
             });
         }
@@ -1256,28 +1378,30 @@
             });
 
             // === RENDER BAR CHART ===
-            Highcharts.chart('bar_chart', {
-            chart: { type: 'column' },
-            title: {
-                text: null,
-                style: { fontSize: '12px' }
+                  Highcharts.chart('bar_chart', {
+            chart: {
+                type: 'column',
+                style: {
+                    fontFamily: 'inherit'  // ✅ ikut font dari CSS web
+                }
             },
-            subtitle: {
-                style: { fontSize: '10px', color: '#666' }
-            },
+            title: { text: null },
             credits: { enabled: false },
             xAxis: {
                 categories: barChartData.map(x => x.name),
-                labels: {
-                    style: { fontSize: '11px', fontWeight: 'bold' }
-                }
+                labels: { enabled: false },
+                lineWidth: 0,
+                tickWidth: 0
             },
             yAxis: {
                 title: { text: 'Total Requests', style: { fontSize: '11px' } }
             },
             tooltip: {
-                pointFormat: '<b>{point.y}</b> requests<br/><i>Click to view details</i>',
-                style: { fontSize: '11px' }
+                formatter: function () {
+                    return '<b>' + this.point.name + '</b><br/>' +
+                           this.y + ' requests<br/><i>Click to view details</i>';
+                },
+                style: { fontSize: '11px', fontFamily: 'inherit' }
             },
             legend: {
                 enabled: true,
@@ -1286,44 +1410,35 @@
                 layout: 'horizontal',
                 itemStyle: {
                     fontSize: '11px',
-                    fontWeight: 'bold'
+                    fontWeight: 'bold',
+                    color: '#000000',        // ✅ teks hitam
+                    fontFamily: 'inherit'    // ✅ font ikut web
                 },
                 symbolRadius: 6
             },
             plotOptions: {
                 column: {
                     cursor: 'pointer',
+                    colorByPoint: false,
                     dataLabels: {
                         enabled: true,
-                        style: {
-                            fontWeight: 'bold',
-                            fontSize: '11px',
-                            textOutline: 'none'
-                        }
-                    }
-                }
-            },
-            series: barChartData.map(function (item) {
-                return {
-                    name: item.name,
-                    data: [item.y],
-                    color: item.color,
-                    showInLegend: true,
-                    dataLabels: {
-                        enabled: true,
-                        style: {
-                            fontWeight: 'bold',
-                            fontSize: '11px',
-                            textOutline: 'none'
-                        }
+                        style: { fontWeight: 'bold', fontSize: '11px', textOutline: 'none' }
                     },
                     point: {
                         events: {
                             click: function () {
-                                filterTableByStatus(item.name);
+                                filterTableByStatus(this.series.name);
                             }
                         }
                     }
+                }
+            },
+            series: barChartData.map(function(item) {
+                return {
+                    name: item.name,
+                    color: item.color,
+                    showInLegend: true,
+                    data: [{ name: item.name, y: item.y }]
                 };
             })
         });
@@ -1370,7 +1485,7 @@
                         }
                     }
                 },
-                series: [{
+                 series: [{
                     name: 'Status',
                     colorByPoint: true,
                     data: pieChartData

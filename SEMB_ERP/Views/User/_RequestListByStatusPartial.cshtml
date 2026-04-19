@@ -4,19 +4,76 @@
     var totalRecords = ViewBag.TotalRecords;
 }
 
-<div class="modal-body">
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <h6><i class="fas fa-filter"></i> Filtered by: <span class="badge bg-warning text-dark">@statusFilter</span></h6>
+<style>
+    .professional-table-req {
+        font-size: 12px;
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        background-color: white;
+        overflow: hidden;
+        min-width: 600px;
+        width: 100%;
+        table-layout: auto;
+    }
+
+        .professional-table-req thead th {
+            background-color: #2f3d57;
+            color: white;
+            font-weight: 600;
+            padding: 8px 12px;
+            text-align: center;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .professional-table-req tbody td {
+            padding: 6px 10px;
+            border: 1px solid #f0f0f0;
+            vertical-align: middle;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .professional-table-req tbody tr:hover {
+            background-color: #f0faf2 !important;
+        }
+</style>
+
+<div class="modal-body p-3">
+
+    <!-- Summary Bar -->
+    <div class="d-flex align-items-center justify-content-between mb-3 p-3"
+         style="background: #f8f9fa; border-radius: 10px; border: 1px solid #e9ecef;">
+        <div>
+            <span style="font-size: 11px; color: #6c757d; text-transform: uppercase; font-weight: 600;">
+                <i class="fas fa-filter me-1" style="color: #3DCD58;"></i> Status Filter
+            </span>
+            <div>
+                <span class="badge" style="background-color: #2f3d57; font-size: 12px; padding: 5px 12px; border-radius: 6px;">
+                    @statusFilter
+                </span>
+            </div>
         </div>
-        <div class="col-md-6 text-end">
-            <h6>Total Records: <span class="badge bg-success">@totalRecords</span></h6>
+        <div class="text-end">
+            <span style="font-size: 11px; color: #6c757d; text-transform: uppercase; font-weight: 600;">
+                Total Records
+            </span>
+            <div>
+                <span class="badge" style="background-color: #3DCD58; font-size: 12px; padding: 5px 12px; border-radius: 6px;">
+                    @totalRecords
+                </span>
+            </div>
         </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped table-sm" id="tbl_filtered_requests">
-            <thead class="bg-warning text-dark text-center">
+    <!-- Table -->
+    <div style="overflow-x: auto; width: 100%;">
+        <table class="table table-bordered table-striped professional-table-req" id="tbl_filtered_requests">
+            <thead>
                 <tr>
                     <th>Request No</th>
                     <th>Status</th>
@@ -46,13 +103,14 @@
 
                         <tr>
                             <td><strong>@(item.request_no?.ToString() ?? "-")</strong></td>
-                            <td class="@statusClass text-center">@(statusDesc != "" ? statusDesc : "-")</td>
+                            <td class="text-center @statusClass">@(statusDesc != "" ? statusDesc : "-")</td>
                             <td>@(item.requested_by_name?.ToString() ?? "-")</td>
                             <td>@(item.record_date?.ToString() ?? "-")</td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-info"
+                                <button class="btn btn-sm"
+                                        style="background-color: #2f3d57; color: #fff; border-radius: 6px; padding: 3px 10px; font-size: 11px;"
                                         onclick="open_detail(@item.id_request)">
-                                    <i class="fas fa-eye"></i> Detail
+                                    <i class="fas fa-eye me-1"></i> Detail
                                 </button>
                             </td>
                         </tr>
@@ -61,7 +119,10 @@
                 else
                 {
                     <tr>
-                        <td colspan="5" class="text-center text-muted">No data available for this status</td>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2 d-block" style="color: #dee2e6;"></i>
+                            No data available for this status
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -69,35 +130,46 @@
     </div>
 </div>
 
-<div class="modal-footer">
-    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-        <i class="fas fa-times"></i> Close
+<div class="modal-footer" style="background: #f8f9fa; border-top: 1px solid #e9ecef;">
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">
+        <i class="fas fa-times me-1"></i> Close
     </button>
 </div>
+
 <script>
-    $(document).ready(function() {
-        // ✅ Destroy dulu kalau sudah ada DataTable
+    $(document).ready(function () {
         if ($.fn.DataTable.isDataTable('#tbl_filtered_requests')) {
             $('#tbl_filtered_requests').DataTable().destroy();
         }
 
-        // ✅ Init DataTable
         $('#tbl_filtered_requests').DataTable({
-            "pageLength": 10,
-            "ordering": true,
-            "searching": true,
-            "order": [[3, 'desc']]
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            order: [[3, 'desc']],
+            scrollX: false,
+            autoWidth: false,
+            language: {
+                search: "Search:",
+                lengthMenu: "Show _MENU_ entries",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                paginate: {
+                    first: "First",
+                    last: "Last",
+                    next: "Next",
+                    previous: "Previous"
+                }
+            },
+            dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                 '<"row"<"col-sm-12"tr>>' +
+                 '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>'
         });
     });
 
-    // ✅ Open detail - FIXED VERSION
     function open_detail(id_request) {
-        // Tutup modal filtered requests dulu
         $('#modal_filtered_requests').modal('hide');
 
-        // Tunggu sampai modal benar-benar tertutup
-        $('#modal_filtered_requests').one('hidden.bs.modal', function() {
-            // Baru tampilkan loading di modal detail
+        $('#modal_filtered_requests').one('hidden.bs.modal', function () {
             $("#body_req_detail_dashboard").html(`
                 <div class="text-center p-5">
                     <i class="fas fa-spinner fa-spin fa-3x text-success"></i>
@@ -105,18 +177,16 @@
                 </div>
             `);
 
-            // Buka modal detail
             $("#modal_req_detail_dashboard").modal("show");
 
-            // Fetch data detail
             $.ajax({
                 type: "GET",
                 url: "@Url.Action("GetReqDetail", "User")",
                 data: { id_request: id_request },
-                success: function(res) {
+                success: function (res) {
                     $("#body_req_detail_dashboard").html(res);
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     $("#modal_req_detail_dashboard").modal("hide");
 
                     Swal.fire({

@@ -1,4 +1,6 @@
-﻿@model SEMB_ERP.Models.LoginModel
+﻿
+
+@model SEMB_ERP.Models.LoginModel
 @using Microsoft.AspNetCore.Mvc.Rendering;
 @using Microsoft.AspNetCore.Http
 @using System.Security.Claims;
@@ -46,9 +48,9 @@
 
                 <div class="col-12 col-lg-6 text-lg-start mb-4 mb-lg-0 custom-alignment">
                     <div class="p-3 p-md-4 text-lg-start">
-                    <div>
-                        <img src="~/images/logo/semb_materialnon.svg" alt="Logo" class="nav-logo">
-                    </div>
+                        <div>
+                            <img src="~/images/logo/mns_logo_fixed.svg" alt="Logo" class="nav-logo" width="400">
+                        </div>
                         <h8 class="text-muted">SEMB - Material Non System</h8>
                         <p class="text-muted small mt-3">version 1.0</p>
                     </div>
@@ -59,7 +61,7 @@
                 <!-- RIGHT (login box) -->
                 <div class="col-12 col-lg-6">
                     <div class="p-3 p-md-4 text-lg-start">
-                        <div class="custom-alignment text-lg-start">
+                        <div class="text-start">
                             <h4>Welcome,</h4>
                             <h4>Please Login</h4>
                         </div>
@@ -176,94 +178,81 @@
 
 
 
-    </div>
+            </div>
 
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js"></script>
-    <script src="~/lib/adminlte/plugins/sweetalert2/sweetalert2.min.js"></script>
-    <script>
-        $(document).on('click', '#btn_cancel', function () {
-            $('#form_add')[0].reset();        // Clears the form fields
-            $('#form_add input').trigger('change'); // If using validation/Select2/etc
-        });
+            <script src="~/lib/jquery/dist/jquery.min.js"></script>
+            <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js"></script>
+            <script src="~/lib/adminlte/plugins/sweetalert2/sweetalert2.min.js"></script>
+            <script>
+                $(document).on('click', '#btn_cancel', function () {
+                    $('#form_add')[0].reset();        // Clears the form fields
+                    $('#form_add input').trigger('change'); // If using validation/Select2/etc
+                });
 
-        function login() {
-            $("#modal_login").modal("show");
-        }
-    </script>
-    <style>
-        .bg {
-            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), /* lapisan gelap */
-            url('@Url.Content("~/images/background/warehouse.jpg")') no-repeat center center fixed;
-            background-size: cover;
+                function login() {
+                    $("#modal_login").modal("show");
+                }
+            </script>
+            <style>
+                .bg {
+                    background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('@Url.Content("~/images/background/warehouse.jpg")') no-repeat center center fixed;
+                    background-size: cover;
+                }
 
-        }
-
-        .mask {
-                    background: rgba(255, 255, 255, 0.9); /* lebih transparan */
+                .mask {
+                    background: rgba(255, 255, 255, 0.9);
                     border-radius: 20px;
-        }
+                }
 
                 .maskmodals {
-                    background: rgba(255, 255, 255, 0.9); /* lebih transparan */
+                    background: rgba(255, 255, 255, 0.9);
                     border-radius: 20px;
                     backdrop-filter: blur(15px) saturate(180%);
-                    -webkit-backdrop-filter: blur(15px) saturate(180%); /* untuk Safari */
+                    -webkit-backdrop-filter: blur(15px) saturate(180%);
                     border: 1px solid rgba(255, 255, 255, 0.4);
                     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
                 }
 
-        .shadow-lg {
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
-        }
+                .shadow-lg {
+                    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+                }
 
-        .btn-success {
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-        }
-
-            .btn-success:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            }
-
-        .btn-success {
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-        }
+                .btn-success {
+                    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+                }
 
                     .btn-success:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            }
+                        transform: translateY(-2px);
+                        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                    }
 
-        .custom-alignment {
-            text-align: center;
-        }
+                .nav-logo {
+                    width: 400px !important; /* Ukuran lebih besar untuk layar laptop */
+                    height: auto !important;
+                    max-width: 450px !important;
+                    display: block;
+                    margin: 0;
+                    object-fit: contain;
+                    padding-right: 0; /* Hapus padding karena SVG sudah ada jarak */
+                }
 
-        .nav-logo {
-            width: 90%;
-            height: auto;
-            display: block;
-            margin: 0;
-        }
+                .custom-alignment {
+                    text-align: center !important;
+                }
 
-        @@media (max-width: 768px) {
-            .iconse {
-                width: 10%;
-            }
-
-
-            .custom-alignment {
-                text-align: center !important;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .nav-logo {
-                margin-top: 10pt;
-                width: 90%;
-            }
-        }
-    </style>
+                /* Media Query untuk Mobile */
+                @@media (max-width: 768px) {
+                    .nav-logo {
+                        width: 200px !important;
+                        max-width: 200px !important;
+                        margin: 10pt auto 0 auto !important;
+                    }
+                    /* HAPUS ATAU GANTI INI */
+                    .custom-alignment {
+                        text-align: left !important; /* Ganti center jadi left */
+                    }
+                }
+            </style>
 </body>
 </html>

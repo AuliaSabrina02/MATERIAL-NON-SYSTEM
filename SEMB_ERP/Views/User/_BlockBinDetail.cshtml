@@ -1,12 +1,51 @@
 ﻿@model List<BlockBinDetailModel>
-
 @{
     var partNo = ViewBag.PartNo as string;
     var totalRecords = ViewBag.TotalRecords as int? ?? 0;
     var errorMessage = ViewBag.ErrorMessage as string;
 }
 
-<div class="modal-body">
+<style>
+    .professional-table-block {
+        font-size: 12px;
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        background-color: white;
+        overflow: hidden;
+        min-width: 500px;
+        width: 100%;
+        table-layout: auto;
+    }
+
+        .professional-table-block thead th {
+            background-color: #2f3d57;
+            color: white;
+            font-weight: 600;
+            padding: 8px 12px;
+            text-align: center;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .professional-table-block tbody td {
+            padding: 6px 10px;
+            border: 1px solid #f0f0f0;
+            vertical-align: middle;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .professional-table-block tbody tr:hover {
+            background-color: #f0faf2 !important;
+        }
+</style>
+
+<div class="modal-body p-3">
+
     @if (!string.IsNullOrEmpty(errorMessage))
     {
         <div class="alert alert-danger">
@@ -16,23 +55,66 @@
     }
     else if (Model == null || !Model.Any())
     {
-        <div class="alert alert-info text-center">
-            <i class="fas fa-info-circle"></i>
-            <p class="mb-0">No blocked bins found for part: <strong>@partNo</strong></p>
+        <!-- Summary Bar -->
+        <div class="d-flex align-items-center justify-content-between mb-3 p-3"
+             style="background: #f8f9fa; border-radius: 10px; border: 1px solid #e9ecef;">
+            <div>
+                <span style="font-size: 11px; color: #6c757d; text-transform: uppercase; font-weight: 600;">
+                    <i class="fas fa-ban me-1" style="color: #3DCD58;"></i> Part No
+                </span>
+                <div>
+                    <span class="badge" style="background-color: #2f3d57; font-size: 12px; padding: 5px 12px; border-radius: 6px;">
+                        @partNo
+                    </span>
+                </div>
+            </div>
+            <div class="text-end">
+                <span style="font-size: 11px; color: #6c757d; text-transform: uppercase; font-weight: 600;">
+                    Total Records
+                </span>
+                <div>
+                    <span class="badge" style="background-color: #3DCD58; font-size: 12px; padding: 5px 12px; border-radius: 6px;">
+                        0
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="text-center text-muted py-4">
+            <i class="fas fa-inbox fa-2x mb-2 d-block" style="color: #dee2e6;"></i>
+            No blocked bins found for part: <strong>@partNo</strong>
         </div>
     }
     else
     {
-        <div class="mb-3">
-            <h6>
-                <i class="fas fa-list"></i>
-                Showing <strong>@totalRecords</strong> blocked bin(s) for part: <strong>@partNo</strong>
-            </h6>
+        <!-- Summary Bar -->
+        <div class="d-flex align-items-center justify-content-between mb-3 p-3"
+             style="background: #f8f9fa; border-radius: 10px; border: 1px solid #e9ecef;">
+            <div>
+                <span style="font-size: 11px; color: #6c757d; text-transform: uppercase; font-weight: 600;">
+                    <i class="fas fa-ban me-1" style="color: #3DCD58;"></i> Part No
+                </span>
+                <div>
+                    <span class="badge" style="background-color: #2f3d57; font-size: 12px; padding: 5px 12px; border-radius: 6px;">
+                        @partNo
+                    </span>
+                </div>
+            </div>
+            <div class="text-end">
+                <span style="font-size: 11px; color: #6c757d; text-transform: uppercase; font-weight: 600;">
+                    Total Records
+                </span>
+                <div>
+                    <span class="badge" style="background-color: #3DCD58; font-size: 12px; padding: 5px 12px; border-radius: 6px;">
+                        @totalRecords
+                    </span>
+                </div>
+            </div>
         </div>
 
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover table-sm" id="tbl_blockbin_filtered">
-                <thead class="bg-danger text-white">
+        <!-- Table -->
+        <div style="overflow-x: auto; width: 100%;">
+            <table class="table table-bordered table-striped professional-table-block" id="tbl_blockbin_filtered">
+                <thead>
                     <tr>
                         <th>No</th>
                         <th>Part Number</th>
@@ -44,17 +126,17 @@
                     @foreach (var item in Model)
                     {
                         <tr>
-                            <td>@item.no</td>
+                            <td class="text-center">@item.no</td>
                             <td><strong>@item.partno</strong></td>
-                            <td>
+                            <td class="text-center">
                                 <span class="badge bg-danger">
-                                    <i class="fas fa-ban"></i> @item.sbin
+                                    <i class="fas fa-ban me-1"></i>@item.sbin
                                 </span>
                             </td>
                             <td>
                                 @if (item.variance_date.HasValue)
                                 {
-                                    @string.Format("{0:yyyy-MM-dd HH:mm}", item.variance_date.Value)
+                                    @string.Format("{0:dd-MM-yyyy HH:mm}", item.variance_date.Value)
                                 }
                                 else
                                 {
@@ -69,21 +151,40 @@
     }
 </div>
 
+<div class="modal-footer" style="background: #f8f9fa; border-top: 1px solid #e9ecef;">
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">
+        <i class="fas fa-times me-1"></i> Close
+    </button>
+</div>
+
 <script>
     $(function () {
         if ($.fn.DataTable.isDataTable('#tbl_blockbin_filtered')) {
             $('#tbl_blockbin_filtered').DataTable().destroy();
         }
-
         $('#tbl_blockbin_filtered').DataTable({
-            "paging": true,
-            "pageLength": 10,
-            "searching": true,
-            "ordering": true,
-            "info": true,
-            "autoWidth": false,
-            "responsive": true,
-            "order": [[3, 'desc']] // Sort by variance_date descending
+            paging: true,
+            pageLength: 10,
+            searching: true,
+            ordering: true,
+            info: true,
+            scrollX: false,
+            autoWidth: false,
+            order: [[3, 'desc']],
+            language: {
+                search: "Search:",
+                lengthMenu: "Show _MENU_ entries",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                paginate: {
+                    first: "First",
+                    last: "Last",
+                    next: "Next",
+                    previous: "Previous"
+                }
+            },
+            dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                 '<"row"<"col-sm-12"tr>>' +
+                 '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>'
         });
     });
 </script>

@@ -3,228 +3,357 @@
     var user = Model.First();
 }
 
-<section id="hero1" class="hero bg-dark position-relative">
-    <div class="inner d-flex justify-content-between align-items-center px-3 py-2 w-100">
+<style>
+    .kpi-card-wh {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-bottom: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        border: 1px solid #e9ecef;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 100%;
+    }
 
-        <div class="extract-info">
-            <small class="text-muted"><i class="fas fa-clock"></i> <span id="current-time"></span></small>
-        </div>
+        .kpi-card-wh:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        }
 
-        <div class="position-absolute top-50 start-50 translate-middle text-center">
-            <h3 class="text-white mb-0">
-                <i class="fas fa-chart-pie text-success"></i>
-                <b>Pallet Monitoring Dashboard</b>
+    .kpi-icon-wh {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        flex-shrink: 0;
+    }
+
+        .kpi-icon-wh i {
+            color: #fff;
+        }
+
+    .kpi-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .kpi-label-wh {
+        font-size: 9.5px;
+        font-weight: 600;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        white-space: normal;
+        word-break: break-word;
+        line-height: 1.3;
+        margin-bottom: 2px;
+    }
+
+    .kpi-value-wh {
+        font-size: 18px;
+        font-weight: 700;
+        color: #2c3e50;
+        line-height: 1;
+    }
+
+    .kpi-col {
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+    }
+
+    .card {
+        margin-bottom: 0;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .card-header {
+        background-color: #2f3d57;
+        border-radius: 12px 12px 0 0 !important;
+    }
+
+        .card-header h3.card-title,
+        .card-header .card-title {
+            color: #ffffff !important;
+        }
+
+        .card-header i {
+            color: #3DCD58 !important;
+        }
+
+        .card-header .btn-outline-secondary {
+            color: #ffffff;
+            border-color: rgba(255,255,255,0.4);
+        }
+
+            .card-header .btn-outline-secondary:hover {
+                background-color: rgba(255,255,255,0.1);
+            }
+
+    .hero {
+        min-height: 70px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        color: #fff;
+        margin-bottom: 15px;
+    }
+
+        .hero .inner {
+            background: rgba(0,0,0,0.7);
+            height: 70px;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0 1rem;
+        }
+
+    .hero-title-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        width: 100%;
+    }
+
+        .hero-title-container h3 {
+            margin-bottom: 0;
+            font-weight: 700;
+            font-size: 1.75rem;
+        }
+</style>
+
+<section id="hero" class="hero bg-dark position-relative"
+         style="background: url('@Url.Content("~/images/background/bg-am.jpg")') center center / cover no-repeat fixed;">
+    <div class="inner">
+        <div></div>
+        <div class="hero-title-container">
+            <h3 class="text-white">
+                <i class="fas fa-chart-pie text-success me-2"></i>
+                Pallet Monitoring Dashboard
             </h3>
         </div>
-
-        @* <nav aria-label="breadcrumb" class="text-end ms-auto breadcrumb-sm">
-            <ol class="breadcrumb mb-0 d-inline-flex flex-nowrap align-items-center bg-transparent">
-                <li class="breadcrumb-item small"><a href="#">Home</a></li>
-                <li class="breadcrumb-item small text-white active" aria-current="page">Dashboard</li>
-            </ol>
-        </nav> *@
+        <div class="ms-auto"></div>
     </div>
 </section>
+<div class="container-fluid px-2 pb-4">
 
-<section class="content">
-    <div class="container-fluid">
-        <div class="row pt-3">
-            <div class="col-lg-4 col-md-6">
-                <div class="small-box" style="background-color: #17a2b8; color: white; min-height: 85px;">
-                    <div class="inner" style="padding: 10px;">
-                        <h3 id="total-created" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0;">0</h3>
-                        <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin-top: 5px;">Pallet Created</p>
-                    </div>
-                    <div class="icon" style="top: 5px; right: 15px;">
-                        <i class="fas fa-box" style="font-size: 45px; opacity: 0.3;"></i>
-                    </div>
+    <!-- KPI Cards -->
+    <div class="row flex-nowrap overflow-auto mb-2 pb-1" style="margin-left: 0; margin-right: 0;">
+
+        <!-- Pallet Created -->
+        <!-- Pallet Created -->
+        <div class="kpi-col" style="min-width: 155px; flex: 1;">
+            <div class="kpi-card-wh" onclick="loadStatusModal('CREATION')">
+                <!-- ✅ Tambahkan ini -->
+                <div class="kpi-icon-wh" style="background-color: #17a2b8;">
+                    <i class="fas fa-box"></i>
                 </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6">
-                <div class="small-box" style="background-color: #007bff; color: white; min-height: 85px;">
-                    <div class="inner" style="padding: 10px;">
-                        <h3 id="total-transferred" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0;">0</h3>
-                        <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin-top: 5px;">Pallet Transferred</p>
-                    </div>
-                    <div class="icon" style="top: 5px; right: 15px;">
-                        <i class="fas fa-dolly" style="font-size: 45px; opacity: 0.3;"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4 col-md-12">
-                <div class="small-box" style="background-color: #28a745; color: white; min-height: 85px;">
-                    <div class="inner" style="padding: 10px;">
-                        <h3 id="total-supplied" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0;">0</h3>
-                        <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin-top: 5px;">Pallet Completed</p>
-                    </div>
-                    <div class="icon" style="top: 5px; right: 15px;">
-                        <i class="fas fa-check-double" style="font-size: 45px; opacity: 0.3;"></i>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-            </div>
-
-        <div class="row">
-            <div class="col-lg-6">
-                <div class="card card-success card-outline">
-                    <div class="card-header">
-                        <h5><i class="fas fa-chart-bar mr-2"></i> Pallet Movement</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="pallet_main_chart" style="width:100%; height:300px;"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-6">
-                <div class="card card-success card-outline">
-                    <div class="card-header">
-                        <h5><i class="fas fa-exclamation-triangle mr-2"></i> Pallet Problem</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="pallet_problem_chart" style="width:100%; height:300px;"></div>
-                    </div>
+                <div class="kpi-body">
+                    <div class="kpi-label-wh">Pallet Created</div>
+                    <div class="kpi-value-wh" id="total-created">0</div>
                 </div>
             </div>
         </div>
-            <!-- ===== HISTORY TABLE ===== -->
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="card card-primary card-outline">
-                        <div class="card-header">
-                            <h5><i class="fas fa-history mr-2"></i> Recent Pallet History</h5>
-                        </div>
-                        <div class="card-body table-responsive">
-                            <table id="table_history" class="table table-bordered table-striped nowrap" style="width:100%">
-                                <thead class="bg-warning text-center">
-                                    <tr>
-                                        <th>Pallet No</th>
-                                        <th>Req No</th>
-                                        <th>Status</th>
-                                        <th>Creation Date</th>
-                                        <th>Transfer Date</th>
-                                        <th>Supplied Date</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
-                    </div>
+
+        <!-- Pallet Transferred -->
+        <div class="kpi-col" style="min-width: 155px; flex: 1;">
+            <div class="kpi-card-wh" onclick="loadStatusModal('TRANSFER')">
+                <!-- ✅ Tambahkan ini -->
+                <div class="kpi-icon-wh" style="background-color: #007bff;">
+                    <i class="fas fa-dolly"></i>
+                </div>
+                <div class="kpi-body">
+                    <div class="kpi-label-wh">Pallet Transferred</div>
+                    <div class="kpi-value-wh" id="total-transferred">0</div>
                 </div>
             </div>
+        </div>
 
+        <!-- Pallet Completed -->
+        <div class="kpi-col" style="min-width: 155px; flex: 1;">
+            <div class="kpi-card-wh" onclick="loadStatusModal('SUPPLIED')">
+                <!-- ✅ Tambahkan ini -->
+                <div class="kpi-icon-wh" style="background-color: #28a745;">
+                    <i class="fas fa-check-double"></i>
+                </div>
+                <div class="kpi-body">
+                    <div class="kpi-label-wh">Pallet Completed</div>
+                    <div class="kpi-value-wh" id="total-supplied">0</div>
+                </div>
+            </div>
+        </div>
 
-        <div class="modal fade" id="modal_pallet_container" tabindex="-1" role="dialog" aria-hidden="true">
-            <div class="modal-dialog modal-xl" role="document">
-                <div class="modal-content">
-                    <div class="modal-header bg-danger text-white">
-                        <h5 class="modal-title">
-                            <i class="fas fa-pallet"></i> Pallet Problem Detail
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div id="modal_content_detail">
-                        <div class="text-center p-5">
-                            <i class="fas fa-spinner fa-spin fa-3x"></i>
-                            <p class="mt-3">Loading...</p>
-                        </div>
+    </div>
+
+    <!-- Chart Cards -->
+    <div class="row g-3 px-1">
+
+        <!-- Pallet Movement -->
+        <div class="col-6">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center" style="min-height: 56px; padding: 12px 20px;">
+                    <h3 class="card-title fw-bold" style="margin: 0;">
+                        <i class="fas fa-chart-bar me-1"></i> Pallet Movement
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div id="pallet_main_chart" style="width:100%; height:300px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pallet Problem -->
+        <div class="col-6">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center" style="min-height: 56px; padding: 12px 20px;">
+                    <h3 class="card-title fw-bold" style="margin: 0;">
+                        <i class="fas fa-exclamation-triangle me-1"></i> Pallet Problem
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div id="pallet_problem_chart" style="width:100%; height:300px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Pallet History - full width -->
+        <!-- Recent Pallet History - full width -->
+        <div class="col-12">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center" style="min-height: 56px; padding: 12px 20px;">
+                    <h3 class="card-title fw-bold" style="margin: 0;">
+                        <i class="fas fa-history me-1"></i> Recent Pallet History
+                    </h3>
+                </div>
+                <div class="card-body" id="pallet-history-container">
+                    <!-- ✅ Ganti ini -->
+                    <div class="text-center p-3">
+                        <i class="fas fa-spinner fa-spin"></i> Loading...
                     </div>
                 </div>
             </div>
         </div>
 
+    </div>
+</div>
 
-        </div>
-    </section>
-
-    <!-- ===== MODAL DETAIL ===== -->
-    <div class="modal fade" id="modal_req_detail">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title"><i class="fas fa-list"></i> Pallet Detail</h5>
-                    <button type="button" class="close text-white" data-bs-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="p-3">
-                    <div class="row">
-                        <div class="col-12">
-                            <table class="table table-borderless table-sm">
-                                <tr>
-                                    <td width="20%">Request No</td>
-                                    <td id="request-no">:</td>
-                                </tr>
-                                <tr>
-                                    <td>Pallet No</td>
-                                    <td id="pallet-no">:</td>
-                                </tr>
-                                <tr>
-                                    <td>Status</td>
-                                    <td id="pallet-status">:</td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="col-12 table-responsive">
-                            <table class="table table-bordered table-striped align-center nowrap" id="tbl-detail" style="font-size:12pt;width:100%;">
-                                <thead class="bg-warning align-middle text-center">
-                                    <tr>
-                                        <th width="12%">Box Id</th>
-                                        <th width="12%">Part No</th>
-                                        <th width="12%">Quantity</th>
-                                        <th width="12%">S-Bin</th>
-                                        <th width="12%">Picked By</th>
-                                        <th width="12%">Record Date</th>
-                                    </tr>
-                                </thead>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-            <div class="modal fade" id="modal_pallet_container" tabindex="-1" role="dialog" aria-hidden="true">
-                <div class="modal-dialog modal-xl" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header bg-danger text-white">
-                            <h5 class="modal-title">
-                                <i class="fas fa-pallet"></i> Pallet Problem Detail
-                            </h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div id="modal_content_detail">
-                            <div class="text-center p-5">
-                                <i class="fas fa-spinner fa-spin fa-3x"></i>
-                                <p class="mt-3">Loading...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+<!-- Modal Pallet Problem Detail -->
+<div class="modal fade" id="modal_pallet_container" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-pallet"></i> Pallet Problem Detail
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <div id="modal_content_detail">
+                <div class="text-center p-5">
+                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                    <p class="mt-3">Loading...</p>
+                </div>
             </div>
         </div>
     </div>
+</div>
 
-    @section Scripts {
+<!-- Modal Pallet Detail -->
+<div class="modal fade" id="modal_req_detail">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-list"></i> Pallet Detail</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="p-3">
+                <div class="row">
+                    <div class="col-12">
+                        <table class="table table-borderless table-sm">
+                            <tr>
+                                <td width="20%">Request No</td>
+                                <td id="request-no">:</td>
+                            </tr>
+                            <tr>
+                                <td>Pallet No</td>
+                                <td id="pallet-no">:</td>
+                            </tr>
+                            <tr>
+                                <td>Status</td>
+                                <td id="pallet-status">:</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-12 table-responsive">
+                        <table class="table table-bordered table-striped align-center nowrap"
+                               id="tbl-detail" style="font-size:12pt; width:100%;">
+                            <thead class="bg-warning align-middle text-center">
+                                <tr>
+                                    <th width="12%">Box Id</th>
+                                    <th width="12%">Part No</th>
+                                    <th width="12%">Quantity</th>
+                                    <th width="12%">S-Bin</th>
+                                    <th width="12%">Picked By</th>
+                                    <th width="12%">Record Date</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
     <script src="https://code.highcharts.com/highcharts.js"></script>
 
     <script>
-        var chartInstance; 
+        var chartInstance;
 
-        $(document).ready(function () {
+            Highcharts.setOptions({
+            chart: {
+                style: { fontFamily: 'inherit' }
+            },
+            legend: {
+                itemStyle: {
+                    color: '#000000',
+                    fontFamily: 'inherit',
+                    fontWeight: 'bold'
+                }
+            },
+            xAxis: {
+                labels: { style: { color: '#000000', fontFamily: 'inherit' } }
+            },
+            yAxis: {
+                labels: { style: { color: '#000000', fontFamily: 'inherit' } },
+                title: { style: { color: '#000000', fontFamily: 'inherit' } }
+            },
+            tooltip: {
+                style: { fontFamily: 'inherit' }
+            }
+        });
+
+               $(document).ready(function () {
             loadSummary();
             loadChartData();
-            initHistoryTable();
+            loadRecentPalletHistory();  // ✅ Tambahkan () — sebelumnya tidak ada ()
             loadPalletProblemChart();
+
             setInterval(function () {
                 loadSummary();
                 loadChartData();
-                $('#table_history').DataTable().ajax.reload(null, false);
-                                      loadPalletProblemChart();
+                loadRecentPalletHistory();  // ✅ Tambahkan () — sebelumnya tidak ada ()
+                loadPalletProblemChart();
             }, 300000);
         });
 
@@ -406,53 +535,6 @@
             }
         }
 
-        // Initialize History Table
-        function initHistoryTable() {
-            $('#table_history').DataTable({
-                processing: true,
-                serverSide: true,
-                ajax: {
-                    url: '@Url.Action("GetPalletHistoryList")',
-                    type: 'POST'
-                },
-                columns: [
-                    {
-                        data: 'pallet_no',
-                        className: 'text-center',
-                        render: function (data) {
-                            return '<b>' + data + '</b>';
-                        }
-                    },
-                    { data: 'request_no', className: 'text-center' },
-                    {
-                        data: 'status_pallet',
-                        className: 'text-center',
-                        render: function (data) {
-                            var badgeClass = 'secondary';
-                            if (data === 'SUPPLIED') badgeClass = 'success';
-                            else if (data === 'TRANSFER' || data === 'RECEIVED') badgeClass = 'primary';
-                            else if (data === 'CREATION') badgeClass = 'secondary';
-
-                            return '<span class="badge badge-' + badgeClass + '">' + data + '</span>';
-                        }
-                    },
-                    { data: 'record_date', className: 'text-center' },
-                    { data: 'transfer_date', className: 'text-center' },
-                    { data: 'supplied_date', className: 'text-center' },
-                    {
-                        data: 'id_pallet',
-                        className: 'text-center',
-                        render: function (data, type, row) {
-                            return '<button class="btn btn-xs btn-info" onclick="show_detail(' +
-                                data + ',\'' + row.pallet_no + '\',\'' + row.status_pallet +
-                                '\',\'' + row.request_no + '\')"><i class="fas fa-eye"></i> Detail</button>';
-                        }
-                    }
-                ],
-                order: [[3, 'desc']] // Sort by creation date descending
-            });
-        }
-
 
                 function filterPalletByDate(date) {
             console.log('Loading pallet problems for date:', date);
@@ -500,7 +582,22 @@
                 }
             });
         }
-
+                function loadRecentPalletHistory() {
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetRecentPalletHistory", "User")",
+                success: function (response) {
+                    $('#pallet-history-container').html(response);
+                },
+                error: function () {
+                    $('#pallet-history-container').html(`
+                        <div class="alert alert-danger m-2">
+                            <i class="fas fa-exclamation-triangle"></i> Failed to load pallet history
+                        </div>
+                    `);
+                }
+            });
+        }
                     function loadPalletProblemChart() {
             $.post('@Url.Action("GetPalletProblems", "User")', {
                 draw: 1, start: 0, length: 1000
@@ -610,4 +707,4 @@
             $('#modal_req_detail').modal('show');
         }
     </script>
-    }
+}

@@ -4,22 +4,76 @@
     var totalRecords = ViewBag.TotalRecords;
 }
 
-<div class="modal-body">
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <h6>
-                <i class="fas fa-filter"></i> Filtered by Date:
-                <span class="badge bg-danger text-white">@dateFilter</span>
-            </h6>
+<style>
+    .professional-table-pallet {
+        font-size: 12px;
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        background-color: white;
+        overflow: hidden;
+        min-width: 900px;
+        width: 100%;
+        table-layout: auto;
+    }
+
+        .professional-table-pallet thead th {
+            background-color: #2f3d57;
+            color: white;
+            font-weight: 600;
+            padding: 8px 12px;
+            text-align: center;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .professional-table-pallet tbody td {
+            padding: 6px 10px;
+            border: 1px solid #f0f0f0;
+            vertical-align: middle;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .professional-table-pallet tbody tr:hover {
+            background-color: #f0faf2 !important;
+        }
+</style>
+
+<div class="modal-body p-3">
+
+    <!-- Summary Bar -->
+    <div class="d-flex align-items-center justify-content-between mb-3 p-3"
+         style="background: #f8f9fa; border-radius: 10px; border: 1px solid #e9ecef;">
+        <div>
+            <span style="font-size: 11px; color: #6c757d; text-transform: uppercase; font-weight: 600;">
+                <i class="fas fa-filter me-1" style="color: #3DCD58;"></i> Date Filter
+            </span>
+            <div>
+                <span class="badge" style="background-color: #2f3d57; font-size: 12px; padding: 5px 12px; border-radius: 6px;">
+                    @dateFilter
+                </span>
+            </div>
         </div>
-        <div class="col-md-6 text-end">
-            <h6>Total Records: <span class="badge bg-success">@totalRecords</span></h6>
+        <div class="text-end">
+            <span style="font-size: 11px; color: #6c757d; text-transform: uppercase; font-weight: 600;">
+                Total Records
+            </span>
+            <div>
+                <span class="badge" style="background-color: #3DCD58; font-size: 12px; padding: 5px 12px; border-radius: 6px;">
+                    @totalRecords
+                </span>
+            </div>
         </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped table-sm" id="tbl_filtered_pallets">
-            <thead class="bg-danger text-white text-center">
+    <!-- Table -->
+    <div style="overflow-x: auto; width: 100%;">
+        <table class="table table-bordered table-striped professional-table-pallet" id="tbl_filtered_pallets">
+            <thead>
                 <tr>
                     <th>No.</th>
                     <th>Pallet No</th>
@@ -38,7 +92,6 @@
                     foreach (var item in Model)
                     {
                         no++;
-
                         var statusClass = "";
                         var statusLower = (item.status ?? "").ToLower();
                         if (statusLower == "open") statusClass = "bg-warning text-dark";
@@ -52,7 +105,7 @@
                             <td>@(item.req_no ?? "-")</td>
                             <td>@(item.date.ToString("dd-MM-yyyy"))</td>
                             <td>@(item.issue ?? "-")</td>
-                            <td class="@statusClass text-center">@(item.status ?? "-")</td>
+                            <td class="text-center @statusClass">@(item.status ?? "-")</td>
                             <td>@(item.created_by ?? "-")</td>
                             <td>@(item.created_date.ToString("dd-MM-yyyy HH:mm"))</td>
                         </tr>
@@ -61,7 +114,10 @@
                 else
                 {
                     <tr>
-                        <td colspan="8" class="text-center text-muted">No pallet problems found for this date</td>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2 d-block" style="color: #dee2e6;"></i>
+                            No pallet problems found for this date
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -69,28 +125,35 @@
     </div>
 </div>
 
-<div class="modal-footer">
-    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-        <i class="fas fa-times"></i> Close
+<div class="modal-footer" style="background: #f8f9fa; border-top: 1px solid #e9ecef;">
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">
+        <i class="fas fa-times me-1"></i> Close
     </button>
 </div>
 
 <script>
     $(document).ready(function () {
-        // ✅ Destroy dulu kalau ada, baru init
         if ($.fn.DataTable.isDataTable('#tbl_filtered_pallets')) {
             $('#tbl_filtered_pallets').DataTable().destroy();
         }
-
-        // ✅ Hanya init DataTable kalau ada data (lebih dari 1 row)
-        // Row "No data..." tidak di-init DataTable karena bikin error
         if (@totalRecords > 0)
         {
             $('#tbl_filtered_pallets').DataTable({
-                "pageLength": 10,
-                "ordering": true,
-                "searching": true,
-                "order": [[7, 'desc']]
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                scrollX: false,
+                autoWidth: false,
+                order: [[7, 'desc']],
+                language: {
+                    search: "Search:",
+                    lengthMenu: "Show _MENU_ entries",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
+                },
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                     '<"row"<"col-sm-12"tr>>' +
+                     '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>'
             });
         }
     });

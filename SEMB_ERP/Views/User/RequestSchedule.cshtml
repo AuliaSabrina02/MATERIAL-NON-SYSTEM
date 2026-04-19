@@ -1,755 +1,519 @@
 ﻿@{
     ViewData["Title"] = "Project Schedule";
 }
-
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-
 <style>
-    .btn-add-schedule {
-        background-color: #28a745;
-        color: white;
-        border: none;
-        padding: 12px 28px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 15px;
-        font-weight: 600;
-        display: inline-flex;
+    .kpi-card-wh {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-bottom: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        border: 1px solid #e9ecef;
+        cursor: default;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: flex;
         align-items: center;
         gap: 10px;
-        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
-        transition: all 0.3s ease;
-        margin-bottom: 20px;
-    }
-
-        .btn-add-schedule:hover {
-            background-color: #218838;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.5);
-        }
-
-        .btn-add-schedule i {
-            font-size: 16px;
-        }
-
-    .calendar-card {
-        background: white;
-        border-radius: 10px;
-        padding: 25px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-        border: 1px solid #e3e6f0;
-    }
-
-    #calendar {
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    .fc {
-        border: none;
-    }
-
-        .fc .fc-toolbar {
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px 8px 0 0;
-            margin-bottom: 0;
-        }
-
-        .fc .fc-toolbar-title {
-            font-size: 22px;
-            font-weight: 700;
-            color: #2c3e50;
-        }
-
-        .fc .fc-button {
-            background-color: white;
-            border: 1px solid #dee2e6;
-            color: #495057;
-            text-transform: capitalize;
-            padding: 8px 16px;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-
-            .fc .fc-button:hover {
-                background-color: #28a745;
-                border-color: #28a745;
-                color: white;
-                transform: translateY(-1px);
-            }
-
-        .fc .fc-button-primary:not(:disabled).fc-button-active,
-        .fc .fc-button-primary:not(:disabled):active {
-            background-color: #28a745;
-            border-color: #28a745;
-            color: white;
-        }
-
-        .fc .fc-col-header-cell {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            color: #495057;
-            padding: 12px 0;
-            border-color: #dee2e6;
-        }
-
-        .fc .fc-daygrid-day {
-            border-color: #e3e6f0;
-        }
-
-        .fc .fc-daygrid-day-number {
-            padding: 10px;
-            font-size: 14px;
-            font-weight: 500;
-            color: #495057;
-        }
-
-        .fc .fc-daygrid-day.fc-day-today {
-            background-color: #e8f5e9 !important;
-        }
-
-            .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
-                background-color: #28a745;
-                color: white;
-                border-radius: 50%;
-                width: 32px;
-                height: 32px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin: 4px;
-            }
-
-        .fc .fc-event {
-            background-color: #28a745;
-            color: white !important;
-            border: none;
-            border-radius: 5px;
-            padding: 4px 8px;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
-        }
-
-            .fc .fc-event:hover {
-                background-color: #218838;
-                transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(40, 167, 69, 0.4);
-            }
-
-        .fc .fc-daygrid-day:hover {
-            background-color: #f0f9f4;
-            cursor: pointer;
-        }
-
-    .modal-overlay {
-        display: none;
-        position: fixed;
-        z-index: 1040;
-        left: 0;
-        top: 0;
-        width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        animation: fadeIn 0.3s ease;
     }
-
-        .modal-overlay.show {
-            display: block;
-        }
-
-    @@keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
-
-        to {
-            opacity: 1;
-        }
+    .kpi-card-wh:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
     }
-
-    .modal-dialog {
-        display: none;
-        position: fixed;
-        z-index: 1050;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%) scale(0.9);
-        width: 550px;
-        max-width: 90%;
-        animation: modalSlideIn 0.3s ease forwards;
+    .kpi-icon-wh {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        flex-shrink: 0;
     }
-
-        .modal-dialog.show {
-            display: block;
-        }
-
-    @@keyframes modalSlideIn {
-        from {
-            transform: translate(-50%, -50%) scale(0.9);
-            opacity: 0;
-        }
-
-        to {
-            transform: translate(-50%, -50%) scale(1);
-            opacity: 1;
-        }
+    .kpi-icon-wh i { color: #fff; }
+    .kpi-body { flex: 1; min-width: 0; }
+    .kpi-label-wh {
+        font-size: 9.5px;
+        font-weight: 600;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        line-height: 1.3;
+        margin-bottom: 2px;
     }
-
-    .modal-content {
-        background-color: white;
-        border-radius: 12px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-        border: none;
+    .kpi-value-wh {
+        font-size: 18px;
+        font-weight: 700;
+        color: #2c3e50;
+        line-height: 1;
     }
-
-    .modal-header {
-        background-color: #28a745;
-        color: white;
-        padding: 20px 25px;
-        border-radius: 12px 12px 0 0;
-        border-bottom: none;
+    .kpi-col {
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+    }
+    .card-header {
+        background-color: #2f3d57 !important;
+        border-radius: 12px 12px 0 0 !important;
+    }
+    .card-header h3, .card-header h5 { color: #ffffff !important; }
+    .card-header i { color: #3DCD58 !important; }
+    .hero {
+        min-height: 70px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        color: #fff;
+        margin-bottom: 15px;
+    }
+    .hero .inner {
+        background: rgba(0,0,0,0.7);
+        height: 70px;
+        position: relative;
         display: flex;
         justify-content: space-between;
         align-items: center;
-    }
-
-        .modal-header h3 {
-            margin: 0;
-            font-size: 22px;
-            font-weight: 600;
-            color: white;
-        }
-
-        .modal-header .close {
-            color: white;
-            opacity: 0.9;
-            font-size: 28px;
-            font-weight: 300;
-            cursor: pointer;
-            border: none;
-            background: none;
-            padding: 0;
-            line-height: 1;
-            transition: all 0.3s;
-        }
-
-            .modal-header .close:hover {
-                opacity: 1;
-                transform: rotate(90deg);
-            }
-
-    .modal-body {
-        padding: 25px;
-    }
-
-    .form-group {
-        margin-bottom: 20px;
-    }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 14px;
-        }
-
-        .form-group .required {
-            color: #dc3545;
-            margin-left: 2px;
-        }
-
-    .form-control {
         width: 100%;
-        padding: 10px 14px;
-        border: 2px solid #e3e6f0;
-        border-radius: 8px;
-        font-size: 14px;
-        transition: all 0.3s;
-        font-family: inherit;
+        padding: 0 1rem;
     }
-
-        .form-control:focus {
-            outline: none;
-            border-color: #28a745;
-            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
-        }
-
-        .form-control::placeholder {
-            color: #a0aec0;
-        }
-
-    textarea.form-control {
-        resize: vertical;
-        min-height: 100px;
+    .hero-title-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        width: 100%;
     }
-
-    .custom-checkbox {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-top: 5px;
-        cursor: pointer;
+    .hero-title-container h3 {
+        margin-bottom: 0;
+        font-weight: 700;
+        font-size: 1.75rem;
     }
-
-        .custom-checkbox input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            accent-color: #28a745;
-        }
-
-        .custom-checkbox label {
-            margin: 0;
-            font-weight: 400;
-            cursor: pointer;
-            font-size: 14px;
-            color: #495057;
-        }
-
-    .modal-footer {
-        padding: 15px 25px 25px 25px;
-        display: flex;
-        gap: 10px;
-        justify-content: flex-end;
+    .fc .fc-toolbar {
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px 8px 0 0;
+        margin-bottom: 0;
     }
-
-    .btn {
-        padding: 10px 24px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 600;
-        transition: all 0.3s;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
+    .fc .fc-toolbar-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #2c3e50;
     }
-
-    .btn-secondary {
-        background-color: #e9ecef;
-        color: #495057;
+    .fc .fc-button {
+        background-color: white;
         border: 1px solid #dee2e6;
-    }
-
-        .btn-secondary:hover {
-            background-color: #dee2e6;
-            transform: translateY(-1px);
-        }
-
-    .btn-primary {
-        background-color: #28a745;
-        color: white;
-        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
-    }
-
-        .btn-primary:hover {
-            background-color: #218838;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.5);
-        }
-
-    /* Stats Row */
-    .stats-row {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 15px;
-        margin-bottom: 25px;
-    }
-
-    .stat-card {
-        /* background: white;  <-- Hapus ini agar tidak menimpa warna di bawah */
-        border-radius: 10px;
-        padding: 20px;
-        border: none; /* Menghapus semua border termasuk yang di ujung */
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        color: #495057;
+        text-transform: capitalize;
+        padding: 6px 14px;
+        font-weight: 500;
         transition: all 0.3s;
-        color: white; /* Mengatur default teks jadi putih */
     }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        /* Ikon diposisikan agak transparan di pojok agar modern */
-        .stat-card .stat-icon {
-            font-size: 32px;
-            margin-bottom: 10px;
-            opacity: 0.8;
-        }
-
-        .stat-card .stat-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: white; /* Angka jadi putih */
-            margin-bottom: 5px;
-        }
-
-        .stat-card .stat-label {
-            font-size: 13px;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.9); /* Putih halus */
-        }
-
-        /* --- DEFINISI WARNA FULL CARD --- */
-
-        .stat-card.stat-green {
-            background-color: #17a2b8; /* Full Hijau */
-        }
-        .stat-card.stat-blue {
-        background-color: #dc3545; /* Full Info/Biru (Info) */
-        }
-
-        .stat-card.stat-orange {
-        background-color: #28a745; /* Full Merah (Danger) sesuai permintaan sebelumnya */
-        }
+    .fc .fc-button:hover,
+    .fc .fc-button-primary:not(:disabled).fc-button-active,
+    .fc .fc-button-primary:not(:disabled):active {
+        background-color: #2f3d57 !important;
+        border-color: #2f3d57 !important;
+        color: white !important;
+    }
+    .fc .fc-col-header-cell {
+        background-color: #2f3d57;
+        color: white;
+        padding: 10px 0;
+        border-color: #2f3d57;
+    }
+    .fc .fc-col-header-cell a { color: white !important; }
+    .fc .fc-daygrid-day.fc-day-today { background-color: #e8f5e9 !important; }
+    .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+        background-color: #3DCD58;
+        color: white;
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 4px;
+    }
+    .fc .fc-event {
+        background-color: #2f3d57;
+        border: none;
+        border-radius: 5px;
+        padding: 3px 7px;
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    .fc .fc-event:hover { background-color: #3DCD58; }
+    .fc .fc-daygrid-day:hover {
+        background-color: #f0f9f4;
+        cursor: pointer;
+    }
 </style>
 
-<section id="hero1" class="hero bg-dark position-relative">
-    <div class="inner d-flex justify-content-between align-items-center px-3 py-2 w-100">
-        <div class="extract-info">
-            <small class="text-muted"><i class="fas fa-clock"></i> <span id="current-time"></span></small>
-        </div>
-        <div class="position-absolute top-50 start-50 translate-middle text-center">
-            <h3 class="text-white mb-0">
-                <i class="fas fa-calendar text-success"></i>
-                <b> Add Schedule Request</b>
+<!-- Hero -->
+<section id="hero" class="hero bg-dark position-relative"
+         style="background: url('@Url.Content("~/images/background/bg-am.jpg")') center center / cover no-repeat fixed;">
+    <div class="inner">
+        <div></div>
+        <div class="hero-title-container">
+            <h3 class="text-white">
+                <i class="fas fa-calendar text-success me-2"></i>
+                Project Schedule
             </h3>
         </div>
+        <div class="ms-auto"></div>
     </div>
 </section>
 
-<section class="content">
-    <div class="container-fluid">
-        <div class="row pt-3">
-            <div class="col-md-12">
-                <div class="card card-success card-outline">
-                    <div class="card-header bg-success">
-                        <h5 class="text-center text-white">
-                            <i class="fa fa-calendar-alt"></i> Project Schedule
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="stats-row">
-                            <div class="stat-card stat-green">
-                                <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
-                                <div class="stat-value" id="totalSchedules">0</div>
-                                <div class="stat-label">Total Schedules</div>
-                            </div>
-                            <div class="stat-card stat-blue">
-                                <div class="stat-icon"><i class="fas fa-clock"></i></div>
-                                <div class="stat-value" id="upcomingSchedules">0</div>
-                                <div class="stat-label">Upcoming This Week</div>
-                            </div>
-                            <div class="stat-card stat-orange">
-                                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-                                <div class="stat-value" id="completedSchedules">0</div>
-                                <div class="stat-label">Completed</div>
-                            </div>
-                        </div>
+<div class="container-fluid px-2 pb-4">
+    <!-- KPI Cards -->
+    <div class="row flex-nowrap overflow-auto mb-3 pb-1" style="margin-left: 0; margin-right: 0;">
+        <div class="kpi-col" style="min-width: 155px; flex: 1;">
+            <div class="kpi-card-wh" style="cursor: pointer;" onclick="openDetailsModal('TOTAL')">
+                <div class="kpi-icon-wh" style="background-color: #17a2b8;">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="kpi-body">
+                    <div class="kpi-label-wh">Total Schedules</div>
+                    <div class="kpi-value-wh" id="totalSchedules">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="kpi-col" style="min-width: 155px; flex: 1;">
+            <div class="kpi-card-wh" style="cursor: pointer;" onclick="openDetailsModal('UPCOMING')">
+                <div class="kpi-icon-wh" style="background-color: #dc3545;">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="kpi-body">
+                    <div class="kpi-label-wh">Upcoming This Week</div>
+                    <div class="kpi-value-wh" id="upcomingSchedules">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="kpi-col" style="min-width: 155px; flex: 1;">
+            <div class="kpi-card-wh" style="cursor: pointer;" onclick="openDetailsModal('COMPLETED')">
+                <div class="kpi-icon-wh" style="background-color: #28a745;">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="kpi-body">
+                    <div class="kpi-label-wh">Completed</div>
+                    <div class="kpi-value-wh" id="completedSchedules">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                        <button class="btn-add-schedule" onclick="openModal()">
-                            <i class="fas fa-plus-circle"></i>
-                            Add Project Schedule
+    <!-- Calendar Card -->
+    <div class="row px-1">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex align-items-center" style="min-height: 56px; padding: 12px 20px;">
+                    <h3 class="card-title fw-bold mb-0">
+                        <i class="fas fa-calendar-alt me-1"></i> Project Schedule
+                    </h3>
+                    <div class="ms-auto">
+                        <button class="btn btn-sm"
+                                style="background-color: #3DCD58; color: #fff; border-radius: 8px; font-weight: 600;"
+                                onclick="openModal()">
+                            <i class="fas fa-plus-circle me-1"></i> Add Schedule
                         </button>
-
-                        <div class="calendar-card">
-                            <div id='calendar'></div>
-                        </div>
                     </div>
+                </div>
+                <div class="card-body">
+                    <div id='calendar'></div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
-
-<div class="modal-dialog" id="scheduleModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3><i class="fas fa-calendar-plus"></i> Add Project Schedule</h3>
-            <button class="close" onclick="closeModal()">&times;</button>
-        </div>
-        <form id="scheduleForm">
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="title">Title <span class="required">*</span></label>
-                    <input type="text" class="form-control" id="title" name="title"
-                           required placeholder="e.g., MCB 123 Project Review">
-                </div>
-                <div class="form-group">
-                    <label for="scheduleDate">Schedule Date & Time <span class="required">*</span></label>
-                    <input type="datetime-local" class="form-control" id="scheduleDate"
-                           name="scheduleDate" required>
-                </div>
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea class="form-control" id="description" name="description"
-                              placeholder="Add additional details about this schedule..."></textarea>
-                </div>
-                <div class="form-group">
-                    <div class="custom-checkbox">
-                        <input type="checkbox" id="sendEmail" name="sendEmail" checked>
-                        <label for="sendEmail">
-                            <i class="fas fa-envelope"></i> Send email notification on scheduled date
-                        </label>
+<!-- Modal Add Schedule -->
+<div class="modal fade" id="scheduleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #2f3d57;">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-calendar-plus me-1"></i> Add Project Schedule
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="scheduleForm">
+                <div class="modal-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3 p-3"
+                         style="background: #f8f9fa; border-radius: 10px; border: 1px solid #e9ecef;">
+                        <div>
+                            <span style="font-size: 11px; color: #6c757d; text-transform: uppercase; font-weight: 600;">
+                                <i class="fas fa-info-circle me-1" style="color: #3DCD58;"></i> New Schedule Entry
+                            </span>
+                            <div>
+                                <span class="badge" style="background-color: #2f3d57; font-size: 11px; padding: 4px 10px; border-radius: 6px;">
+                                    Fill in the details below
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="fw-bold small">Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-sm" id="title" name="title"
+                               required placeholder="e.g., MCB 123 Project Review">
+                    </div>
+                    <div class="mb-3">
+                        <label class="fw-bold small">Schedule Date & Time <span class="text-danger">*</span></label>
+                        <input type="datetime-local" class="form-control form-control-sm" id="scheduleDate"
+                               name="scheduleDate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="fw-bold small">Description</label>
+                        <textarea class="form-control form-control-sm" id="description" name="description"
+                                  rows="3" placeholder="Add additional details about this schedule..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="sendEmail" name="sendEmail" checked>
+                            <label class="form-check-label small" for="sendEmail">
+                                <i class="fas fa-envelope me-1"></i> Send email notification on scheduled date
+                            </label>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeModal()">
-                    <i class="fas fa-times"></i> Cancel
-                </button>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Save Schedule
-                </button>
-            </div>
-        </form>
+                <div class="modal-footer" style="background: #f8f9fa; border-top: 1px solid #e9ecef;">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-sm"
+                            style="background-color: #3DCD58; color: #fff; font-weight: 600;">
+                        <i class="fas fa-save me-1"></i> Save Schedule
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
+</div>
 
-</section>
+<!-- Modal KPI Detail -->
+<div class="modal fade" id="kpiDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #2f3d57;">
+                <h5 class="modal-title text-white" id="kpiModalTitle">
+                    <i class="fas fa-list me-2"></i> Schedule Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div id="kpiModalContent">
+                <div class="text-center p-5">
+                    <div class="spinner-border text-success" role="status"></div>
+                    <p class="mt-2">Loading data...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    let calendar;
+@section Scripts {
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    <script>
+        var urlGetSchedules   = '/User/GetSchedules';
+        var urlCreateSchedule = '/User/CreateSchedule';
+        var urlMarkCompleted  = '/User/MarkScheduleCompleted';
+        var urlGetDetails     = '/User/GetScheduleDetailsPartial';
 
-    document.addEventListener('DOMContentLoaded', function() {
-        initializeCalendar();
-    });
+        let calendar;
 
-    function initializeCalendar() {
-        const calendarEl = document.getElementById('calendar');
-        calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,listWeek'
-            },
-            themeSystem: 'bootstrap5',
-            height: 650,
-            eventClick: function(info) {
-                showEventDetails(info.event);
-            },
-            dateClick: function(info) {
-                openModal(info.dateStr);
-            }
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeCalendar();
         });
 
-        calendar.render();
+        function initializeCalendar() {
+            const calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,listWeek'
+                },
+                themeSystem: 'bootstrap5',
+                height: 650,
+                eventClick: function (info) { showEventDetails(info.event); },
+                dateClick: function (info) { openModal(info.dateStr); }
+            });
+            calendar.render();
+            loadSchedules();
+        }
 
-        // ✅ LOAD SCHEDULES SETELAH CALENDAR SELESAI RENDER
-        loadSchedules();
-    }
+        function openDetailsModal(category) {
+            // FIX: ternary lengkap - sebelumnya putus di tengah
+            let title = category === 'TOTAL' ? 'All Schedules' :
+                        category === 'UPCOMING' ? 'Upcoming This Week' : 'Completed Schedules';
+            $('#kpiModalTitle').html('<i class="fas fa-list me-2"></i> ' + title);
+            $('#kpiDetailModal').modal('show');
+            $('#kpiModalContent').html('<div class="text-center p-5"><div class="spinner-border text-success"></div><p class="mt-2">Fetching data...</p></div>');
+            $.get(urlGetDetails, { category: category }, function (data) {
+                $('#kpiModalContent').html(data);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Data Loaded',
+                    text: 'Showing ' + title,
+                    timer: 1500,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            }).fail(function () {
+                $('#kpiModalContent').html('<div class="alert alert-danger m-3">Failed to load data.</div>');
+            });
+        }
 
-    function loadSchedules() {
-        console.log('🔄 Loading schedules...');
-
-        fetch('/User/GetSchedules')
-            .then(response => {
-                console.log('Response status:', response.status);
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(res => {
-                console.log('📦 Server response:', res);
-
-                if (res.success && res.data) {
-                    console.log(`✅ Found ${res.data.length} schedules`);
-
-                    // Hapus semua events yang ada
-                    calendar.removeAllEventSources();
-                    calendar.getEvents().forEach(event => event.remove());
-
-                    // Map dan tambahkan events
-                    const events = res.data.map(item => {
-                        console.log(`  - ${item.title} at ${item.start}`);
-                        return {
+        function loadSchedules() {
+            fetch(urlGetSchedules)
+                .then(response => {
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    return response.json();
+                })
+                .then(res => {
+                    if (res.success && res.data) {
+                        calendar.removeAllEventSources();
+                        calendar.getEvents().forEach(event => event.remove());
+                        const events = res.data.map(item => ({
                             id: item.id,
                             title: item.title,
                             start: item.start,
+                            allDay: false,
                             extendedProps: {
-                                description: item.description
+                                description: item.description,
+                                isCompleted: item.isCompleted
                             },
-                            backgroundColor: new Date(item.start) < new Date() ? '#6c757d' : '#28a745',
+                            backgroundColor: item.isCompleted ? '#28a745'
+                                           : new Date(item.start) < new Date() ? '#6c757d' : '#2f3d57',
                             borderColor: 'transparent'
-                        };
-                    });
+                        }));
+                        calendar.addEventSource(events);
+                        setTimeout(() => updateStats(), 500);
+                    }
+                })
+                .catch(err => console.error('Fetch error:', err));
+         }
 
-                    console.log('📅 Adding events to calendar:', events.length);
-
-                    // Tambahkan ke calendar
-                    calendar.addEventSource(events);
-
-                    // Update stats
-                    setTimeout(() => updateStats(), 500);
-
-                    console.log('✅ Calendar updated successfully!');
-                } else {
-                    console.warn('⚠️ No data or request failed');
-                }
-            })
-            .catch(err => {
-                console.error('❌ Fetch error:', err);
-            });
-    }
-
-    function updateStats() {
-        setTimeout(() => {
+        function updateStats() {
             const events = calendar.getEvents();
             const now = new Date();
             const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
+            const notCompleted = events.filter(e => !e.extendedProps.isCompleted);
             document.getElementById('totalSchedules').textContent = events.length;
+            document.getElementById('upcomingSchedules').textContent = 
+                notCompleted.filter(e => e.start >= now && e.start <= nextWeek).length;
+            document.getElementById('completedSchedules').textContent =
+                events.filter(e => e.extendedProps.isCompleted).length;
+        }
 
-            const upcoming = events.filter(e => e.start >= now && e.start <= nextWeek);
-            document.getElementById('upcomingSchedules').textContent = upcoming.length;
-
-            const completed = events.filter(e => e.start < now);
-            document.getElementById('completedSchedules').textContent = completed.length;
-        }, 300);
-    }
-
-    // ✅ FORM SUBMIT - SAVE SCHEDULE
-    document.getElementById('scheduleForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const payload = {
-            Title: document.getElementById('title').value,
-            ScheduledDate: document.getElementById('scheduleDate').value,
-            Description: document.getElementById('description').value
-        };
-
-        // Show loading
-        Swal.fire({
-            title: 'Saving...',
-            text: 'Please wait',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
-        // ✅ Tambahkan flag send_email
-        const sendEmail = document.getElementById('sendEmail').checked;
-        const payloadWithEmail = {
-            ...payload,
-            SendEmail: sendEmail
-        };
-
-        fetch('/User/CreateSchedule', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payloadWithEmail)
-        })
-        .then(r => r.json())
-        .then(res => {
-            if(res.success) {
-                // Tutup modal dulu
-                closeModal();
-
-                // Show success message
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Saved!',
-                    text: 'Schedule added successfully.',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-
-                // ✅ RELOAD SCHEDULES LANGSUNG TANPA REFRESH PAGE
-                loadSchedules();
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: res.message
-                });
-            }
-        })
-        .catch(err => {
+        document.getElementById('scheduleForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const payload = {
+                Title: document.getElementById('title').value,
+                ScheduledDate: document.getElementById('scheduleDate').value,
+                Description: document.getElementById('description').value,
+                SendEmail: document.getElementById('sendEmail').checked
+            };
             Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Failed to save schedule: ' + err.message
+                title: 'Saving...',
+                text: 'Please wait',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+            fetch(urlCreateSchedule, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    $('#scheduleModal').modal('hide');
+                    document.getElementById('scheduleForm').reset();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Saved!',
+                        text: 'Schedule added successfully.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    loadSchedules();
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: res.message });
+                }
+            })
+            .catch(err => {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to save: ' + err.message });
             });
         });
-    });
 
-    function openModal(date) {
-        document.getElementById('modalOverlay').classList.add('show');
-        document.getElementById('scheduleModal').classList.add('show');
-
-        if (date) {
-            document.getElementById('scheduleDate').value = date.includes('T') ? date : date + 'T09:00';
+        function openModal(date) {
+            $('#scheduleModal').modal('show');
+            if (date) {
+                document.getElementById('scheduleDate').value =
+                    date.includes('T') ? date : date + 'T09:00';
+            }
         }
-    }
 
-    function closeModal() {
-        document.getElementById('modalOverlay').classList.remove('show');
-        document.getElementById('scheduleModal').classList.remove('show');
-        document.getElementById('scheduleForm').reset();
-    }
+        function closeModal() {
+            $('#scheduleModal').modal('hide');
+            document.getElementById('scheduleForm').reset();
+        }
 
-    function showEventDetails(event) {
-        const eventDate = new Date(event.start);
-        const isPast = eventDate < new Date();
+        function showEventDetails(event) {
+            const eventDate = new Date(event.start);
+            const isCompleted = event.extendedProps.isCompleted;
+            const isPast = eventDate < new Date();
+            Swal.fire({
+                title: event.title,
+                html: `
+                    <div style="text-align: left; padding: 10px;">
+                        <p><strong>Date:</strong> ${eventDate.toLocaleString('en-GB')}</p>
+                        <p><strong>Description:</strong> ${event.extendedProps.description || 'No description'}</p>
+                        <p><strong>Status:</strong>
+                            <span style="color: ${isCompleted ? '#28a745' : isPast ? '#ffc107' : '#17a2b8'}; font-weight: bold;">
+                                ${isCompleted ? '✅ Completed' : isPast ? '⚠️ Overdue' : '🕐 Upcoming'}
+                            </span>
+                        </p>
+                    </div>
+                `,
+                icon: 'info',
+                showCancelButton: true,
+                showConfirmButton: !isCompleted,
+                confirmButtonText: 'Mark as Done',
+                confirmButtonColor: '#2f3d57',
+                cancelButtonText: 'Close',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
+                if (result.isConfirmed) markScheduleCompleted(event.id);
+            });
+        }
 
-        Swal.fire({
-            title: event.title,
-            html: `
-                <div style="text-align: left; padding: 10px;">
-                    <p><strong> Date:</strong> ${eventDate.toLocaleString('en-GB')}</p>
-                    <p><strong>Description:</strong> ${event.extendedProps.description || 'No description'}</p>
-                    <p><strong>Status:</strong> <span style="color: ${isPast ? '#dc3545' : '#28a745'}; font-weight: bold;">${isPast ? 'Completed' : 'Upcoming'}</span></p>
-                </div>
-            `,
-            icon: 'info',
-            showCancelButton: true,
-            confirmButtonText: 'Mark as Done',
-            confirmButtonColor: '#28a745',
-            cancelButtonText: 'Close',
-            cancelButtonColor: '#6c757d'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                markScheduleCompleted(event.id);
-            }
-        });
-    }
+        function markScheduleCompleted(scheduleId) {
+            fetch(urlMarkCompleted, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(scheduleId)
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Done!',
+                        text: 'Schedule marked as completed.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    loadSchedules();
+                } else {
+                    Swal.fire('Error', res.message, 'error');
+                }
+            });
+        }
 
-    function markScheduleCompleted(scheduleId) {
-        fetch('/User/MarkScheduleCompleted', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(scheduleId)
-        })
-        .then(r => r.json())
-        .then(res => {
-            if (res.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Done!',
-                    text: 'Schedule marked as completed.',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-                loadSchedules(); // Refresh calendar
-            } else {
-                Swal.fire('Error', res.message, 'error');
-            }
-        });
-    }
-</script>
+        console.log("script ok");
+    </script>
+}

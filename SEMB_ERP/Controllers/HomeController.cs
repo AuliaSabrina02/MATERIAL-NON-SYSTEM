@@ -33,7 +33,7 @@ namespace SEMB_ERP.Controllers
         }
         public async Task<IActionResult> Index()
         {
-            //string name = User.FindFirst("semb_erp_name")?.Value;
+             //string name = User.FindFirst("semb_erp_name")?.Value;
             //string level = User.FindFirst("semb_erp_level")?.Value;
             //if (name == null || level == null)
             //{

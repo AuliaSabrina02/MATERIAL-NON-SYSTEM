@@ -6,19 +6,76 @@
     var sesaId = ViewBag.SesaId;
 }
 
-<div class="modal-body">
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <h6><i class="fas fa-filter"></i> Filtered by: <span class="badge bg-primary">@statusFilter</span></h6>
+<style>
+    .professional-table {
+        font-size: 12px;
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        background-color: white;
+        overflow: hidden;
+        min-width: 1800px;
+        width: 100%;
+        table-layout: auto;
+    }
+
+        .professional-table thead th {
+            background-color: #2f3d57;
+            color: white;
+            font-weight: 600;
+            padding: 8px 12px;
+            text-align: center;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .professional-table tbody td {
+            padding: 6px 10px;
+            border: 1px solid #f0f0f0;
+            vertical-align: middle;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .professional-table tbody tr:hover {
+            background-color: #f0faf2 !important;
+        }
+</style>
+
+<div class="modal-body p-3">
+
+    <!-- Summary Bar -->
+    <div class="d-flex align-items-center justify-content-between mb-3 p-3"
+         style="background: #f8f9fa; border-radius: 10px; border: 1px solid #e9ecef;">
+        <div>
+            <span style="font-size: 11px; color: #6c757d; text-transform: uppercase; font-weight: 600;">
+                <i class="fas fa-filter me-1" style="color: #3DCD58;"></i> Status Filter
+            </span>
+            <div>
+                <span class="badge" style="background-color: #2f3d57; font-size: 12px; padding: 5px 12px; border-radius: 6px;">
+                    @statusFilter
+                </span>
+            </div>
         </div>
-        <div class="col-md-6 text-end">
-            <h6>Total Records: <span class="badge bg-success">@totalRecords</span></h6>
+        <div class="text-end">
+            <span style="font-size: 11px; color: #6c757d; text-transform: uppercase; font-weight: 600;">
+                Total Records
+            </span>
+            <div>
+                <span class="badge" style="background-color: #3DCD58; font-size: 12px; padding: 5px 12px; border-radius: 6px;">
+                    @totalRecords
+                </span>
+            </div>
         </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped table-sm" id="tbl_filtered_orders">
-            <thead class="bg-info text-center">
+    <!-- Table -->
+    <div style="overflow-x: auto; width: 100%;">
+        <table class="table table-bordered table-striped professional-table" id="tbl_filtered_orders">
+            <thead>
                 <tr>
                     <th>Status</th>
                     <th>Material Type</th>
@@ -42,7 +99,7 @@
                     <th>L(mm)</th>
                     <th>W(mm)</th>
                     <th>H(mm)</th>
-
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -62,72 +119,109 @@
                         else if (item.priority_request == "Medium") priorityBadge = "badge bg-warning text-dark";
                         else if (item.priority_request == "Low") priorityBadge = "badge bg-success";
 
-                        <tr style="background-color: #edfcf1;">
-                            <td class="@statusClass">@item.status_desc</td>
-                            <td>@item.material_type</td>
-                            <td><strong>@item.partno</strong></td>
-                            <td>@item.po_no</td>
+                        <tr>
+                            <td class="text-center @statusClass">@item.status_desc</td>
+                            <td>@(item.material_type ?? "Not Available")</td>
+                            <td><strong>@(item.partno ?? "Not Available")</strong></td>
+                            <td>@(item.po_no ?? "Not Available")</td>
                             <td class="text-center">@item.qty</td>
                             <td class="text-center">@item.picked_qty</td>
                             <td class="text-center @(item.available_qty > 0 ? "bg-warning" : "bg-secondary text-white")">
                                 @item.available_qty
                             </td>
-                            <td>@item.uom</td>
-                            <td>@item.revision</td>
-                            <td>@item.project_name</td>
-                            <td>@item.storage_requirement</td>
-                            <td>@item.supplier_name</td>
-                            <td>@item.pic_name</td>
-                            <td>@item.order_type</td>
-                            <td>@item.unit_price</td>
+                            <td>@(item.uom ?? "Not Available")</td>
+                            <td>@(item.revision ?? "Not Available")</td>
+                            <td>@(item.project_name ?? "Not Available")</td>
+                            <td>@(item.storage_requirement ?? "Not Available")</td>
+                            <td>@(item.supplier_name ?? "Not Available")</td>
+                            <td>@(item.pic_name ?? "Not Available")</td>
+                            <td>@(item.order_type ?? "Not Available")</td>
+                            <td>@(item.unit_price.HasValue ? item.unit_price.Value.ToString() : "Not Available")</td>
                             <td class="text-center">
                                 @if (!string.IsNullOrEmpty(item.priority_request))
                                 {
                                     <span class="@priorityBadge">@item.priority_request</span>
                                 }
+                                else
+                                {
+                                    <span style="color: #999; font-size: 11px;">Not Available</span>
+                                }
                             </td>
-                            <td>@item.gatepass</td>
-                            <td>@(item.record_date.HasValue? item.record_date.Value.ToString("dd-MM-yyyy HH:mm") : "")</td>
+                            <td>@(item.gatepass ?? "Not Available")</td>
+                            <td>@(item.record_date.HasValue ? item.record_date.Value.ToString("dd-MM-yyyy HH:mm") : "Not Available")</td>
                             <td class="text-center">
                                 @if (!string.IsNullOrEmpty(item.file_support))
                                 {
-                                    <a href="@item.file_support" target="_blank" class="btn btn-xs btn-info">
+                                    <a href="@item.file_support" target="_blank"
+                                       class="btn btn-sm btn-info"
+                                       style="padding: 3px 8px; font-size: 11px;">
                                         <i class="fas fa-file"></i>
                                     </a>
                                 }
+                                else
+                                {
+                                    <span style="color: #999; font-size: 11px;">Not Available</span>
+                                }
                             </td>
-                            <td>@item.length_mm</td>
-                            <td>@item.width_mm</td>
-                            <td>@item.height_mm</td>
-
+                            <td>@(item.length_mm != null ? item.length_mm.ToString() : "Not Available")</td>
+                            <td>@(item.width_mm != null ? item.width_mm.ToString() : "Not Available")</td>
+                            <td>@(item.height_mm != null ? item.height_mm.ToString() : "Not Available")</td>
+                            <td class="text-center">
+                                <a href="http://localhost:5153/User/OrderList?partno=@item.partno&po_no=@item.po_no"
+                                   target="_blank"
+                                   class="btn btn-sm"
+                                   style="background-color: #2f3d57; color: #fff; border-radius: 6px; padding: 3px 10px; font-size: 11px; white-space: nowrap;">
+                                    <i class="fas fa-eye me-1"></i> Detail
+                                </a>
+                            </td>
                         </tr>
                     }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="22" class="text-center text-muted">No data available for this status</td>
-                    </tr>
                 }
             </tbody>
         </table>
     </div>
 </div>
 
-<div class="modal-footer">
-    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-        <i class="fas fa-times"></i> Close
+<div class="modal-footer" style="background: #f8f9fa; border-top: 1px solid #e9ecef;">
+    <a href="http://localhost:5153/User/OrderList" target="_blank"
+       class="btn btn-sm"
+       style="background-color: #3DCD58; color: #fff; border-radius: 6px; font-size: 12px;">
+        <i class="fas fa-external-link-alt me-1"></i> View Full Order List
+    </a>
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">
+        <i class="fas fa-times me-1"></i> Close
     </button>
 </div>
 
 <script>
     $(document).ready(function () {
+        if ($.fn.dataTable.isDataTable('#tbl_filtered_orders')) {
+            $('#tbl_filtered_orders').DataTable().destroy();
+        }
+
         $('#tbl_filtered_orders').DataTable({
-            "pageLength": 10,
-            "ordering": true,
-            "searching": true,
-            "order": [[20, 'desc']],
-            "scrollX": true
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            order: [[17, 'desc']],
+            scrollX: false,
+            autoWidth: false,
+            language: {
+                search: "Search:",
+                lengthMenu: "Show _MENU_ entries",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                emptyTable: "Not Available",
+                zeroRecords: "Not Available",
+                paginate: {
+                    first: "First",
+                    last: "Last",
+                    next: "Next",
+                    previous: "Previous"
+                }
+            },
+            dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                 '<"row"<"col-sm-12"tr>>' +
+                 '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>'
         });
     });
 </script>

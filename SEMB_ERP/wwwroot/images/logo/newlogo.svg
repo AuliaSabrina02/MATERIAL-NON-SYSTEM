@@ -1,0 +1,8 @@
+<svg width="600" height="150" viewBox="0 0 600 150" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+	<text x="10" y="110" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="110" fill="#191919" style="letter-spacing: -2px;">MNS</text>
+	<rect x="270" y="15" width="320" height="120" rx="25" fill="#39d353" />
+	<circle cx="530" cy="75" r="50" fill="none" stroke="white" stroke-width="0.5" opacity="0.3" />
+	<ellipse cx="530" cy="75" rx="20" ry="50" fill="none" stroke="white" stroke-width="0.5" opacity="0.3" />
+	<text x="285" y="65" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="38" fill="white">MATERIAL</text>
+	<text x="285" y="115" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="45" fill="white">NON SYSTEM</text>
+</svg>

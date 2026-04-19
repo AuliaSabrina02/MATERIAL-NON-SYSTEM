@@ -505,11 +505,14 @@
 
                 <!-- Input Message -->
                 <div class="mt-3">
+                    <div id="not_allowed_msg" class="alert alert-warning" style="display:none;">
+                        <i class="fas fa-lock"></i> <strong>Not Allowed</strong> — You are not the PIC of this order.
+                    </div>
                     <form id="form_send_message">
                         <input type="hidden" id="reply_to_id" value="">
                         <div class="input-group">
                             <input type="text" class="form-control" id="message_input" placeholder="Type Something..." required>
-                            <button type="submit" class="btn btn-success">
+                            <button type="submit" id="btn_send_msg" class="btn btn-success">
                                 <i class="fas fa-paper-plane"></i> Send
                             </button>
                         </div>
@@ -827,7 +830,7 @@
                 { "data": "length_mm", "className": "align-middle" },
                 { "data": "width_mm", "className": "align-middle" },
                 { "data": "height_mm", "className": "align-middle" },
-                        
+
                 {
             "data": "id_order",
             "className": "align-middle text-center",
@@ -851,7 +854,7 @@
                     }
                 }
 
-                btn_action += `<button class="btn btn-sm btn-info" title="Discussion" onclick="open_discussion('${data}', '${row['partno']}', '${row['po_no']}', '${row['qty']}', '${row['project_name']}', '${row['status_desc']}', '${row['supplier_name']}', '${row['pic_name']}')">
+                btn_action += `<button class="btn btn-sm btn-info" title="Discussion" onclick="open_discussion('${data}', '${row['partno']}', '${row['po_no']}', '${row['qty']}', '${row['project_name']}', '${row['status_desc']}', '${row['supplier_name']}', '${row['pic_name']}', '${row['pic']}')">
                     <i class="fas fa-comments"></i>
                 </button>`;
 
@@ -999,8 +1002,7 @@
         }
 
 
-            function open_discussion(id_order, part_no, po_no, qty, project_name, status, supplier_name, pic_name) {
-            // Set detail information
+                 function open_discussion(id_order, part_no, po_no, qty, project_name, status, supplier_name, pic_name, pic_sesa_id) {
             $("#disc_part_no").val(part_no);
             $("#disc_po_no").val(po_no);
             $("#disc_qty").val(qty);
@@ -1009,6 +1011,23 @@
             $("#disc_supplier_name").val(supplier_name);
             $("#disc_pic").val(pic_name);
             $("#current_id_order").val(id_order);
+
+            // Cek apakah user yang login adalah PIC order
+                 let isReceiver = user_roles.includes("receiver");
+        let isPic = pic_sesa_id.toUpperCase() === sesa_id.toUpperCase();
+        let canComment = isReceiver || isPic;
+
+        if (canComment) {
+            $("#message_input").prop("disabled", false);
+            $("#message_input").attr("placeholder", "Type Something...");
+            $("#btn_send_msg").show();
+            $("#not_allowed_msg").hide();
+        } else {
+            $("#message_input").prop("disabled", true);
+            $("#message_input").attr("placeholder", "");
+            $("#btn_send_msg").hide();
+            $("#not_allowed_msg").show();
+        }
 
             // Load discussions
             load_discussions(id_order);
@@ -1181,8 +1200,8 @@
             $("div#modal_update_order").modal("show");
         }
 
-                function downloadRowData(id_order) {
-            window.location.href = "@Url.Action("DownloadTemplate", "User")?id_order=" + id_order;
+            function downloadRowData(id_order) {
+            window.location.href = "@Url.Action("DownloadOrderDetail", "User")?id_order=" + id_order;
         }
 
 
@@ -1525,7 +1544,7 @@
                     url: "@Url.Action("CreateListBox")",
                     data: {
                         box_id: box_id,
-                        total_qty: total_qty,
+                        total_qty: total_qty,  
                         spq: spq
                     }
                 }).done(function (res) {

@@ -1,12 +1,51 @@
 ﻿@model List<MaterialReturnModel>
-
 @{
     var status = ViewBag.Status as string;
     var totalRecords = ViewBag.TotalRecords as int? ?? 0;
     var errorMessage = ViewBag.ErrorMessage as string;
 }
 
-<div class="modal-body">
+<style>
+    .professional-table-return {
+        font-size: 12px;
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        background-color: white;
+        overflow: hidden;
+        min-width: 900px;
+        width: 100%;
+        table-layout: auto;
+    }
+
+        .professional-table-return thead th {
+            background-color: #2f3d57;
+            color: white;
+            font-weight: 600;
+            padding: 8px 12px;
+            text-align: center;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .professional-table-return tbody td {
+            padding: 6px 10px;
+            border: 1px solid #f0f0f0;
+            vertical-align: middle;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .professional-table-return tbody tr:hover {
+            background-color: #f0faf2 !important;
+        }
+</style>
+
+<div class="modal-body p-3">
+
     @if (!string.IsNullOrEmpty(errorMessage))
     {
         <div class="alert alert-danger">
@@ -14,98 +53,108 @@
             <strong>Error:</strong> @errorMessage
         </div>
     }
-    else if (Model == null || !Model.Any())
-    {
-        <div class="alert alert-info text-center">
-            <i class="fas fa-info-circle"></i>
-            <p class="mb-0">No returns found with status: <strong>@status</strong></p>
-        </div>
-    }
     else
     {
-        <div class="mb-3">
-            <h6>
-                <i class="fas fa-list"></i>
-                Showing <strong>@totalRecords</strong> return(s) with status: <strong>@status</strong>
-            </h6>
+        <!-- Summary Bar -->
+        <div class="d-flex align-items-center justify-content-between mb-3 p-3"
+             style="background: #f8f9fa; border-radius: 10px; border: 1px solid #e9ecef;">
+            <div>
+                <span style="font-size: 11px; color: #6c757d; text-transform: uppercase; font-weight: 600;">
+                    <i class="fas fa-filter me-1" style="color: #3DCD58;"></i> Status Filter
+                </span>
+                <div>
+                    <span class="badge" style="background-color: #2f3d57; font-size: 12px; padding: 5px 12px; border-radius: 6px;">
+                        @status
+                    </span>
+                </div>
+            </div>
+            <div class="text-end">
+                <span style="font-size: 11px; color: #6c757d; text-transform: uppercase; font-weight: 600;">
+                    Total Records
+                </span>
+                <div>
+                    <span class="badge" style="background-color: #3DCD58; font-size: 12px; padding: 5px 12px; border-radius: 6px;">
+                        @totalRecords
+                    </span>
+                </div>
+            </div>
         </div>
 
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover table-sm" id="tbl_return_filtered">
-                <thead class="bg-info">
-                    <tr>
-                        <th>ID</th>
-                        <th>PO No</th>
-                        <th>Part No</th>
-                        <th>Qty Return</th>
-                        <th>UOM</th>
-                        <th>Condition</th>
-                        <th>PIC</th>
-                        <th>Return Date</th>
-                        <th>Update Date</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
-                        var statusBadgeClass = item.status_desc switch
-                        {
-                            "Sent" => "badge bg-warning",
-                            "Approved" => "badge bg-success",
-                            "In Transit" => "badge bg-info",
-                            "Returned" => "badge bg-secondary",
-                            _ => "badge bg-light"
-                        };
-
+        @if (Model == null || !Model.Any())
+        {
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-inbox fa-2x mb-2 d-block" style="color: #dee2e6;"></i>
+                No returns found with status: <strong>@status</strong>
+            </div>
+        }
+        else
+        {
+            <!-- Table -->
+            <div style="overflow-x: auto; width: 100%;">
+                <table class="table table-bordered table-striped professional-table-return" id="tbl_return_filtered">
+                    <thead>
                         <tr>
-                            <td>@item.id_return</td>
-                            <td>@item.po_no</td>
-                            <td><strong>@item.partno</strong></td>
-                            <td class="text-right">@string.Format("{0:N2}", item.qty_return)</td>
-                            <td>@item.uom</td>
-                            <td>
-                                @if (item.condition == "Good")
-                                {
-                                    <span class="badge bg-success">Good</span>
-                                }
-                                else if (item.condition == "Damaged")
-                                {
-                                    <span class="badge bg-danger">Damaged</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-warning">@item.condition</span>
-                                }
-                            </td>
-                            <td>@item.name</td>
-                            <td>
-                                @if (item.return_date.HasValue)
-                                {
-                                    @string.Format("{0:yyyy-MM-dd HH:mm}", item.return_date.Value)
-                                }
-                                else
-                                {
-                                    <span class="text-muted">-</span>
-                                }
-                            </td>
-                            <td>
-                                @if (item.update_date.HasValue)
-                                {
-                                    @string.Format("{0:yyyy-MM-dd HH:mm}", item.update_date.Value)
-                                }
-                                else
-                                {
-                                    <span class="text-muted">-</span>
-                                }
-                            </td>
-                            <td><span class="@statusBadgeClass">@item.status_desc</span></td>
+                            <th>ID</th>
+                            <th>PO No</th>
+                            <th>Part No</th>
+                            <th>Qty Return</th>
+                            <th>UOM</th>
+                            <th>Condition</th>
+                            <th>PIC</th>
+                            <th>Return Date</th>
+                            <th>Update Date</th>
+                            <th>Status</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            var statusBadgeClass = item.status_desc switch
+                            {
+                                "Sent" => "badge bg-warning text-dark",
+                                "Approved" => "badge bg-success",
+                                "In Transit" => "badge bg-info",
+                                "Returned" => "badge bg-secondary",
+                                _ => "badge bg-light text-dark"
+                            };
+
+                            <tr>
+                                <td class="text-center">@item.id_return</td>
+                                <td>@item.po_no</td>
+                                <td><strong>@item.partno</strong></td>
+                                <td class="text-center">@string.Format("{0:N2}", item.qty_return)</td>
+                                <td>@item.uom</td>
+                                <td class="text-center">
+                                    @if (item.condition == "Good")
+                                    {
+                                        <span class="badge bg-success">Good</span>
+                                    }
+                                    else if (item.condition == "Damaged")
+                                    {
+                                        <span class="badge bg-danger">Damaged</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark">@item.condition</span>
+                                    }
+                                </td>
+                                <td>@item.name</td>
+                                <td>@(item.return_date.HasValue ? string.Format("{0:dd-MM-yyyy HH:mm}", item.return_date.Value) : "-")</td>
+                                <td>@(item.update_date.HasValue ? string.Format("{0:dd-MM-yyyy HH:mm}", item.update_date.Value) : "-")</td>
+                                <td class="text-center"><span class="@statusBadgeClass">@item.status_desc</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
     }
+</div>
+
+<div class="modal-footer" style="background: #f8f9fa; border-top: 1px solid #e9ecef;">
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">
+        <i class="fas fa-times me-1"></i> Close
+    </button>
 </div>
 
 <script>
@@ -113,15 +162,27 @@
         if ($.fn.DataTable.isDataTable('#tbl_return_filtered')) {
             $('#tbl_return_filtered').DataTable().destroy();
         }
-
-        $('#tbl_return_filtered').DataTable({
-            "paging": true,
-            "pageLength": 10,
-            "searching": true,
-            "ordering": true,
-            "info": true,
-            "autoWidth": false,
-            "responsive": true
-        });
+        if (@totalRecords > 0)
+        {
+            $('#tbl_return_filtered').DataTable({
+                paging: true,
+                pageLength: 10,
+                searching: true,
+                ordering: true,
+                info: true,
+                scrollX: false,
+                autoWidth: false,
+                order: [[7, 'desc']],
+                language: {
+                    search: "Search:",
+                    lengthMenu: "Show _MENU_ entries",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
+                },
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                     '<"row"<"col-sm-12"tr>>' +
+                     '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>'
+            });
+        }
     });
 </script>

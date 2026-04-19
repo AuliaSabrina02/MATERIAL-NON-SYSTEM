@@ -16,6 +16,7 @@ namespace SEMB_ERP.Function
         public string ConnectionString = @"Server=localhost\SQLEXPRESS;Database=SEMB_ERP_QAS;Trusted_Connection=True;TrustServerCertificate=True;";
         public string ConnectionStringBLP = @"Server=localhost\SQLEXPRESS;Database=DBBLP;Trusted_Connection=True;TrustServerCertificate=True;";
 
+
         public List<OrderTempListModel> GetTempOrder(string id_upload, string sesa_id)
         {
             List<OrderTempListModel> dataList = new List<OrderTempListModel>();
@@ -298,6 +299,59 @@ namespace SEMB_ERP.Function
                 // Log error
             }
 
+            return template;
+        }
+
+
+        public OrderTemplateModel GetOrderDetail(int id_order)
+        {
+            OrderTemplateModel template = null;
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    string query = @"
+                SELECT * FROM tbl_order 
+                WHERE id_order = @id_order";
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@id_order", id_order);
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                template = new OrderTemplateModel
+                                {
+                                    id_template = Convert.ToInt32(reader["id_order"]),
+                                    material_type = reader["material_type"]?.ToString(),
+                                    partno = reader["partno"]?.ToString(),
+                                    po_no = reader["po_no"]?.ToString(),
+                                    qty = reader["qty"]?.ToString(),
+                                    uom = reader["uom"]?.ToString(),
+                                    revision = reader["revision"]?.ToString(),
+                                    project_name = reader["project_name"]?.ToString(),
+                                    storage_requirement = reader["storage_requirement"]?.ToString(),
+                                    supplier_name = reader["supplier_name"]?.ToString(),
+                                    order_type = reader["order_type"]?.ToString(),
+                                    unit_price = reader["unit_price"]?.ToString(),
+                                    priority_request = reader["priority_request"]?.ToString(),
+                                    length_mm = reader["length_mm"]?.ToString(),
+                                    width_mm = reader["width_mm"]?.ToString(),
+                                    height_mm = reader["height_mm"]?.ToString(),
+                                    remark = reader["remark"]?.ToString(),
+                                    gatepass = reader["gatepass"]?.ToString(),
+                                    pic = reader["pic"]?.ToString(),
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error
+            }
             return template;
         }
 
@@ -713,7 +767,7 @@ namespace SEMB_ERP.Function
         }
 
 
-        public string DeleteReturn(int id_return, string sesa_id)
+        public string DeleteMaterialReturn(int id)
         {
             try
             {
@@ -721,26 +775,28 @@ namespace SEMB_ERP.Function
                 {
                     conn.Open();
 
-                    // Cek status dulu sebelum delete
-                    string checkQuery = "SELECT status FROM material_return WHERE id_return = @id_return";
-                    SqlCommand checkCmd = new SqlCommand(checkQuery, conn);
-                    checkCmd.Parameters.AddWithValue("@id_return", id_return);
-                    var status = checkCmd.ExecuteScalar()?.ToString();
+                    // Opsional: Cek status dulu sebelum hapus untuk keamanan extra
+                    // "Hanya boleh hapus jika status = 1 (Sent)"
+                    string checkStatusQuery = "SELECT status FROM material_return WHERE id_return = @id";
+                    SqlCommand checkCmd = new SqlCommand(checkStatusQuery, conn);
+                    checkCmd.Parameters.AddWithValue("@id", id);
+                    object currentStatus = checkCmd.ExecuteScalar();
 
-                    if (status == null) return "Data not found.";
-                    if (status != "1") return "Cannot delete. Status already updated.";
+                    if (currentStatus == null) return "Data not found.";
+                    if (Convert.ToInt32(currentStatus) != 1) return "Cannot delete. Data is already processed (Approved/In Transit).";
 
-                    string query = "DELETE FROM material_return WHERE id_return = @id_return";
+                    // Eksekusi Delete
+                    string query = "DELETE FROM material_return WHERE id_return = @id";
                     SqlCommand cmd = new SqlCommand(query, conn);
-                    cmd.Parameters.AddWithValue("@id_return", id_return);
+                    cmd.Parameters.AddWithValue("@id", id);
 
                     int rowsAffected = cmd.ExecuteNonQuery();
-                    return rowsAffected > 0 ? "OK" : "No changes made.";
+                    return rowsAffected > 0 ? "OK" : "No data deleted.";
                 }
             }
             catch (Exception ex)
             {
-                return "error;" + ex.Message;
+                return ex.Message;
             }
         }
         public string UpdateReturn(MaterialReturnModel model, IFormFile image_support_file, string sesa_id)
@@ -1144,6 +1200,35 @@ namespace SEMB_ERP.Function
             return (palletList, totalRecords);
         }
 
+
+        public string UpdatePalletProblemStatus(int id, string status, string updated_by)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    string query = @"UPDATE pallet_problems 
+                             SET status = @status, 
+                                 updated_by = @updated_by, 
+                                 updated_date = GETDATE() 
+                             WHERE id = @id";
+
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@status", status);
+                        cmd.Parameters.AddWithValue("@updated_by", updated_by);
+                        cmd.Parameters.AddWithValue("@id", id);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                return "success";
+            }
+            catch (Exception ex)
+            {
+                return "error;" + ex.Message;
+            }
+        }
         public dynamic GetReservationList(IFormCollection form, string sesa_id)
         {
             try
@@ -1361,7 +1446,7 @@ OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY";
             return dt;
         }
 
-         public int CreateSchedule(string sesaId, string email, DateTime date, string title, string desc)
+        public int CreateSchedule(string sesaId, string email, DateTime date, string title, string desc)
         {
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
@@ -1488,7 +1573,7 @@ OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY";
         }
         public List<string> GetPrinter(string loc = "")
         {
-            string qry_printer = "SELECT printer_name FROM mst_printer WHERE loc='"+loc+"' ORDER BY printer_name";
+            string qry_printer = "SELECT printer_name FROM mst_printer WHERE loc='" + loc + "' ORDER BY printer_name";
             if (loc == "")
             {
                 qry_printer = "SELECT printer_name FROM mst_printer ORDER BY printer_name";
@@ -2114,7 +2199,7 @@ OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY";
                 WHERE pd.erp_id_order IS NOT NULL 
                   AND pd.PKG_ID2 IN (
                       SELECT PartName 
-                      FROM SEMB_ERP_QAS.dbo.tmp_bin_matrial 
+                      FROM SEMB_DT.SEMB_ERP_QAS.dbo.tmp_bin_matrial 
                       WHERE DoneBy = @user
                   )";
 
@@ -3335,7 +3420,7 @@ OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY";
                             Pstats = reader["PickingStatus"].ToString()
                         });
                     }
-                }                        
+                }
             }
             return boxs;
         }
@@ -3381,7 +3466,7 @@ OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY";
                 {
                     depts.Add(new RequestListModel
                     {
-                        department = reader["department"].ToString(),                        
+                        department = reader["department"].ToString(),
                     });
                 }
             }
@@ -3807,7 +3892,7 @@ OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY";
         {
             List<ChartModel> result = new List<ChartModel>();
 
-            using (SqlConnection conn = new SqlConnection(ConnectionString)) 
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
                 conn.Open();
                 SqlCommand cmd = new SqlCommand("GET_AGING_MOVEMENT_CHART", conn);
@@ -3966,7 +4051,7 @@ OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY";
             }
         }
 
-        public string InsertShipmentManual(string id_upload, string project_name, string stage_name, string wo_no, string partno, 
+        public string InsertShipmentManual(string id_upload, string project_name, string stage_name, string wo_no, string partno,
             string revision, decimal qty, string is_coated, DateTime ship_date, string sesa_id)
         {
             try
