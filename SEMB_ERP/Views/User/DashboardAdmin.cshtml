@@ -1,0 +1,1316 @@
+﻿@{
+    ViewData["Title"] = "Dashboard Admin";
+}
+
+<style>
+    .kpi-card-wh {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-bottom: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        border: 1px solid #e9ecef;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 100%;
+    }
+
+        .kpi-card-wh:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        }
+
+    .kpi-icon-wh {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        flex-shrink: 0;
+    }
+
+        .kpi-icon-wh i {
+            color: #fff;
+        }
+
+    .kpi-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .kpi-label-wh {
+        font-size: 9.5px;
+        font-weight: 600;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        white-space: normal;
+        word-break: break-word;
+        line-height: 1.3;
+        margin-bottom: 2px;
+    }
+
+    .kpi-value-wh {
+        font-size: 18px;
+        font-weight: 700;
+        color: #2c3e50;
+        line-height: 1;
+    }
+
+    .kpi-col {
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+    }
+
+    .hero {
+        min-height: 70px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        color: #fff;
+        margin-bottom: 15px;
+    }
+
+        .hero .inner {
+            background: rgba(0,0,0,0.7);
+            height: 70px;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0 1rem;
+        }
+
+    .hero-title-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        width: 100%;
+    }
+
+        .hero-title-container h3 {
+            margin-bottom: 0;
+            font-weight: 700;
+            font-size: 1.75rem;
+        }
+
+    #adminDashboardTabs {
+        padding: 0px 0px 16px 0px;
+    }
+
+        #adminDashboardTabs .nav-link {
+            border: none;
+            border-radius: 6px;
+            padding: 12px 20px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            margin: 0 2px;
+        }
+
+            #adminDashboardTabs .nav-link:hover {
+                background-color: #f8f9fa;
+                color: #2c3e50;
+            }
+
+            #adminDashboardTabs .nav-link.active {
+                background-color: #3DCD58 !important;
+                color: white !important;
+                box-shadow: 0 2px 8px rgba(61,205,88,0.3);
+            }
+
+    .dashboard-card {
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        border: 1px solid #e9ecef;
+        margin-bottom: 16px;
+    }
+
+    .card-header {
+        background-color: #2f3d57 !important;
+        border-radius: 12px 12px 0 0 !important;
+    }
+
+        .card-header h3.card-title,
+        .card-header .card-title {
+            color: #ffffff !important;
+        }
+
+        .card-header i {
+            color: #3DCD58 !important;
+        }
+
+        .card-header .btn-outline-secondary {
+            color: #ffffff;
+            border-color: rgba(255,255,255,0.4);
+        }
+
+            .card-header .btn-outline-secondary:hover {
+                background-color: rgba(255,255,255,0.1);
+            }
+
+    .coming-soon-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 80px 20px;
+        color: #adb5bd;
+    }
+
+        .coming-soon-box i {
+            font-size: 64px;
+            margin-bottom: 16px;
+            color: #dee2e6;
+        }
+
+        .coming-soon-box h4 {
+            font-weight: 700;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+
+        .coming-soon-box p {
+            font-size: 14px;
+            color: #adb5bd;
+        }
+</style>
+
+<!-- Hero -->
+<section id="hero" class="hero bg-dark position-relative"
+         style="background: url('@Url.Content("~/images/background/bg-am.jpg")') center center / cover no-repeat fixed;">
+    <div class="inner">
+        <div></div>
+        <div class="hero-title-container">
+            <h3 class="text-white">
+                <i class="fas fa-chart-pie text-success me-2"></i>
+                Dashboard Admin
+            </h3>
+        </div>
+        <div class="ms-auto"></div>
+    </div>
+</section>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 mt-3">
+                <div class="dashboard-card">
+                    <div class="card-body">
+
+                        <!-- Tabs -->
+                        <ul class="nav nav-pills justify-content-center" id="adminDashboardTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="tab-requestor"
+                                        data-bs-toggle="tab" data-bs-target="#pane-requestor"
+                                        type="button" role="tab" aria-selected="true">
+                                    <i class="fas fa-user me-1"></i> Requestor
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="tab-receiver"
+                                        data-bs-toggle="tab" data-bs-target="#pane-receiver"
+                                        type="button" role="tab" aria-selected="false">
+                                    <i class="fas fa-box-open me-1"></i> Receiver
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="tab-plant-receiver"
+                                        data-bs-toggle="tab" data-bs-target="#pane-plant-receiver"
+                                        type="button" role="tab" aria-selected="false">
+                                    <i class="fas fa-industry me-1"></i> Plant Receiver
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content" id="adminDashboardTabContent">
+
+                            <!-- ══════════════════════════════════════
+                                 TAB 1 : REQUESTOR
+                            ══════════════════════════════════════ -->
+                            <div class="tab-pane fade show active" id="pane-requestor" role="tabpanel">
+
+                                <!-- KPI Cards -->
+                                <div class="row flex-nowrap overflow-auto mb-2 pb-1" style="margin-left:0;margin-right:0;">
+                                    <div class="kpi-col" style="min-width:155px;flex:1;">
+                                        <div class="kpi-card-wh" onclick="openOrderModal('Submission')">
+                                            <div class="kpi-icon-wh" style="background-color:#6c757d;">
+                                                <i class="fas fa-file-import"></i>
+                                            </div>
+                                            <div class="kpi-body">
+                                                <div class="kpi-label-wh">Submission</div>
+                                                <div class="kpi-value-wh" id="total-submission">0</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="kpi-col" style="min-width:155px;flex:1;">
+                                        <div class="kpi-card-wh" onclick="openOrderModal('Received')">
+                                            <div class="kpi-icon-wh" style="background-color:#007bff;">
+                                                <i class="fas fa-box-open"></i>
+                                            </div>
+                                            <div class="kpi-body">
+                                                <div class="kpi-label-wh">Received</div>
+                                                <div class="kpi-value-wh" id="total-received">0</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="kpi-col" style="min-width:155px;flex:1;">
+                                        <div class="kpi-card-wh" onclick="openOrderModal('Putaway')">
+                                            <div class="kpi-icon-wh" style="background-color:#ffc107;">
+                                                <i class="fas fa-warehouse"></i>
+                                            </div>
+                                            <div class="kpi-body">
+                                                <div class="kpi-label-wh">Putaway</div>
+                                                <div class="kpi-value-wh" id="total-putaway">0</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="kpi-col" style="min-width:155px;flex:1;">
+                                        <div class="kpi-card-wh" onclick="openOrderModal('Partial')">
+                                            <div class="kpi-icon-wh" style="background-color:#fd7e14;">
+                                                <i class="fas fa-tasks"></i>
+                                            </div>
+                                            <div class="kpi-body">
+                                                <div class="kpi-label-wh">Partially Picked</div>
+                                                <div class="kpi-value-wh" id="total-partially-picked">0</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="kpi-col" style="min-width:155px;flex:1;">
+                                        <div class="kpi-card-wh" onclick="openOrderModal('Closed')">
+                                            <div class="kpi-icon-wh" style="background-color:#28a745;">
+                                                <i class="fas fa-check-circle"></i>
+                                            </div>
+                                            <div class="kpi-body">
+                                                <div class="kpi-label-wh">Closed</div>
+                                                <div class="kpi-value-wh" id="total-closed">0</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Charts Row 1 -->
+                                <div class="row g-3 px-1">
+                                    <div class="col-6">
+                                        <div class="card h-100">
+                                            <div class="card-header d-flex align-items-center" style="min-height:56px;padding:12px 20px;">
+                                                <h3 class="card-title fw-bold mb-0">
+                                                    <i class="fas fa-chart-bar me-1"></i> Request Status
+                                                </h3>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="bar_chart" style="width:100%;height:300px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="card h-100">
+                                            <div class="card-header d-flex align-items-center" style="min-height:56px;padding:12px 20px;">
+                                                <h3 class="card-title fw-bold mb-0">
+                                                    <i class="fas fa-chart-pie me-1"></i> Picking Progress
+                                                </h3>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="pie_chart" style="width:100%;height:300px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Charts Row 2 -->
+                                    <div class="col-6">
+                                        <div class="card h-100">
+                                            <div class="card-header d-flex align-items-center" style="min-height:56px;padding:12px 20px;">
+                                                <h3 class="card-title fw-bold mb-0">
+                                                    <i class="fas fa-chart-line me-1"></i> Aging Movement Chart
+                                                </h3>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="aging_chart" style="width:100%;height:280px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="card h-100">
+                                            <div class="card-header d-flex align-items-center" style="min-height:56px;padding:12px 20px;">
+                                                <h3 class="card-title fw-bold mb-0">
+                                                    <i class="fas fa-undo me-1"></i> Return Status
+                                                </h3>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="return_chart" style="width:100%;height:280px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Request Schedule -->
+                                    <div class="col-12">
+                                        <div class="card h-100">
+                                            <div class="card-header d-flex align-items-center" style="min-height:56px;padding:12px 20px;">
+                                                <h3 class="card-title fw-bold mb-0">
+                                                    <i class="fas fa-chart-bar me-1"></i> Request Schedule
+                                                </h3>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="summary_chart" style="width:100%;height:350px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Recent Non-Conf -->
+                                    <div class="col-12">
+                                        <div class="card">
+                                            <div class="card-header d-flex align-items-center" style="min-height:56px;padding:12px 20px;">
+                                                <h3 class="card-title fw-bold mb-0">
+                                                    <i class="fas fa-exclamation-circle me-1"></i> Recent Non-Conf
+                                                </h3>
+                                                <div class="card-tools ms-auto">
+                                                    <a href="@Url.Action("NonConfList", "User")" class="btn btn-sm btn-outline-secondary">
+                                                        View All
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="nonconf-table-container">
+                                                    <div class="text-center p-3">
+                                                        <i class="fas fa-spinner fa-spin"></i> Loading...
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div><!-- /pane-requestor -->
+                            <!-- ══════════════════════════════════════
+                                 TAB 2 : RECEIVER  (placeholder)
+                            ══════════════════════════════════════ -->
+                            <div class="tab-pane fade" id="pane-receiver" role="tabpanel">
+
+                                <!-- Charts Row -->
+                                <div class="row g-3 px-1 mb-3">
+
+                                    <!-- Block Bin Summary -->
+                                    <div class="col-6">
+                                        <div class="card h-100">
+                                            <div class="card-header d-flex align-items-center" style="min-height:56px;padding:12px 20px;">
+                                                <h3 class="card-title fw-bold mb-0">
+                                                    <i class="fas fa-ban me-1"></i> Block Bin Summary (Top 10 Part Numbers)
+                                                </h3>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="block_bin_chart" style="width:100%;height:300px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Pallet Problem Trend -->
+                                    <div class="col-6">
+                                        <div class="card h-100">
+                                            <div class="card-header d-flex align-items-center" style="min-height:56px;padding:12px 20px;">
+                                                <h3 class="card-title fw-bold mb-0">
+                                                    <i class="fas fa-pallet me-1"></i> Pallet Problem Trend
+                                                </h3>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="pallet_problem_chart" style="width:100%;height:300px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Recent Variance History -->
+                                    <div class="col-12">
+                                        <div class="card">
+                                            <div class="card-header d-flex align-items-center" style="min-height:56px;padding:12px 20px;">
+                                                <h3 class="card-title fw-bold mb-0">
+                                                    <i class="fas fa-exclamation-triangle me-1"></i> Recent Variance History
+                                                </h3>
+                                                <div class="card-tools ms-auto">
+                                                    <a href="@Url.Action("VarianceHistory", "User")" class="btn btn-sm btn-outline-secondary">
+                                                        View All
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="variance-table-container">
+                                                    <div class="text-center p-3">
+                                                        <i class="fas fa-spinner fa-spin"></i> Loading...
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <!-- ══════════════════════════════════════
+                                 TAB 3 : PLANT RECEIVER  (placeholder)
+                            ══════════════════════════════════════ -->
+                            <div class="tab-pane fade" id="pane-plant-receiver" role="tabpanel">
+
+                                <!-- KPI Cards -->
+                                <div class="row flex-nowrap overflow-auto mb-2 pb-1" style="margin-left:0;margin-right:0;">
+                                    <div class="kpi-col" style="min-width:155px;flex:1;">
+                                        <div class="kpi-card-wh" onclick="loadPrStatusModal('CREATION')">
+                                            <div class="kpi-icon-wh" style="background-color:#17a2b8;">
+                                                <i class="fas fa-box"></i>
+                                            </div>
+                                            <div class="kpi-body">
+                                                <div class="kpi-label-wh">Pallet Created</div>
+                                                <div class="kpi-value-wh" id="pr-total-created">0</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="kpi-col" style="min-width:155px;flex:1;">
+                                        <div class="kpi-card-wh" onclick="loadPrStatusModal('TRANSFER')">
+                                            <div class="kpi-icon-wh" style="background-color:#007bff;">
+                                                <i class="fas fa-dolly"></i>
+                                            </div>
+                                            <div class="kpi-body">
+                                                <div class="kpi-label-wh">Pallet Transferred</div>
+                                                <div class="kpi-value-wh" id="pr-total-transferred">0</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="kpi-col" style="min-width:155px;flex:1;">
+                                        <div class="kpi-card-wh" onclick="loadPrStatusModal('SUPPLIED')">
+                                            <div class="kpi-icon-wh" style="background-color:#28a745;">
+                                                <i class="fas fa-check-double"></i>
+                                            </div>
+                                            <div class="kpi-body">
+                                                <div class="kpi-label-wh">Pallet Completed</div>
+                                                <div class="kpi-value-wh" id="pr-total-supplied">0</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Charts -->
+                                <div class="row g-3 px-1">
+                                    <!-- Pallet Movement -->
+                                    <div class="col-12">
+                                        <div class="card h-100">
+                                            <div class="card-header d-flex align-items-center" style="min-height:56px;padding:12px 20px;">
+                                                <h3 class="card-title fw-bold mb-0">
+                                                    <i class="fas fa-chart-bar me-1"></i> Pallet Movement
+                                                </h3>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="pr-pallet-main-chart" style="width:100%;height:300px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Placeholder col-6 biar sejajar -->
+                                    <div class="col-6"></div>
+
+                                    <!-- Recent Pallet History -->
+                                    <div class="col-12">
+                                        <div class="card h-100">
+                                            <div class="card-header d-flex align-items-center" style="min-height:56px;padding:12px 20px;">
+                                                <h3 class="card-title fw-bold mb-0">
+                                                    <i class="fas fa-history me-1"></i> Recent Pallet History
+                                                </h3>
+                                            </div>
+                                            <div class="card-body" id="pr-pallet-history-container">
+                                                <div class="text-center p-3">
+                                                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div><!-- /tab-content -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ══════════════════ MODALS ══════════════════ -->
+<!-- Modal Order List -->
+<div class="modal fade" id="modalOrderList" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width:85%;">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-list"></i> Order List</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalOrderListBody">
+                <div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-3x"></i><p class="mt-3">Loading...</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Filtered Requests -->
+<div class="modal fade" id="modal_filtered_requests" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width:85%;">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="fas fa-list"></i> Request List by Picking Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="body_filtered_requests">
+                <div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-3x"></i><p class="mt-3">Loading...</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Filtered Reservations -->
+<div class="modal fade" id="modal_filtered_reservations" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width:85%;">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="fas fa-box"></i> Reservation List by Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div id="body_filtered_reservations">
+                <div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-3x"></i><p class="mt-3">Loading...</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Filtered Returns -->
+<div class="modal fade" id="modal_filtered_returns" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width:85%;">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="fas fa-undo"></i> Return List by Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div id="body_filtered_returns">
+                <div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-3x"></i><p class="mt-3">Loading...</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Aging Movement -->
+<div class="modal fade" id="modal_aging_movement" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width:85%;">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="fas fa-clock"></i> Aging - <span id="aging-modal-title"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div id="aging-modal-content-wrapper">
+                <div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-3x text-warning"></i><p class="mt-3">Loading...</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Block Bin Detail -->
+<div class="modal fade" id="modal_filtered_blockbin" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width:85%;">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-ban"></i> Block Bin Detail</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div id="body_filtered_blockbin">
+                <div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-3x"></i><p class="mt-3">Loading...</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Pallet Problem Detail -->
+<div class="modal fade" id="modal_pallet_container" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width:85%;">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-pallet"></i> Pallet Problem Detail</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div id="modal_content_detail">
+                <div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-3x"></i><p class="mt-3">Loading...</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Pallet Status Detail (Plant Receiver) -->
+<div class="modal fade" id="modal_pallet_status" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width:85%;">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="modal_pallet_status_title">
+                    <i class="fas fa-pallet"></i> Pallet Detail
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div id="modal_pallet_status_content">
+                <div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-3x"></i><p class="mt-3">Loading...</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Pallet Detail (Plant Receiver) -->
+<div class="modal fade" id="modal_pallet_req_detail" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-list"></i> Pallet Detail</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="p-3">
+                <div class="row">
+                    <div class="col-12">
+                        <table class="table table-borderless table-sm">
+                            <tr><td width="20%">Request No</td><td id="pr-request-no">:</td></tr>
+                            <tr><td>Pallet No</td><td id="pr-pallet-no">:</td></tr>
+                            <tr><td>Status</td><td id="pr-pallet-status">:</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-12 table-responsive">
+                        <table class="table table-bordered table-striped align-center nowrap"
+                               id="pr-tbl-detail" style="font-size:12pt;width:100%;">
+                            <thead class="bg-warning align-middle text-center">
+                                <tr>
+                                    <th>Box Id</th>
+                                    <th>Part No</th>
+                                    <th>Quantity</th>
+                                    <th>S-Bin</th>
+                                    <th>Picked By</th>
+                                    <th>Record Date</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal Schedule Detail -->
+<div class="modal fade" id="modal_schedule_detail" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width:85%;">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color:#2f3d57;">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    <span id="scheduleModalTitle">Schedule Details</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div id="scheduleModalContent">
+                <div class="text-center p-5">
+                    <div class="spinner-border text-success" role="status"></div>
+                    <p class="mt-2">Loading data...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts {
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script>
+                $(document).ready(function () {
+                    Highcharts.setOptions({
+                        chart: { style: { fontFamily: 'inherit' } },
+                        legend: { itemStyle: { color: '#000000', fontWeight: 'bold' } },
+                        xAxis: { labels: { style: { color: '#000000' } } },
+                        yAxis: {
+                            labels: { style: { color: '#000000' } },
+                            title: { style: { color: '#000000' } }
+                        }
+                    });
+
+                            $('#tab-receiver').on('shown.bs.tab', function () {
+                    loadBlockBinChart();
+                    loadPalletProblemChart();
+                    loadRecentVariance();
+                });
+
+                        // Load plant receiver saat tab diklik
+                $('#tab-plant-receiver').on('shown.bs.tab', function () {
+                    loadPrSummary();
+                    loadPrChartData();
+                    loadPrRecentPalletHistory();
+                });
+
+                    loadData();
+                    loadReserveReturnData();
+                    loadNonConfData();
+                    loadAgingMovementChart();
+                    loadScheduleSummary();
+
+                    setInterval(function () {
+                        loadData();
+                        loadReserveReturnData();
+                        loadNonConfData();
+                        loadAgingMovementChart();
+                        loadScheduleSummary();
+                    }, 300000);
+                });
+
+                /* ── Data Loaders ── */
+                function loadData() {
+                    $.post('@Url.Action("GetRequestorSummary", "User")', function (data) {
+                        $('#total-submission').text(data.submission);
+                        $('#total-received').text(data.received);
+                        $('#total-putaway').text(data.putaway);
+                        $('#total-partially-picked').text(data.partiallyPicked);
+                        $('#total-closed').text(data.closed);
+                        renderCharts(data);
+                    });
+                }
+
+                function loadNonConfData() {
+                    $.ajax({
+                        type: "GET",
+                        url: "@Url.Action("GetRecentNonConf", "User")",
+                        success: function (res) { $('#nonconf-table-container').html(res); },
+                        error: function () {
+                            $('#nonconf-table-container').html('<div class="alert alert-danger m-2"><i class="fas fa-exclamation-triangle"></i> Failed to load non-conformance data</div>');
+                        }
+                    });
+                }
+
+                function loadReserveReturnData() {
+                    $.post('@Url.Action("GetReservationList", "User")', { draw:1, start:0, length:1000 }, function (res) {
+                        if (res.data) processReservationChart(res.data);
+                    });
+                    $.post('@Url.Action("GetReturnList", "User")', { draw:1, start:0, length:1000 }, function (res) {
+                        if (res.data) processReturnChart(res.data);
+                    });
+                }
+
+                function loadAgingMovementChart() {
+                    $.ajax({
+                        type: "GET",
+                        url: "@Url.Action("GetAgingMovementChart", "User")",
+                        success: function (res) {
+                            var categories = [], s1 = [], s2 = [], s3 = [], s4 = [];
+                            $.each(res, function (i, item) {
+                                categories.push(item.label);
+                                s1.push(item.value1); s2.push(item.value2);
+                                s3.push(item.value3); s4.push(item.value4);
+                            });
+                            Highcharts.chart('aging_chart', {
+                                chart: { type: 'column' },
+                                title: { text: '' },
+                                credits: { enabled: false },
+                                xAxis: { categories: categories },
+                                yAxis: { min: 0, title: { text: 'Total' } },
+                                legend: { align: 'center', verticalAlign: 'bottom', itemStyle: { fontSize: '11px', fontWeight: 'normal' } },
+                                tooltip: { headerFormat: '<b>{point.key}</b><br/>', pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}' },
+                                plotOptions: {
+                                    column: {
+                                                stacking: 'normal', dataLabels: { enabled: true }, cursor: 'pointer',     borderRadius: 6,
+                                                point: { events: { click: function () { openAgingModal(this.series.name); } } }
+                                    }
+                                },
+                                series: [
+                                    { name: '<= 3 Months', data: s1, color: '#bcff47' },
+                                    { name: '<= 6 Months', data: s2, color: '#ff9147' },
+                                    { name: '<= 12 Months', data: s3, color: '#ff478a' },
+                                    { name: '> 1 Year',    data: s4, color: '#c247ff' }
+                                ]
+                            });
+                        }
+                    });
+                }
+
+                function loadScheduleSummary() {
+                    $.ajax({
+                        url: '@Url.Action("GetSchedules", "User")',
+                        type: 'GET',
+                        success: function (res) {
+                            if (!res.success || !res.data) return;
+                            const now = new Date();
+                            const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+                            let total = res.data.length, upcoming = 0, completed = 0;
+                            res.data.forEach(item => {
+                                if (item.isCompleted) { completed++; }
+                                else if (new Date(item.start) >= now && new Date(item.start) <= nextWeek) { upcoming++; }
+                            });
+                            renderSummaryChart({ total, upcoming, completed });
+                        }
+                    });
+                }
+
+                /* ── Chart Renderers ── */
+                function renderCharts(data) {
+                    Highcharts.chart('bar_chart', {
+                        chart: { type: 'column' }, title: { text: null }, credits: { enabled: false },
+                        xAxis: { categories: ['Picking Volume'] },
+                        yAxis: { title: { text: 'Total Requests' } },
+                        legend: { enabled: true, align: 'center', verticalAlign: 'bottom', layout: 'horizontal', itemStyle: { fontSize: '11px', fontWeight: 'normal' } },
+                        tooltip: { pointFormat: '<b>{series.name}</b>: {point.y}<br/><i>Click to view details</i>' },
+                        plotOptions: {
+                            column: {
+                                        dataLabels: { enabled: true }, cursor: 'pointer',    borderRadius: 6,
+                                        point: { events: { click: function () { openOrderModal(this.series.name); } } }
+                            }
+                        },
+                        series: [
+                            { name: 'Submission', data: [data.submission],       color: '#6c757d' },
+                            { name: 'Received',   data: [data.received],         color: '#007bff' },
+                            { name: 'Putaway',    data: [data.putaway],          color: '#ffc107' },
+                            { name: 'Partial',    data: [data.partiallyPicked],  color: '#fd7e14' },
+                            { name: 'Closed',     data: [data.closed],           color: '#28a745' }
+                        ]
+                    });
+
+                    Highcharts.chart('pie_chart', {
+                        chart: { type: 'pie' }, title: { text: null }, credits: { enabled: false },
+                        legend: { enabled: true, align: 'center', verticalAlign: 'bottom', layout: 'horizontal', itemStyle: { fontSize: '11px', fontWeight: 'normal' }, symbolRadius: 6 },
+                        plotOptions: {
+                            pie: {
+                                cursor: 'pointer',
+                                dataLabels: { enabled: true, format: '{point.name}: {point.y} ({point.percentage:.1f}%)' },
+                                showInLegend: true,
+                                point: { events: { click: function () { filterRequestByPickingStatus(this.name); } } }
+                            }
+                        },
+                        series: [{
+                            name: 'Picking Status', colorByPoint: true,
+                            data: [
+                                { name: 'Request',       y: data.pickingSummary?.request       || 0, color: '#6c757d' },
+                                { name: 'Start Picking', y: data.pickingSummary?.startPicking  || 0, color: '#17a2b8' },
+                                { name: 'Picking',       y: data.pickingSummary?.picking       || 0, color: '#ffc107' },
+                                { name: 'Consolidation', y: data.pickingSummary?.consolidation || 0, color: '#fd7e14' },
+                                { name: 'Transferring',  y: data.pickingSummary?.transferring  || 0, color: '#007bff' },
+                                { name: 'Supplied',      y: data.pickingSummary?.supplied      || 0, color: '#28a745' }
+                            ]
+                        }]
+                    });
+                }
+
+                function renderSummaryChart(data) {
+                    Highcharts.chart('summary_chart', {
+                        chart: { type: 'column' }, title: { text: null }, credits: { enabled: false },
+                        xAxis: { categories: ['Schedule Status'] },
+                        yAxis: { min: 0, title: { text: 'Total Schedule' } },
+                        legend: { enabled: true, align: 'center', verticalAlign: 'bottom', layout: 'horizontal', itemStyle: { fontSize: '11px', fontWeight: 'normal' } },
+                        tooltip: { pointFormat: '<b>{series.name}</b>: {point.y}<br/><i>Click to view details</i>' },
+                        plotOptions: {
+                            column: {
+                                        dataLabels: { enabled: true }, cursor: 'pointer',    borderRadius: 6,
+                                        point: { events: { click: function () {
+                                    const map = { 'Total': 'TOTAL', 'Upcoming': 'UPCOMING', 'Completed': 'COMPLETED' };
+                                    filterScheduleByCategory(map[this.series.name] || this.series.name);
+                                }}}
+                            }
+                        },
+                        series: [
+                            { name: 'Total',     data: [data.total],     color: '#007bff' },
+                            { name: 'Upcoming',  data: [data.upcoming],  color: '#ffc107' },
+                            { name: 'Completed', data: [data.completed], color: '#28a745' }
+                        ]
+                    });
+                }
+
+                function processReservationChart(data) {
+                    let s = { submission: 0, approved: 0, cancelled: 0 };
+                    data.forEach(function (item) {
+                        let st = (item.status_desc || '').toLowerCase();
+                        if (st.includes('submission')) s.submission++;
+                        else if (st.includes('approved')) s.approved++;
+                        else if (st.includes('cancelled')) s.cancelled++;
+                    });
+                    renderReservationChart(s);
+                }
+
+                function processReturnChart(data) {
+                    let s = { sent: 0, approved: 0, inTransit: 0, returned: 0 };
+                    data.forEach(function (item) {
+                        let st = (item.status_desc || '').toLowerCase();
+                        if (st.includes('sent')) s.sent++;
+                        else if (st.includes('approved')) s.approved++;
+                        else if (st.includes('transit')) s.inTransit++;
+                        else if (st.includes('returned')) s.returned++;
+                    });
+                    renderReturnChart(s);
+                }
+
+                function renderReservationChart(s) {
+                    Highcharts.chart('reserve_chart', {
+                        chart: { type: 'pie' }, title: { text: null }, credits: { enabled: false },
+                        tooltip: { pointFormat: '{series.name}: <b>{point.y}</b> ({point.percentage:.1f}%)' },
+                        plotOptions: {
+                            pie: {
+                                innerSize: '60%', allowPointSelect: true, cursor: 'pointer',
+                                dataLabels: { enabled: true, format: '<b>{point.name}</b>: {point.y} ({point.percentage:.1f}%)', style: { fontSize: '11px', textOutline: 'none' } },
+                                showInLegend: true,
+                                point: { events: { click: function () { filterReservationByStatus(this.name); } } }
+                            }
+                        },
+                        series: [{ name: 'Reservations', colorByPoint: true, data: [
+                            { name: 'Submission', y: s.submission, color: '#17a2b8' },
+                            { name: 'Approved',   y: s.approved,   color: '#28a745' },
+                            { name: 'Cancelled',  y: s.cancelled,  color: '#dc3545' }
+                        ]}]
+                    });
+                }
+
+                function renderReturnChart(s) {
+                    Highcharts.chart('return_chart', {
+                        chart: { type: 'column' }, title: { text: null }, credits: { enabled: false },
+                        xAxis: { categories: ['Return Status'] },
+                        yAxis: { min: 0, title: { text: 'Total Returns' }, stackLabels: { enabled: true } },
+                        legend: { align: 'center', verticalAlign: 'bottom', layout: 'horizontal', itemStyle: { fontSize: '11px' } },
+                        tooltip: { pointFormat: '<b>{series.name}</b>: {point.y}<br/>Total: {point.stackTotal}<br/><i>Click to view details</i>' },
+                        plotOptions: {
+                            column: {
+                                        stacking: 'normal', cursor: 'pointer',     borderRadius: 6,  dataLabels: { enabled: true },
+                                point: { events: { click: function () { filterReturnByStatus(this.series.name); } } }
+                            }
+                        },
+                        series: [
+                            { name: 'Sent',       data: [s.sent],       color: '#ffc107' },
+                            { name: 'Approved',   data: [s.approved],   color: '#28a745' },
+                            { name: 'In Transit', data: [s.inTransit],  color: '#007bff' },
+                            { name: 'Returned',   data: [s.returned],   color: '#6c757d' }
+                        ]
+                    });
+                }
+
+
+                function loadPrSummary() {
+            $.ajax({
+                url: '@Url.Action("GetPalletSummary")',
+                type: 'POST',
+                dataType: 'json',
+                success: function (data) {
+                    $('#pr-total-created').text(data.totalCreated);
+                    $('#pr-total-transferred').text(data.totalTransferred);
+                    $('#pr-total-supplied').text(data.totalSupplied);
+                },
+                error: function () { console.error('Error loading pallet summary'); }
+            });
+        }
+
+        function loadPrChartData() {
+            $.ajax({
+                url: '@Url.Action("GetPalletStatusChartData")',
+                type: 'POST',
+                dataType: 'json',
+                success: function (data) {
+                    const colorMap = {
+                        'CREATION': '#6c757d', 'TRANSFER': '#007bff',
+                        'RECEIVED': '#17a2b8', 'SUPPLIED': '#28a745'
+                    };
+                    const seriesData = data.categories.map((cat, i) => ({
+                        name: cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase(),
+                        data: [data.dataValues[i]],
+                        color: colorMap[cat.toUpperCase()] || '#000',
+                        statusRaw: cat.toUpperCase()
+                    }));
+                    Highcharts.chart('pr-pallet-main-chart', {
+                        chart: { type: 'column' }, title: { text: null }, credits: { enabled: false },
+                        xAxis: { visible: false },
+                        yAxis: { min: 0, title: { text: 'Total Pallets' } },
+                        plotOptions: {
+                            column: {
+                                        cursor: 'pointer',     borderRadius: 6,  dataLabels: { enabled: true },
+                                point: { events: { click: function () { loadPrStatusModal(this.series.options.statusRaw); } } }
+                            }
+                        },
+                        series: seriesData
+                    });
+                },
+                error: function () { console.error('Error loading pallet chart data'); }
+            });
+        }
+
+        function loadPrRecentPalletHistory() {
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetRecentPalletHistory", "User")",
+                success: function (res) { $('#pr-pallet-history-container').html(res); },
+                error: function () {
+                    $('#pr-pallet-history-container').html('<div class="alert alert-danger m-2"><i class="fas fa-exclamation-triangle"></i> Failed to load pallet history</div>');
+                }
+            });
+        }
+
+        function loadPrStatusModal(status) {
+            $('#modal_pallet_status_title').html('<i class="fas fa-pallet"></i> Detail Status: ' + status);
+            $('#modal_pallet_status_content').html(`<div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-3x text-primary"></i><p class="mt-3">Loading data ${status}...</p></div>`);
+            $('#modal_pallet_status').modal('show');
+            $.ajax({
+                type: "GET", url: "@Url.Action("GetPalletListByStatus", "User")", data: { status: status },
+                success: function (res) {
+                    $('#modal_pallet_status_content').html(res);
+                    Swal.fire({ icon:'success', title:'Data Loaded', text:'Showing pallet detail for '+status, timer:1500, showConfirmButton:false, toast:true, position:'top-end' });
+                },
+                error: function (xhr) { $('#modal_pallet_status_content').html(`<div class="alert alert-danger m-3">Error: ${xhr.statusText}</div>`); }
+            });
+        }
+
+        function prShowDetail(id_pallet, palletNo, status, requestNo) {
+            $('#pr-request-no').text(': ' + requestNo);
+            $('#pr-pallet-no').text(': ' + palletNo);
+            $('#pr-pallet-status').text(': ' + status);
+            if ($.fn.dataTable.isDataTable('#pr-tbl-detail')) { $('#pr-tbl-detail').DataTable().destroy(); }
+            $('#pr-tbl-detail').DataTable({
+                ajax: {
+                    url: "@Url.Action("GetPalletDetail")",
+                    data: { plt_id: id_pallet },
+                    dataSrc: function (json) {
+                        return json.map(item => ({
+                            BoxId: item.box_id, PartNo: item.partno, Qty: item.qty,
+                            Bin: item.sbin, PickedBy: item.picked_by, RecordDate: item.record_date
+                        }));
+                    }
+                },
+                columns: [
+                    { data: 'BoxId' }, { data: 'PartNo' }, { data: 'Qty' },
+                    { data: 'Bin' }, { data: 'PickedBy' }, { data: 'RecordDate' }
+                ]
+            });
+            $('#modal_pallet_req_detail').modal('show');
+        }
+
+
+                // ✅ Alias untuk partial view GetRecentPalletHistory yang memanggil show_detail()
+                function show_detail(id_pallet, palletNo, status, requestNo) {
+                    $('#pr-request-no').text(': ' + requestNo);
+                    $('#pr-pallet-no').text(': ' + palletNo);
+                    $('#pr-pallet-status').text(': ' + status);
+
+                    if ($.fn.dataTable.isDataTable('#pr-tbl-detail')) {
+                        $('#pr-tbl-detail').DataTable().destroy();
+                    }
+
+                    $('#pr-tbl-detail').DataTable({
+                        ajax: {
+                            url: "@Url.Action("GetPalletDetail")",
+                            data: { plt_id: id_pallet },
+                            dataSrc: function (json) {
+                                return json.map(item => ({
+                                    BoxId: item.box_id,
+                                    PartNo: item.partno,
+                                    Qty: item.qty,
+                                    Bin: item.sbin,
+                                    PickedBy: item.picked_by,
+                                    RecordDate: item.record_date
+                                }));
+                            }
+                        },
+                        columns: [
+                            { data: 'BoxId' }, { data: 'PartNo' }, { data: 'Qty' },
+                            { data: 'Bin' }, { data: 'PickedBy' }, { data: 'RecordDate' }
+                        ]
+                    });
+
+                    $('#modal_pallet_req_detail').modal('show');
+                }
+
+                        function loadRecentVariance() {
+                    $.ajax({
+                        type: "GET",
+                        url: "@Url.Action("GetRecentVariance", "User")",
+                        success: function (res) { $('#variance-table-container').html(res); },
+                        error: function () {
+                            $('#variance-table-container').html('<div class="alert alert-danger m-2"><i class="fas fa-exclamation-triangle"></i> Failed to load variance data</div>');
+                        }
+                    });
+                }
+
+                function loadBlockBinChart() {
+                    $.post('@Url.Action("GetBlockBin", "User")', {
+                        draw: 1, start: 0, length: 10,
+                        'order[0][column]': 0, 'order[0][dir]': 'desc', 'columns[0][data]': 'partno'
+                    }, function (response) {
+                        if (!response.data) return;
+                        var categories = [], dataValues = [];
+                        $.each(response.data, function (i, item) {
+                            categories.push(item.partno);
+                            dataValues.push(1);
+                        });
+                        Highcharts.chart('block_bin_chart', {
+                            chart: { type: 'bar' }, title: { text: '' }, credits: { enabled: false },
+                            xAxis: { categories: categories, title: { text: 'Part Number' } },
+                            yAxis: { min: 0, title: { text: 'Occurrence' } },
+                            tooltip: { pointFormat: '<b>{point.y}</b> occurrence(s)<br/><i>Click to view details</i>' },
+                            plotOptions: {
+                                bar: {
+                                            cursor: 'pointer',    borderRadius: 6,
+                                            dataLabels: { enabled: true, style: { fontWeight: 'bold', fontSize: '11px' } },
+                                    point: { events: { click: function () { filterBlockBinByPartNo(this.category); } } }
+                                }
+                            },
+                            series: [{ name: 'Blocked Item', data: dataValues, color: '#dc3545', showInLegend: false }]
+                        });
+                    });
+                }
+
+                function filterBlockBinByPartNo(partNo) {
+                    $('#modal_filtered_blockbin').modal('show');
+                    $('#body_filtered_blockbin').html(`<div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-3x text-danger"></i><p class="mt-3">Loading block bin detail for <strong>${partNo}</strong>...</p></div>`);
+                    $.ajax({
+                        type: "GET", url: "@Url.Action("GetBlockBinDetail", "User")", data: { partno: partNo },
+                        success: function (res) {
+                            $('#body_filtered_blockbin').html(res);
+                            Swal.fire({ icon:'success', title:'Data Loaded', text:'Showing block bin detail for '+partNo, timer:1500, showConfirmButton:false, toast:true, position:'top-end' });
+                        },
+                        error: function (xhr) { $('#body_filtered_blockbin').html(`<div class="alert alert-danger m-3">Error: ${xhr.statusText}</div>`); }
+                    });
+                }
+
+                function loadPalletProblemChart() {
+                    $.post('@Url.Action("GetPalletProblems", "User")', { draw:1, start:0, length:1000 }, function (response) {
+                        if (!response.data || response.data.length === 0) return;
+                        const grouped = {};
+                        response.data.forEach(x => {
+                            const d = x.date.split('T')[0];
+                            grouped[d] = (grouped[d] || 0) + 1;
+                        });
+                        const categories = Object.keys(grouped).sort();
+                        const values = categories.map(k => grouped[k]);
+                        Highcharts.chart('pallet_problem_chart', {
+                            chart: { type: 'column' }, title: { text: null }, credits: { enabled: false },
+                            xAxis: { categories: categories, labels: { style: { fontSize: '10px' }, rotation: -45 } },
+                            yAxis: { title: { text: 'Total Problems' }, allowDecimals: false },
+                            tooltip: { pointFormat: '<b>{point.y}</b> problem(s)<br/><i>Click to view details</i>' },
+                            plotOptions: {
+                                column: {
+                                    cursor: 'pointer', borderRadius: 6,
+                                    dataLabels: { enabled: true, style: { fontWeight: 'bold', fontSize: '11px' } },
+                                    point: { events: { click: function () { filterPalletByDate(this.category); } } }
+                                }
+                            },
+                            series: [{ name: 'Pallet Problem', data: values, color: '#dc3545', showInLegend: false }]
+                        });
+                    });
+                }
+
+                function filterPalletByDate(date) {
+                    $('#modal_pallet_container').modal('show');
+                    $('#modal_content_detail').html(`<div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-3x text-danger"></i><p class="mt-3">Loading pallet problems for <strong>${date}</strong>...</p></div>`);
+                    $.ajax({
+                        type: "GET", url: "@Url.Action("GetPalletProblemByDate", "User")", data: { date: date },
+                        success: function (res) {
+                            $('#modal_content_detail').html(res);
+                            Swal.fire({ icon:'success', title:'Data Loaded', text:'Showing pallet problems for '+date, timer:1500, showConfirmButton:false, toast:true, position:'top-end' });
+                        },
+                        error: function (xhr) { $('#modal_content_detail').html(`<div class="alert alert-danger m-3">Error: ${xhr.statusText}</div>`); }
+                    });
+                }
+
+                /* ── Modal Openers ── */
+                function openOrderModal(status) {
+                    const map = { 'Submission':'SUBMISSION','Received':'RECEIVED','Putaway':'PUTAWAY','Partial':'PARTIALLY PICKED','Closed':'CLOSED' };
+                    const mapped = map[status] || status;
+                    $('#modalOrderList').modal('show');
+                    $('#modalOrderListBody').html(`<div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-3x text-primary"></i><p class="mt-3">Loading <strong>${status}</strong> orders...</p></div>`);
+                    $.ajax({
+                        type: "GET", url: '@Url.Action("GetOrderListByStatus", "User")', data: { status: mapped },
+                      success: function (res) {
+            $('#modalOrderListBody').html(res);
+            setTimeout(function () {
+                // ✅ Destroy dulu sebelum reinit
+                if ($.fn.dataTable.isDataTable('#modalOrderListBody table')) {
+                    $('#modalOrderListBody table').DataTable().destroy();
+                }
+                $('#modalOrderListBody table').DataTable({
+                    paging: true, searching: true, ordering: true,
+                    pageLength: 10, responsive: true
+                });
+                Swal.fire({ icon:'success', title:'Data Loaded', text:'Showing '+status+' orders', timer:1500, showConfirmButton:false, toast:true, position:'top-end' });
+            }, 300);
+        },
+                        error: function (xhr) {
+                            $('#modalOrderListBody').html(`<div class="alert alert-danger m-3"><i class="fas fa-exclamation-triangle"></i> Error: ${xhr.statusText}</div>`);
+                        }
+                    });
+                }
+
+
+
+                function openAgingModal(agingCategory) {
+                    $('#aging-modal-title').text(agingCategory);
+                    $('#aging-modal-content-wrapper').html(`<div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-3x text-primary"></i><p class="mt-3">Loading ${agingCategory} data...</p></div>`);
+                    $('#modal_aging_movement').modal('show');
+                    $.ajax({
+                        type: 'GET', url: '@Url.Action("AgingMovementPartial", "User")', data: { agingCategory: agingCategory },
+                        success: function (res) {
+                            setTimeout(function () {
+                                $('#aging-modal-content-wrapper').html(res);
+                                Swal.fire({ icon:'success', title:'Data Loaded', text:'Showing '+agingCategory+' aging data', timer:1500, showConfirmButton:false, toast:true, position:'top-end' });
+                            }, 400);
+                        },
+                        error: function () { $('#aging-modal-content-wrapper').html('<div class="alert alert-danger m-3">Failed to load data.</div>'); }
+                    });
+                }
+
+                function filterScheduleByCategory(category) {
+                    let title = category === 'TOTAL' ? 'All Schedules' : category === 'UPCOMING' ? 'Upcoming This Week' : 'Completed Schedules';
+                    $('#scheduleModalTitle').text(title);
+                    $('#scheduleModalContent').html(`<div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-3x text-success"></i><p class="mt-3">Loading ${title}...</p></div>`);
+                    $('#modal_schedule_detail').modal('show');
+                    $.get('/User/GetScheduleDetailsPartial', { category: category }, function (data) {
+                        $('#scheduleModalContent').html(data);
+                        Swal.fire({ icon:'success', title:'Data Loaded', text:'Showing '+title, timer:1500, showConfirmButton:false, toast:true, position:'top-end' });
+                    }).fail(function () {
+                        $('#scheduleModalContent').html('<div class="alert alert-danger m-3">Failed to load data.</div>');
+                    });
+                }
+
+                function filterRequestByPickingStatus(statusName) {
+                    const map = { 'Request':'REQUEST','Start Picking':'START PICKING','Picking':'PICKING','Consolidation':'CONSOLIDATION','Transferring':'TRANSFERRING','Supplied':'SUPPLIED' };
+                    $('#modal_filtered_requests').modal('show');
+                    $('#body_filtered_requests').html(`<div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-3x text-primary"></i><p class="mt-3">Loading <strong>${statusName}</strong> requests...</p></div>`);
+                    $.ajax({
+                        type: "GET", url: "@Url.Action("GetRequestListByStatus", "User")", data: { status: map[statusName] || statusName },
+                        success: function (res) {
+                            $('#body_filtered_requests').html(res);
+                            Swal.fire({ icon:'success', title:'Data Loaded', text:'Showing '+statusName+' requests', timer:1500, showConfirmButton:false, toast:true, position:'top-end' });
+                        },
+                        error: function (xhr) { $('#body_filtered_requests').html(`<div class="alert alert-danger m-3">Error: ${xhr.statusText}</div>`); }
+                    });
+                }
+
+                function filterReservationByStatus(statusName) {
+                    $('#modal_filtered_reservations').modal('show');
+                    $('#body_filtered_reservations').html(`<div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-3x text-primary"></i><p class="mt-3">Loading <strong>${statusName}</strong>...</p></div>`);
+                    $.ajax({
+                        type: "GET", url: "@Url.Action("GetReservationListByStatus", "User")", data: { status: statusName },
+                        success: function (res) {
+                            $('#body_filtered_reservations').html(res);
+                            Swal.fire({ icon:'success', title:'Data Loaded', text:'Showing '+statusName+' reservations', timer:1500, showConfirmButton:false, toast:true, position:'top-end' });
+                        },
+                        error: function (xhr) { $('#body_filtered_reservations').html(`<div class="alert alert-danger m-3">Error: ${xhr.statusText}</div>`); }
+                    });
+                }
+
+                function filterReturnByStatus(statusName) {
+                    $('#modal_filtered_returns').modal('show');
+                    $('#body_filtered_returns').html(`<div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-3x text-primary"></i><p class="mt-3">Loading <strong>${statusName}</strong>...</p></div>`);
+                    $.ajax({
+                        type: "GET", url: "@Url.Action("GetReturnListByStatus", "User")", data: { status: statusName },
+                        success: function (res) {
+                            $('#body_filtered_returns').html(res);
+                            Swal.fire({ icon:'success', title:'Data Loaded', text:'Showing '+statusName+' returns', timer:1500, showConfirmButton:false, toast:true, position:'top-end' });
+                        },
+                        error: function (xhr) { $('#body_filtered_returns').html(`<div class="alert alert-danger m-3">Error: ${xhr.statusText}</div>`); }
+                    });
+                }
+    </script>
+}

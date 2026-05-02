@@ -174,7 +174,7 @@
         <!-- Submission -->
         <div class="kpi-col" style="min-width: 155px; flex: 1;">
             <div class="kpi-card-wh" onclick="filterTableByStatus('Submission')">
-                <div class="kpi-icon-wh" style="background-color: #6c757d;">
+                <div class="kpi-icon-wh" style="background-color: #FFBF00;">
                     <i class="fas fa-file-import"></i>
                 </div>
                 <div class="kpi-body">
@@ -187,7 +187,7 @@
         <!-- Received -->
         <div class="kpi-col" style="min-width: 155px; flex: 1;">
             <div class="kpi-card-wh" onclick="filterTableByStatus('Received')">
-                <div class="kpi-icon-wh" style="background-color: #007bff;">
+                <div class="kpi-icon-wh" style="background-color: #22A855;">
                     <i class="fas fa-box-open"></i>
                 </div>
                 <div class="kpi-body">
@@ -200,7 +200,7 @@
         <!-- Putaway -->
         <div class="kpi-col" style="min-width: 155px; flex: 1;">
             <div class="kpi-card-wh" onclick="filterTableByStatus('Putaway')">
-                <div class="kpi-icon-wh" style="background-color: #ffc107;">
+                <div class="kpi-icon-wh" style="background-color: #2196C9;">
                     <i class="fas fa-warehouse"></i>
                 </div>
                 <div class="kpi-body">
@@ -213,7 +213,7 @@
         <!-- Partially Picked -->
         <div class="kpi-col" style="min-width: 155px; flex: 1;">
             <div class="kpi-card-wh" onclick="filterTableByStatus('Partial')">
-                <div class="kpi-icon-wh" style="background-color: #fd7e14;">
+                <div class="kpi-icon-wh" style="background-color: #F45C1B;">
                     <i class="fas fa-tasks"></i>
                 </div>
                 <div class="kpi-body">
@@ -226,7 +226,7 @@
         <!-- Closed -->
         <div class="kpi-col" style="min-width: 155px; flex: 1;">
             <div class="kpi-card-wh" onclick="filterTableByStatus('Closed')">
-                <div class="kpi-icon-wh" style="background-color: #28a745;">
+                <div class="kpi-icon-wh" style="background-color: #9E9E8E;">
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <div class="kpi-body">
@@ -781,6 +781,7 @@
                         plotOptions: {
                             bar: {
                                 cursor: 'pointer', // ✅ Cursor pointer
+                                 borderRadius: 6,
                                 dataLabels: {
                                     enabled: true,
                                     style: {
@@ -897,7 +898,7 @@
                     plotOptions: {
                         column: {
                             cursor: 'pointer',
-                            borderRadius: 5,
+                            borderRadius: 6,
                             dataLabels: {
                                 enabled: true,
                                 style: {
@@ -1005,6 +1006,7 @@
                  stacking: 'normal',
                  dataLabels: { enabled: true },
                  cursor: 'pointer',
+                  borderRadius: 6,
                  point: {
                      events: {
                          click: function () {
@@ -1301,6 +1303,7 @@
                     column: {
                         stacking: 'normal',
                         cursor: 'pointer', // ✅ Cursor pointer
+                         borderRadius: 6,
                         dataLabels: { enabled: true },
                         point: {
                             events: {
@@ -1348,11 +1351,11 @@
         function renderCharts(data) {
             // === DATA UNTUK BAR CHART ===
             const barChartData = [
-                { name: 'Submission', y: data.submission, color: '#6c757d' },
-                { name: 'Received', y: data.received, color: '#007bff' },
-                { name: 'Putaway', y: data.putaway, color: '#ffc107' },
-                { name: 'Partial', y: data.partiallyPicked, color: '#fd7e14' },
-                { name: 'Closed', y: data.closed, color: '#28a745' }
+                { name: 'Submission', y: data.submission, color: '#FFBF00' },
+                { name: 'Received', y: data.received, color: '#22A855' },
+                { name: 'Putaway', y: data.putaway, color: '#2196C9' },
+                { name: 'Partial', y: data.partiallyPicked, color: '#F45C1B' },
+                { name: 'Closed', y: data.closed, color: '#9E9E8E' }
             ];
 
             // === DATA UNTUK PIE CHART ===
@@ -1420,6 +1423,7 @@
                 column: {
                     cursor: 'pointer',
                     colorByPoint: false,
+                     borderRadius: 6,
                     dataLabels: {
                         enabled: true,
                         style: { fontWeight: 'bold', fontSize: '11px', textOutline: 'none' }
@@ -1485,7 +1489,7 @@
                         }
                     }
                 },
-                 series: [{
+                series: [{
                     name: 'Status',
                     colorByPoint: true,
                     data: pieChartData

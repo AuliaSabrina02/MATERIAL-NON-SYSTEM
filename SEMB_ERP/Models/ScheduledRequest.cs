@@ -34,5 +34,8 @@ namespace SEMB_ERP.Models
 
         [Column("is_completed")] // ✅ PASTIKAN INI ADA
         public bool? IsCompleted { get; set; }
+
+        [Column("send_email")]
+        public bool SendEmail { get; set; }
     }
 }

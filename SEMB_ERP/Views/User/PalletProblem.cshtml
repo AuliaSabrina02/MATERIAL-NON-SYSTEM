@@ -10,8 +10,9 @@
     string todayDate = DateTime.Today.ToString("yyyy-MM-dd");
 }
 
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
 <style>
-    /* Menyamakan gaya input filter dan font tabel dengan halaman Return */
     .smaller-input {
         height: 25px;
         padding: 5px;
@@ -23,7 +24,6 @@
         font-size: 10pt;
     }
 
-    /* Sembunyikan search default karena kita pakai baris filter */
     #table_pallet_problem_filter.dataTables_filter {
         display: none;
     }
@@ -46,23 +46,52 @@
             border-left: none !important;
             border-right: none !important;
             border-top: none !important;
-            /* UBAH DI SINI: dari 10px menjadi 13px atau sesuai selera */
-            font-size: 13px;
-            font-weight: 500; /* Opsional: tambah ketebalan dikit agar lebih jelas */
+            font-size: 12px;
+            font-weight: 500;
         }
 
         #table_pallet_problem thead th {
             border: none !important;
-            /* UBAH DI SINI: agar header tetap lebih besar dari isi (misal 14px) */
-            font-size: 14px;
+            font-size: 13px;
             vertical-align: middle;
             text-align: center;
         }
 
-        /* Background hijau muda untuk baris sel (sesuai drawCallback Return) */
         #table_pallet_problem tbody tr td {
             background-color: #edfcf1;
         }
+
+    .action-gap {
+        display: flex !important;
+        gap: 5px;
+        justify-content: center;
+    }
+
+        .action-gap .btn {
+            border-radius: 4px !important;
+        }
+
+    .select2-container .select2-selection--single {
+        height: 38px !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 4px !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 38px !important;
+        padding-left: 10px !important;
+        color: #495057 !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 38px !important;
+    }
+
+    .select2-dropdown {
+        border: 1px solid #ced4da !important;
+        border-radius: 4px !important;
+        z-index: 9999 !important;
+    }
 </style>
 
 <section id="hero1" class="hero bg-dark position-relative">
@@ -71,7 +100,7 @@
         <div class="position-absolute top-50 start-50 translate-middle text-center">
             <h3 class="text-white mb-0">
                 <i class="fas fa-pallet text-success"></i>
-                <b>Pallet Problem List</b>
+                <b>Pallet Problem</b>
             </h3>
         </div>
         <nav aria-label="breadcrumb" class="text-end ms-auto breadcrumb-sm">
@@ -87,21 +116,22 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-12 mb-2">
+                            <div class="col col-12 mb-2 d-flex justify-content-end">
                                 <button type="button" class="btn btn-sm btn-primary" id="btn_add_pallet_problem">
                                     <i class="fa fa-plus-circle"></i> Add Pallet Problem
                                 </button>
                             </div>
-
                             <div class="col-12 table-responsive">
                                 <table id="table_pallet_problem" class="table table-bordered table-striped nowrap" style="width:100%">
                                     <thead class="bg-navy-custom align-middle text-center">
                                         <tr>
                                             <th>No</th>
                                             <th>Pallet No</th>
-                                            <th>Request No</th>
                                             <th>Date</th>
                                             <th>Issue</th>
+                                            <th>Created By</th>
+                                            <th>Updated By</th>
+                                            <th>Status</th>
                                             <th>Action</th>
                                         </tr>
                                         <tr>
@@ -110,6 +140,8 @@
                                             <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="2" /></td>
                                             <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="3" /></td>
                                             <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="4" /></td>
+                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="5" /></td>
+                                            <td></td>
                                             <td></td>
                                         </tr>
                                     </thead>
@@ -138,32 +170,22 @@
                 @Html.AntiForgeryToken()
                 <div class="modal-body">
                     <input type="hidden" name="id" id="pallet_problem_id" />
-                    <input type="hidden" name="created_by" value="@sesa_id" />
-
-                    <div class="row">
+                    <input type="hidden" name="created_by" id="created_by" value="@sesa_id" />
+                    <input type="hidden" name="updated_by" id="updated_by" value="@sesa_id" />
+                    <div class="row g-3">
                         <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Pallet No <span class="text-danger">*</span></label>
-                                <input class="form-control" type="text" name="pallet_no" id="pallet_no" required />
-                            </div>
+                            <label class="form-label fw-semibold">Pallet No <span class="text-danger">*</span></label>
+                            <select class="form-control" name="pallet_no" id="pallet_no" style="width:100%;" required>
+                                <option value="">-- Select Pallet No --</option>
+                            </select>
                         </div>
                         <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Date <span class="text-danger">*</span></label>
-                                <input class="form-control" type="date" name="date" id="date" value="@todayDate" required />
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Request No <span class="text-danger">*</span></label>
-                                <input class="form-control" type="text" name="req_no" id="req_no" required />
-                            </div>
+                            <label class="form-label fw-semibold">Date <span class="text-danger">*</span></label>
+                            <input class="form-control" type="date" name="date" id="date" value="@todayDate" required />
                         </div>
                         <div class="col-md-12">
-                            <div class="form-group">
-                                <label>Issue <span class="text-danger">*</span></label>
-                                <textarea class="form-control" name="issue" id="issue" rows="3" required></textarea>
-                            </div>
+                            <label class="form-label fw-semibold">Issue <span class="text-danger">*</span></label>
+                            <textarea class="form-control" name="issue" id="issue" rows="3" required></textarea>
                         </div>
                     </div>
                 </div>
@@ -176,13 +198,13 @@
     </div>
 </div>
 
-@section Scripts
-{
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         var Table;
-        var loading = "<i class='fa fa-4x fa-spinner fa-spin'></i>";
 
         $(document).ready(function () {
+
             Table = $("#table_pallet_problem").DataTable({
                 "orderCellsTop": true,
                 "processing": true,
@@ -202,64 +224,108 @@
                         }
                     },
                     { "data": "pallet_no", "className": "align-middle" },
-                    { "data": "req_no", "className": "align-middle" },
                     {
                         "data": "date",
                         "className": "text-center align-middle",
-                        "render": function(data) {
+                        "render": function (data) {
                             return data ? new Date(data).toLocaleDateString('en-GB') : '-';
                         }
                     },
                     {
                         "data": "issue",
                         "className": "align-middle",
-                        "render": function(data) {
-                            return data.length > 50 ? data.substring(0, 50) + '...' : data;
+                        "render": function (data) {
+                            return data.length > 30 ? data.substring(0, 30) + '...' : data;
+                        }
+                    },
+                    { "data": "created_by", "className": "align-middle text-center" },
+                    {
+                        "data": "updated_by",
+                        "className": "align-middle text-center",
+                        "render": function (data) { return data ? data : '-'; }
+                    },
+                    {
+                        "data": "status",
+                        "className": "text-center align-middle",
+                        "render": function (data) {
+                            return data === 'Active'
+                                ? '<span class="badge bg-success">Active</span>'
+                                : '<span class="badge bg-secondary">Closed</span>';
                         }
                     },
                     {
                         "data": null,
                         "className": "text-center align-middle",
                         "orderable": false,
-                        "render": function (data, type, row) {
-                            return `
-                                <div class="btn-group">
-                                    <button class="btn btn-xs btn-warning btn-edit" data-id="${row.id}">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-xs btn-danger btn-delete" data-id="${row.id}">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            `;
-                        }
+                               "render": function (data, type, row) {
+            let statusBtn = row.status === 'Active'
+                ? `<button class="btn btn-xs btn-success btn-close-problem" data-id="${row.id}" title="Close Problem"><i class="fas fa-check"></i></button>`
+                : ``;  // kalau Closed, kosong aja
+            return `
+                <div class="action-gap">
+                    <button class="btn btn-xs btn-warning btn-edit" data-id="${row.id}" title="Edit Data"><i class="fas fa-edit"></i></button>
+                    ${statusBtn}
+                    <button class="btn btn-xs btn-danger btn-delete" data-id="${row.id}" title="Delete Data"><i class="fas fa-trash"></i></button>
+                </div>`;
+        }
                     }
                 ],
                 "order": [[1, 'asc']]
             });
 
-            // Script Filter (Copy dari Return)
-            $('input.filter_table').on('keyup change', function () {
-                let trgt = $(this).attr('target');
-                if (Table.column(trgt).search() !== this.value) {
-                    Table.column(trgt).search(this.value).draw();
-                }
-            });
+                               $('input.filter_table').on('keyup change', function () {
+            let trgt = $(this).attr('target');
+            Table.column(trgt).search(this.value).draw();
+        });
 
-            // Menangani klik Add
-            $("#btn_add_pallet_problem").click(function() {
+                 $('#pallet_no').select2({
+            dropdownParent: $('#modal_pallet_problem'),
+            placeholder: '-- Select or Search Pallet No --',
+            allowClear: true,
+            minimumInputLength: 0,
+            ajax: {
+                url: '@Url.Action("GetPalletTransferHistory", "User")',  // ✅ ganti ke sini
+                type: 'POST',
+                delay: 300,
+                data: function (params) {
+                    return {
+                        draw: 1,
+                        start: 0,
+                        length: 50,
+                        'search[value]': params.term || ''
+                    };
+                },
+                processResults: function (res) {
+                    if (!res.data) return { results: [] };
+                    var seen = {};
+                    var filtered = res.data.filter(function (item) {
+                        if (seen[item.pallet_no]) return false;
+                        seen[item.pallet_no] = true;
+                        return true;
+                    });
+                    return {
+                        results: filtered.map(function (item) {
+                            return { id: item.pallet_no, text: item.pallet_no };
+                        })
+                    };
+                },
+                cache: false
+            }
+        });
+
+            $("#btn_add_pallet_problem").click(function () {
                 $("#form_pallet_problem")[0].reset();
                 $("#pallet_problem_id").val("");
+                $('#pallet_no').val(null).trigger('change');
+                $("#date").val('@todayDate');
                 $("#modal_title").text("Create Pallet Problem");
                 $("#modal_pallet_problem").modal("show");
             });
 
-            // Submit Form (Logika sama dengan sebelumnya namun UI disesuaikan)
-            $("#form_pallet_problem").submit(function(e) {
+            $("#form_pallet_problem").submit(function (e) {
                 e.preventDefault();
                 let formData = new FormData(this);
                 let isEdit = $("#pallet_problem_id").val() !== "";
-
                 Swal.fire({
                     title: 'Confirmation!!',
                     text: "Are you sure?",
@@ -276,9 +342,8 @@
                             data: formData,
                             processData: false,
                             contentType: false,
-                            success: function(res) {
-                                let arr = res.split(";");
-                                if (arr[0] === "success" || res.trim().toUpperCase() === "OK") {
+                            success: function (res) {
+                                if (res.includes("success") || res.trim().toUpperCase() === "OK") {
                                     Swal.fire("Success!", "Data processed successfully.", "success");
                                     $("#modal_pallet_problem").modal("hide");
                                     Table.ajax.reload(null, false);
@@ -291,21 +356,44 @@
                 });
             });
 
-            // Edit & Delete Buttons (Gunakan event delegation)
-            $(document).on('click', '.btn-edit', function() {
+            $(document).on('click', '.btn-edit', function () {
                 let id = $(this).data('id');
-                $.get("@Url.Action("GetPalletProblemById", "User")", { id: id }, function(data) {
+                $.get("@Url.Action("GetPalletProblemById", "User")", { id: id }, function (data) {
                     $("#pallet_problem_id").val(data.id);
-                    $("#pallet_no").val(data.pallet_no);
-                    $("#req_no").val(data.req_no);
+                    var option = new Option(data.pallet_no, data.pallet_no, true, true);
+                    $('#pallet_no').empty().append(option).trigger('change');
                     $("#date").val(data.date.split('T')[0]);
                     $("#issue").val(data.issue);
+                    $("#updated_by").val("@sesa_id");
                     $("#modal_title").text("Update Pallet Problem");
                     $("#modal_pallet_problem").modal("show");
                 });
             });
 
-            $(document).on('click', '.btn-delete', function() {
+            $(document).on('click', '.btn-close-problem', function () {
+                let id = $(this).data('id');
+                Swal.fire({
+                    title: 'Close Problem?',
+                    text: "Status will be changed to Closed.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    confirmButtonText: 'Yes, Close it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.post("@Url.Action("UpdatePalletProblemStatus", "User")", { id: id, status: 'Closed', updated_by: '@sesa_id' }, function (res) {
+                            if (res === "success") {
+                                Swal.fire("Success!", "Problem has been closed.", "success");
+                                Table.ajax.reload(null, false);
+                            } else {
+                                Swal.fire("Failed!", res, "error");
+                            }
+                        });
+                    }
+                });
+            });
+
+            $(document).on('click', '.btn-delete', function () {
                 let id = $(this).data('id');
                 Swal.fire({
                     title: 'Are you sure?',
@@ -316,7 +404,7 @@
                     confirmButtonText: 'Yes, delete it!'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        $.post("@Url.Action("DeletePalletProblem", "User")", { id: id }, function(res) {
+                        $.post("@Url.Action("DeletePalletProblem", "User")", { id: id }, function (res) {
                             Table.ajax.reload(null, false);
                             Swal.fire("Deleted!", "Record has been deleted.", "success");
                         });

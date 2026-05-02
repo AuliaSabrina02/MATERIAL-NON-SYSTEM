@@ -314,7 +314,7 @@
         </div>
     </div>
 </div>
-@section Scripts {
+    @section Scripts {
     <script src="https://code.highcharts.com/highcharts.js"></script>
 
     <script>
@@ -417,6 +417,7 @@
                 plotOptions: {
                     column: {
                         cursor: 'pointer',
+                            borderRadius: 6,
                         dataLabels: { enabled: true },
                         point: {
                             events: {
@@ -638,7 +639,7 @@
                     plotOptions: {
                         column: {
                             cursor: 'pointer',
-                            borderRadius: 5,
+                            borderRadius: 6,
                             dataLabels: {
                                 enabled: true,
                                 style: {
@@ -707,4 +708,4 @@
             $('#modal_req_detail').modal('show');
         }
     </script>
-}
+    }

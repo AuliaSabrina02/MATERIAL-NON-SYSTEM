@@ -6,6 +6,8 @@
     List<string> listStatus = (ViewBag.listStatus as List<string>) ?? new List<string> { "Sent", "Approved", "In Transit", "Returned" };
 }
 
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
 <style>
     .smaller-input {
         height: 25px;
@@ -50,23 +52,33 @@
             text-align: center;
         }
 
-    #loadingSpinner {
-        display: none;
-        position: fixed;
-        z-index: 9999;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
+    .action-gap {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
     }
 
-        #loadingSpinner img {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
+    .select2-container .select2-selection--single {
+        height: 38px !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 4px !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 38px !important;
+        padding-left: 10px !important;
+        color: #495057 !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 38px !important;
+    }
+
+    .select2-dropdown {
+        border: 1px solid #ced4da !important;
+        border-radius: 4px !important;
+        z-index: 9999 !important;
+    }
 </style>
 
 <section id="hero1" class="hero bg-dark position-relative">
@@ -84,7 +96,7 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="row">
-                            <div class="col col-12 mb-2">
+                            <div class="col col-12 mb-2 d-flex justify-content-end">
                                 <button class="btn btn-sm btn-primary" onclick="open_modal_add()">
                                     <i class="fas fa-plus-circle"></i> Create Return
                                 </button>
@@ -103,7 +115,7 @@
                                             <th>Remark</th>
                                             <th>PIC</th>
                                             <th>Return Date</th>
-                                            <th>Image</th>
+                                            <th>Document</th>
                                             <th>Action</th>
                                         </tr>
                                         <tr style="background-color: #3b6b85;">
@@ -147,14 +159,16 @@
                 <h6 class="modal-title text-white" id="modalLabel"><i class="fas fa-exchange-alt"></i> Form Material Return</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="form_return" enctype="multipart/form-data" method="post" action="#">
+            <form id="form_return" enctype="multipart/form-data" method="post">
                 <input type="hidden" name="id_return" id="id_return" />
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group mb-2">
-                                <label>Request No</label>
-                                <input type="text" name="request_no" id="request_no" class="form-control" />
+                                <label>Request No <span class="text-danger">*</span></label>
+                                <select name="request_no" id="request_no" class="form-control" style="width:100%;">
+                                    <option value="">-- Select Request No --</option>
+                                </select>
                             </div>
                             <div class="form-group mb-2">
                                 <label>PO Number <span class="text-danger">*</span></label>
@@ -187,8 +201,14 @@
                                 <textarea name="reason_return" id="remark" class="form-control" rows="2"></textarea>
                             </div>
                             <div class="form-group mb-2">
-                                <label>Image Support</label>
-                                <input type="file" name="image_support_file" id="file_image" class="form-control" accept="image/*" />
+                                <label>Document Support <small class="text-muted">(PDF)</small></label>
+                                <input type="file" name="image_support_file" id="file_pdf" class="form-control" accept="application/pdf" />
+                                <div id="current_file_info" class="mt-1" style="display:none;">
+                                    <small class="text-muted">Current file: </small>
+                                    <a id="current_file_link" href="#" target="_blank" class="text-primary">
+                                        <i class="fas fa-file-pdf text-danger"></i> <span id="current_file_name"></span>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -217,151 +237,230 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-        var table;
-        $(document).ready(function () {
-            table = $("#table_return").DataTable({
-                "orderCellsTop": true,
-                "processing": true,
-                "serverSide": true,
-                "ajax": { "url": "@Url.Action("GetReturnList", "User")", "type": "POST" },
-                "columns": [
-                    { "data": "status_desc", "className": "align-middle" },
-                    { "data": "request_no", "className": "align-middle", "defaultContent": "" },
-                    { "data": "po_no", "className": "align-middle" },
-                    { "data": "partno", "className": "align-middle" },
-                    { "data": "qty_return", "className": "text-center align-middle" },
-                    { "data": "uom", "className": "text-center align-middle" },
-                    { "data": "condition", "className": "text-center align-middle" },
-             { "data": "reason_return", "className": "align-middle", "defaultContent": "" },
-                    { "data": "name", "className": "align-middle" },
-                    { "data": "return_date", "className": "text-center align-middle" },
-                    {
-                        "data": "image_support",
-                        "className": "text-center align-middle",
-                              "render": function(data) {
-            return data ? `<a href="javascript:void(0)" class="text-primary fw-bold" onclick="view_image('${data}')">View</a>` : "-";
-        }
-        },
-        {
-            "data": null,
-            "className": "text-center align-middle",
-            "render": function (data, type, row) {
-                if (row.status_desc === "Sent") {
-                    return `
-                        <button class="btn btn-sm btn-warning me-1" onclick='open_modal_edit(${JSON.stringify(row)})'>
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick='delete_return(${row.id_return})'>
-                            <i class="fas fa-trash"></i>
-                        </button>`;
-                } else {
-                    return `<i class="fas fa-lock text-muted"></i>`;
+            var table;
+
+            $(document).ready(function () {
+
+                table = $("#table_return").DataTable({
+                    "orderCellsTop": true,
+                    "processing": true,
+                    "serverSide": true,
+                    "ajax": { "url": "@Url.Action("GetReturnList", "User")", "type": "POST" },
+                    "columns": [
+                        { "data": "status_desc", "className": "align-middle" },
+                        { "data": "request_no", "className": "align-middle", "defaultContent": "" },
+                        { "data": "po_no", "className": "align-middle" },
+                        { "data": "partno", "className": "align-middle" },
+                        { "data": "qty_return", "className": "text-center align-middle" },
+                        { "data": "uom", "className": "text-center align-middle" },
+                        { "data": "condition", "className": "text-center align-middle" },
+                        { "data": "reason_return", "className": "align-middle", "defaultContent": "" },
+                        { "data": "name", "className": "align-middle" },
+                               {
+                "data": "return_date",
+                "className": "text-center align-middle",
+                "render": function(data) {
+                    if (!data) return "-";
+                    return data.substring(0, 10);
                 }
-            }
-        }
-                ],
-                "drawCallback": function () {
-                    this.api().rows().every(function () {
-                        var status = (this.data().status_desc || "").toLowerCase().trim();
-                        var bg = status === "sent" ? "bg-warning" : status === "approved" ? "bg-success" : status === "in transit" ? "bg-info" : "bg-secondary";
-                        $(this.node()).find('td:eq(0)').addClass(bg);
-                    });
-                }
-            });
-
-            $('.filter_table').on('keyup change', function () {
-                table.column($(this).attr('target')).search(this.value).draw();
-            });
-
-            $("#form_return").submit(function (e) {
-                e.preventDefault();
-                var formData = new FormData(this); // Pakai FormData agar Image bisa upload
-                const url = $("#id_return").val() ? "@Url.Action("UpdateReturn", "User")" : "@Url.Action("CreateReturn", "User")";
-
-                Swal.fire({
-                    title: 'Confirmation!!',
-                    text: "Are you sure ?",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#28a745',
-                    confirmButtonText: 'Yes!',
-                    showLoaderOnConfirm: true,
-                    preConfirm: () => {
-                        return $.ajax({
-                            url: url, type: 'POST', data: formData, contentType: false, processData: false
-                        }).done(function (msg) {
-                            if (msg.trim().toUpperCase() === "OK") {
-                                Swal.fire("Success!", "Data processed.", "success");
-                                $("#modal_return").modal("hide");
-                                table.ajax.reload(null, false);
-                            } else { Swal.fire("Failed!", msg, "error"); }
+            },
+                        {
+                            "data": "image_support",
+                            "className": "text-center align-middle",
+                            "render": function (data) {
+                                if (!data) return "-";
+                                var pathNew = "/Uploads/returns/" + data;
+                                var pathOld = "/Uploads/" + data;
+                                var path = data.includes("/") ? data : pathNew;
+                                return `<a href="${pathNew}" target="_blank" class="text-danger fw-bold" title="Open PDF">
+                                            <i class="fas fa-file-pdf"></i> View
+                                        </a>`;
+                            }
+                        },
+                        {
+                            "data": null,
+                            "className": "text-center align-middle",
+                            "render": function (data, type, row) {
+                                if (row.status_desc === "Sent") {
+                                    return `
+                                        <div class="action-gap">
+                                            <button class="btn btn-xs btn-warning" onclick='open_modal_edit(${JSON.stringify(row)})' title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-xs btn-danger" onclick="delete_data('${row.id_return}')" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>`;
+                                } else {
+                                    return `<i class="fas fa-lock text-muted" title="Locked"></i>`;
+                                }
+                            }
+                        }
+                    ],
+                    "drawCallback": function () {
+                        this.api().rows().every(function () {
+                            var status = (this.data().status_desc || "").toLowerCase().trim();
+                            var bg = status === "sent" ? "bg-warning"
+                                   : status === "approved" ? "bg-success"
+                                   : status === "in transit" ? "bg-info"
+                                   : "bg-secondary";
+                            $(this.node()).find('td:eq(0)').addClass(bg);
                         });
                     }
                 });
-            });
-        });
 
-        function open_modal_add() {
-            $("#form_return")[0].reset();
-            $("#id_return").val("");
-            $("#modalLabel").html('<i class="fas fa-plus-circle"></i> Create Material Return');
-            $("#modal_return").modal("show");
-        }
+                $('.filter_table').on('keyup change', function () {
+                    table.column($(this).attr('target')).search(this.value).draw();
+                });
 
-                function open_modal_edit(data) {
-            $("#form_return")[0].reset();
-            $("#id_return").val(data.id_return);
-            $("#request_no").val(data.request_no);  // tambah
-            $("#po_no").val(data.po_no);
-            $("#partno").val(data.partno);
-            $("#qty_return").val(data.qty_return);
-            $("#uom").val(data.uom);
-            $("#condition").val(data.condition);
-            $("#remark").val(data.reason_return);   // fix: pakai reason_return
-            $("#modal_return").modal("show");
-        }
-
-                function delete_return(id) {
-            Swal.fire({
-                title: 'Delete Confirmation!',
-                text: "Are you sure want to delete this data?",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc3545',
-                confirmButtonText: 'Yes, Delete!',
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: '@Url.Action("DeleteReturn", "User")',
+                $('#request_no').select2({
+                    dropdownParent: $('#modal_return'),
+                    placeholder: '-- Select or Search Request No --',
+                    allowClear: true,
+                    minimumInputLength: 0,
+                    ajax: {
+                        url: '@Url.Action("GetRequestList", "User")',
                         type: 'POST',
-                        data: { id_return: id },
-                        success: function (msg) {
+                        delay: 300,
+                        data: function (params) {
+                            return {
+                                draw: 1,
+                                start: 0,
+                                length: 50,
+                                'search[value]': params.term || ''
+                            };
+                        },
+                        processResults: function (res) {
+                            if (!res.data) return { results: [] };
+                            return {
+                                results: res.data.map(function (item) {
+                                    return { id: item.request_no, text: item.request_no };
+                                })
+                            };
+                        },
+                        cache: true
+                    }
+                });
+
+               $("#form_return").submit(function (e) {
+        e.preventDefault();
+        var requestNo = $("#request_no").val();
+        if (!requestNo) {
+            Swal.fire("Required!", "Please select a Request No.", "warning");
+            return;
+        }
+        var formData = new FormData(this);
+
+                    var fileInput = document.getElementById('file_pdf');
+                    if (fileInput.files.length > 0) {
+                        var file = fileInput.files[0];
+                        if (file.type !== 'application/pdf') {
+                            Swal.fire("Invalid File!", "Only PDF files are allowed.", "warning");
+                            return;
+                        }
+                    }
+
+                    const url = $("#id_return").val()
+                        ? "@Url.Action("UpdateReturn", "User")"
+                        : "@Url.Action("CreateReturn", "User")";
+
+                    Swal.fire({
+                        title: 'Confirmation!!',
+                        text: "Are you sure you want to save this data?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#28a745',
+                        confirmButtonText: 'Yes, Save!',
+                        showLoaderOnConfirm: true,
+                        preConfirm: () => {
+                            return $.ajax({
+                                url: url,
+                                type: 'POST',
+                                data: formData,
+                                contentType: false,
+                                processData: false
+                            }).done(function (msg) {
+                                if (msg.trim().toUpperCase() === "OK") {
+                                    Swal.fire("Success!", "Data processed successfully.", "success");
+                                    $("#modal_return").modal("hide");
+                                    table.ajax.reload(null, false);
+                                } else {
+                                    Swal.fire("Failed!", msg, "error");
+                                }
+                            });
+                        }
+                    });
+                });
+            });
+
+                   function open_modal_add() {
+                $("#form_return")[0].reset();
+                $("#id_return").val("");
+                $('#request_no').val(null).trigger('change');
+                $("#current_file_info").hide();
+                // $("#file_pdf").attr("required", true); ← tambah ini
+                $("#modalLabel").html('<i class="fas fa-plus-circle"></i> Create Material Return');
+                $("#modal_return").modal("show");
+            }
+
+            function open_modal_edit(data) {
+                $("#form_return")[0].reset();
+                $("#id_return").val(data.id_return);
+
+                if (data.request_no) {
+                    var option = new Option(data.request_no, data.request_no, true, true);
+                    $('#request_no').empty().append(option).trigger('change');
+                } else {
+                    $('#request_no').val(null).trigger('change');
+                }
+
+                $("#po_no").val(data.po_no);
+                $("#partno").val(data.partno);
+                $("#qty_return").val(data.qty_return);
+                $("#uom").val(data.uom);
+                $("#condition").val(data.condition);
+                $("#remark").val(data.reason_return);
+
+                        if (data.image_support) {
+                $("#current_file_name").text(data.image_support);
+                $("#current_file_link").attr("href", "/Uploads/returns/" + data.image_support);
+                $("#current_file_info").show();
+                // $("#file_pdf").removeAttr("required"); ← tambah ini
+            } else {
+                $("#current_file_info").hide();
+                // $("#file_pdf").attr("required", true); ← tambah ini
+            }
+                $("#modalLabel").html('<i class="fas fa-edit"></i> Edit Material Return');
+                $("#modal_return").modal("show");
+            }
+
+            function delete_data(id) {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, delete it!',
+                    showLoaderOnConfirm: true,
+                    preConfirm: () => {
+                        return $.ajax({
+                            url: "@Url.Action("DeleteReturn", "User")",
+                            type: 'POST',
+                            data: { id: id }
+                        }).done(function (msg) {
                             if (msg.trim().toUpperCase() === "OK") {
-                                Swal.fire("Deleted!", "Data has been deleted.", "success");
+                                 Swal.fire("Deleted!", "Your file has been deleted.", "success");
                                 table.ajax.reload(null, false);
                             } else {
                                 Swal.fire("Failed!", msg, "error");
                             }
-                        }
-                    });
-                }
-            });
-        }
-               function view_image(file) {
-            var img = new Image();
-            var pathNew = "/Uploads/returns/" + file;
-            var pathOld = "/Uploads/" + file;
-
-            img.onload = function () {
-                $("#img_zoom").attr("src", pathNew);
-                $("#modal_view_image").modal("show");
-            };
-            img.onerror = function () {
-                $("#img_zoom").attr("src", pathOld);
-                $("#modal_view_image").modal("show");
-            };
-            img.src = pathNew;
-        }
+                        });
+                    }
+                });
+            }
     </script>
 }

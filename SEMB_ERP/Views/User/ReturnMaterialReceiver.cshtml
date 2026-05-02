@@ -80,7 +80,7 @@
         <div class="position-absolute top-50 start-50 translate-middle text-center">
             <h3 class="text-white mb-0">
                 <i class="fas fa-truck-loading text-success"></i>
-                <b>Receiver - Material Return Processing</b>
+                <b>Material Return Processing</b>
             </h3>
         </div>
     </div>
@@ -107,7 +107,7 @@
                                             <th>Remark</th>
                                             <th>PIC</th>
                                             <th>Return Date</th>
-                                            <th>Image</th>
+                                            <th>Document</th>
                                             <th>Action</th>
                                         </tr>
                                         <tr style="background-color: #3b6b85;">
@@ -147,22 +147,6 @@
     </div>
 </div>
 
-<!-- Modal Image Preview -->
-<div class="modal fade" id="modal_view_image" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-md">
-        <div class="modal-content">
-            <div class="modal-header bg-navy-custom text-white py-2">
-                <h6 class="modal-title">Image Preview</h6>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body text-center p-1">
-                <img id="img_zoom" src="" style="width: 100%; height: auto; border-radius: 4px;" />
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Update Status -->
 <div class="modal fade" id="modal_receiver" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -173,14 +157,14 @@
             <form id="form_receiver_update">
                 <input type="hidden" name="id_return" id="rec_id_return" />
                 <div class="modal-body">
-                    <div class="callout callout-info mb-3" style="font-size: 11px; border-left-color: #28a745;">
+                    <div class="mb-3 p-3" style="background: #f8f9fa; border-radius: 8px; border-left: 4px solid #28a745;">
                         <div class="row">
                             <div class="col-6">
-                                <label class="fw-bold text-muted mb-0">PO Number</label>
+                                <small class="fw-bold text-muted d-block">PO Number</small>
                                 <p id="lbl_po" class="mb-0 fw-bold text-primary"></p>
                             </div>
                             <div class="col-6">
-                                <label class="fw-bold text-muted mb-0">Part Number</label>
+                                <small class="fw-bold text-muted d-block">Part Number</small>
                                 <p id="lbl_part" class="mb-0 fw-bold text-primary"></p>
                             </div>
                         </div>
@@ -227,22 +211,38 @@
                     { "data": "condition", "className": "text-center align-middle" },
                     { "data": "reason_return", "className": "align-middle", "defaultContent": "" },
                     { "data": "name", "className": "align-middle" },
-                    { "data": "return_date", "className": "text-center align-middle" },
-                    {
+                        {
+            "data": "return_date",
+            "className": "text-center align-middle",
+            "render": function(data) {
+                if (!data) return "-";
+                return data.substring(0, 10);
+            }
+        },
+        {
                         "data": "image_support",
                         "className": "text-center align-middle",
                         "render": function (data) {
-                            return data ? `<a href="javascript:void(0)" class="text-primary fw-bold" onclick="view_image('${data}')">View</a>` : "-";
+                            if (!data) return "-";
+                            return `<a href="/Uploads/returns/${data}" target="_blank" class="text-danger fw-bold" title="Open PDF">
+                                        <i class="fas fa-file-pdf"></i> View
+                                    </a>`;
                         }
                     },
                     {
                         "data": null,
                         "className": "text-center align-middle",
-                        "render": function (data, type, row) {
-                            return `<button class="btn btn-sm btn-info text-white" style="font-size:9px; padding: 2px 8px;" onclick='open_receiver_modal(${JSON.stringify(row)})'>
-                                        <i class="fas fa-edit"></i> Process
-                                    </button>`;
-                        }
+                                      "render": function (data, type, row) {
+            console.log("status_desc:", row.status_desc);
+            if ((row.status_desc || "").toLowerCase().trim() === "returned") {
+                return `<button class="btn btn-sm btn-secondary text-white" style="font-size:9px; padding: 2px 8px;" disabled>
+                            <i class="fas fa-lock"></i> Locked
+                        </button>`;
+            }
+            return `<button class="btn btn-sm btn-info text-white" style="font-size:9px; padding: 2px 8px;" onclick='open_receiver_modal(${JSON.stringify(row)})'>
+                        <i class="fas fa-edit"></i> Process
+                    </button>`;
+        }
                     }
                 ],
                 "drawCallback": function () {
@@ -269,8 +269,15 @@
                 }
             });
 
+            //per step
             $("#form_receiver_update").submit(function (e) {
                 e.preventDefault();
+                     var currentStatus = parseInt($("#rec_status").data("current"));
+        var selectedStatus = parseInt($("#rec_status").val());
+        if (selectedStatus > currentStatus + 1) {
+            Swal.fire("Error!", "Status can only be updated one step at a time.", "warning");
+            return;
+        }
                 Swal.fire({
                     title: 'Confirmation',
                     text: "Update return status?",
@@ -302,27 +309,41 @@
             });
         });
 
-        function open_receiver_modal(row) {
+        // function open_receiver_modal(row) {
+        //     $("#rec_id_return").val(row.id_return);
+        //     $("#lbl_po").text(row.po_no);
+        //     $("#lbl_part").text(row.partno);
+        //     $("#rec_status").val(row.status);
+        //     $("#modal_receiver").modal("show");
+        // }
+
+                function open_receiver_modal(row) {
             $("#rec_id_return").val(row.id_return);
             $("#lbl_po").text(row.po_no);
             $("#lbl_part").text(row.partno);
-            $("#rec_status").val(row.status);
-            $("#modal_receiver").modal("show");
-        }
+                $("#rec_status").data("current", row.status); // ← tambah ini
 
-        function view_image(file) {
-            var img = new Image();
-            var pathNew = "/Uploads/returns/" + file;
-            var pathOld = "/Uploads/" + file;
-            img.onload = function () {
-                $("#img_zoom").attr("src", pathNew);
-                $("#modal_view_image").modal("show");
-            };
-            img.onerror = function () {
-                $("#img_zoom").attr("src", pathOld);
-                $("#modal_view_image").modal("show");
-            };
-            img.src = pathNew;
+            // Hapus semua option dulu
+            $("#rec_status").empty();
+
+            // Tentukan status yang boleh dipilih (hanya yang lebih tinggi dari status saat ini)
+            var currentStatus = parseInt(row.status);
+            var allStatus = [
+                { val: 1, text: "Sent" },
+                { val: 2, text: "Approved" },
+                { val: 3, text: "In Transit" },
+                { val: 4, text: "Returned" }
+            ];
+
+            // Hanya tampilkan status >= status saat ini
+            allStatus.forEach(function(s) {
+                if (s.val >= currentStatus) {
+                    var selected = s.val === currentStatus ? "selected" : "";
+                    $("#rec_status").append(`<option value="${s.val}" ${selected}>${s.text}</option>`);
+                }
+            });
+
+            $("#modal_receiver").modal("show");
         }
     </script>
 }

@@ -194,7 +194,6 @@ namespace SEMB_ERP.Controllers
 
         //    return View();
         //}
-
         [HttpPost]
         public JsonResult GetPalletProblems()
         {
@@ -203,14 +202,20 @@ namespace SEMB_ERP.Controllers
                 var draw = Request.Form["draw"].FirstOrDefault();
                 var start = Request.Form["start"].FirstOrDefault();
                 var length = Request.Form["length"].FirstOrDefault();
-                var searchValue = Request.Form["search[value]"].FirstOrDefault();
                 var sortColumn = Request.Form["order[0][column]"].FirstOrDefault();
                 var sortDirection = Request.Form["order[0][dir]"].FirstOrDefault();
+
+                // TAMBAH INI - baca filter per kolom
+                var searchPalletNo = Request.Form["columns[1][search][value]"].FirstOrDefault();
+                var searchDate = Request.Form["columns[2][search][value]"].FirstOrDefault();
+                var searchIssue = Request.Form["columns[3][search][value]"].FirstOrDefault();
+                var searchCreatedBy = Request.Form["columns[4][search][value]"].FirstOrDefault();
+                var searchUpdatedBy = Request.Form["columns[5][search][value]"].FirstOrDefault();
 
                 int pageSize = length != null ? Convert.ToInt32(length) : 10;
                 int skip = start != null ? Convert.ToInt32(start) : 0;
 
-                var result = _dal.GetPalletProblems(skip, pageSize, searchValue, sortColumn, sortDirection);
+                var result = _dal.GetPalletProblems(skip, pageSize, searchPalletNo, searchDate, searchIssue, searchCreatedBy, searchUpdatedBy, sortColumn, sortDirection);
 
                 return Json(new
                 {
@@ -503,7 +508,7 @@ namespace SEMB_ERP.Controllers
         {
             try
             {
-                var result = _dal.GetPalletProblems(0, 9999, "", "", "");
+                var result = _dal.GetPalletProblems(0, 9999, "", "", "", "", "", "1", "asc");
 
                 System.Diagnostics.Debug.WriteLine($"=== PALLET DEBUG ===");
                 System.Diagnostics.Debug.WriteLine($"Date param: '{date}'");
@@ -581,15 +586,20 @@ namespace SEMB_ERP.Controllers
                 var draw = Request.Form["draw"].FirstOrDefault();
                 var start = Request.Form["start"].FirstOrDefault();
                 var length = Request.Form["length"].FirstOrDefault();
-                var searchValue = Request.Form["search[value]"].FirstOrDefault();
                 var sortColumn = Request.Form["order[0][column]"].FirstOrDefault();
                 var sortDirection = Request.Form["order[0][dir]"].FirstOrDefault();
+
+                // TAMBAH INI
+                var searchPalletNo = Request.Form["columns[1][search][value]"].FirstOrDefault();
+                var searchDate = Request.Form["columns[2][search][value]"].FirstOrDefault();
+                var searchIssue = Request.Form["columns[3][search][value]"].FirstOrDefault();
+                var searchCreatedBy = Request.Form["columns[4][search][value]"].FirstOrDefault();
+                var searchUpdatedBy = Request.Form["columns[5][search][value]"].FirstOrDefault();
 
                 int pageSize = length != null ? Convert.ToInt32(length) : 10;
                 int skip = start != null ? Convert.ToInt32(start) : 0;
 
-                var result = _dal.GetPalletList(skip, pageSize, searchValue, sortColumn, sortDirection);
-
+                var result = _dal.GetPalletList(skip, pageSize, searchPalletNo, searchDate, searchIssue, searchCreatedBy, searchUpdatedBy, sortColumn, sortDirection);
                 return Json(new
                 {
                     draw = draw,
@@ -4033,18 +4043,15 @@ namespace SEMB_ERP.Controllers
         {
             try
             {
-                // Ambil SESA ID dari user yang login
                 string fullIdentity = User.Identity?.Name ?? "";
                 string sesaId = fullIdentity.Contains("\\")
                     ? fullIdentity.Split('\\')[1]
                     : fullIdentity;
-
                 if (string.IsNullOrEmpty(sesaId))
                 {
                     sesaId = User.FindFirstValue("sesa_id")
                         ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
                 }
-
                 if (string.IsNullOrEmpty(sesaId))
                 {
                     return Json(new
@@ -4053,20 +4060,18 @@ namespace SEMB_ERP.Controllers
                         message = "SESA ID cannot be identified. Please re-login."
                     });
                 }
-
                 string userEmail = User.FindFirstValue(ClaimTypes.Email)
                     ?? "no-email@company.com";
 
-                // Insert ke database
                 DatabaseAccessLayer dal = new DatabaseAccessLayer();
                 int newId = dal.CreateSchedule(
                     sesaId,
                     userEmail,
                     model.ScheduledDate,
                     model.Title,
-                    model.Description
+                    model.Description,
+                    model.SendEmail  // ← tambah ini
                 );
-
                 return Json(new
                 {
                     success = true,
@@ -4083,7 +4088,6 @@ namespace SEMB_ERP.Controllers
                 });
             }
         }
-
         [HttpGet]
         public IActionResult GetSchedules()
         {
@@ -4779,6 +4783,31 @@ namespace SEMB_ERP.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> DeleteSchedule([FromBody] int id)
+        {
+            try
+            {
+                var schedule = await _context.ScheduledRequests.FindAsync(id);
+                if (schedule == null)
+                    return Json(new { success = false, message = "Schedule not found." });
+
+                _context.ScheduledRequests.Remove(schedule);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        public IActionResult DashboardAdmin()
+        {
+            return View();
+        }
+
         [Authorize(Policy = "RequireRequestorAdmin")]
         [HttpPost]
         public IActionResult DeleteShipment(string id_shipment)
@@ -4801,6 +4830,8 @@ namespace SEMB_ERP.Controllers
                     return Content($"error;Failed to delete shipment: {ex.Message}", "text/plain");
                 }
             }
+
+
         }
     }
 }

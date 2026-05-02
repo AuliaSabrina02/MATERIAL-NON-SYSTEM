@@ -1,7 +1,9 @@
 ﻿@{
     ViewData["Title"] = "Project Schedule";
 }
+
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+
 <style>
     .kpi-card-wh {
         background: #ffffff;
@@ -17,10 +19,12 @@
         gap: 10px;
         height: 100%;
     }
-    .kpi-card-wh:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-    }
+
+        .kpi-card-wh:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        }
+
     .kpi-icon-wh {
         width: 44px;
         height: 44px;
@@ -31,8 +35,16 @@
         font-size: 17px;
         flex-shrink: 0;
     }
-    .kpi-icon-wh i { color: #fff; }
-    .kpi-body { flex: 1; min-width: 0; }
+
+        .kpi-icon-wh i {
+            color: #fff;
+        }
+
+    .kpi-body {
+        flex: 1;
+        min-width: 0;
+    }
+
     .kpi-label-wh {
         font-size: 9.5px;
         font-weight: 600;
@@ -42,22 +54,32 @@
         line-height: 1.3;
         margin-bottom: 2px;
     }
+
     .kpi-value-wh {
         font-size: 18px;
         font-weight: 700;
         color: #2c3e50;
         line-height: 1;
     }
+
     .kpi-col {
         padding-left: 4px !important;
         padding-right: 4px !important;
     }
+
     .card-header {
         background-color: #2f3d57 !important;
         border-radius: 12px 12px 0 0 !important;
     }
-    .card-header h3, .card-header h5 { color: #ffffff !important; }
-    .card-header i { color: #3DCD58 !important; }
+
+        .card-header h3, .card-header h5 {
+            color: #ffffff !important;
+        }
+
+        .card-header i {
+            color: #3DCD58 !important;
+        }
+
     .hero {
         min-height: 70px;
         position: relative;
@@ -66,16 +88,18 @@
         color: #fff;
         margin-bottom: 15px;
     }
-    .hero .inner {
-        background: rgba(0,0,0,0.7);
-        height: 70px;
-        position: relative;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
-        padding: 0 1rem;
-    }
+
+        .hero .inner {
+            background: rgba(0,0,0,0.7);
+            height: 70px;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0 1rem;
+        }
+
     .hero-title-container {
         position: absolute;
         top: 50%;
@@ -84,22 +108,26 @@
         text-align: center;
         width: 100%;
     }
-    .hero-title-container h3 {
-        margin-bottom: 0;
-        font-weight: 700;
-        font-size: 1.75rem;
-    }
+
+        .hero-title-container h3 {
+            margin-bottom: 0;
+            font-weight: 700;
+            font-size: 1.75rem;
+        }
+
     .fc .fc-toolbar {
         padding: 15px;
         background: #f8f9fa;
         border-radius: 8px 8px 0 0;
         margin-bottom: 0;
     }
+
     .fc .fc-toolbar-title {
         font-size: 18px;
         font-weight: 700;
         color: #2c3e50;
     }
+
     .fc .fc-button {
         background-color: white;
         border: 1px solid #dee2e6;
@@ -109,32 +137,42 @@
         font-weight: 500;
         transition: all 0.3s;
     }
-    .fc .fc-button:hover,
-    .fc .fc-button-primary:not(:disabled).fc-button-active,
-    .fc .fc-button-primary:not(:disabled):active {
-        background-color: #2f3d57 !important;
-        border-color: #2f3d57 !important;
-        color: white !important;
-    }
+
+        .fc .fc-button:hover,
+        .fc .fc-button-primary:not(:disabled).fc-button-active,
+        .fc .fc-button-primary:not(:disabled):active {
+            background-color: #2f3d57 !important;
+            border-color: #2f3d57 !important;
+            color: white !important;
+        }
+
     .fc .fc-col-header-cell {
         background-color: #2f3d57;
         color: white;
         padding: 10px 0;
         border-color: #2f3d57;
     }
-    .fc .fc-col-header-cell a { color: white !important; }
-    .fc .fc-daygrid-day.fc-day-today { background-color: #e8f5e9 !important; }
-    .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
-        background-color: #3DCD58;
-        color: white;
-        border-radius: 50%;
-        width: 28px;
-        height: 28px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 4px;
+
+        .fc .fc-col-header-cell a {
+            color: white !important;
+        }
+
+    .fc .fc-daygrid-day.fc-day-today {
+        background-color: #e8f5e9 !important;
     }
+
+        .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+            background-color: #3DCD58;
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 4px;
+        }
+
     .fc .fc-event {
         background-color: #2f3d57;
         border: none;
@@ -143,11 +181,39 @@
         font-size: 11px;
         font-weight: 500;
         cursor: pointer;
+        color: #ffffff !important; /* ← tambah ini */
     }
-    .fc .fc-event:hover { background-color: #3DCD58; }
+
+        .fc .fc-event:hover {
+            background-color: #3DCD58;
+        }
+
+    .fc .fc-list-event:hover td {
+        background-color: #1e7e34 !important;
+        color: #ffffff !important;
+    }
+
+    .fc .fc-list-event:hover .fc-list-event-title a {
+        color: #ffffff !important;
+    }
+
     .fc .fc-daygrid-day:hover {
         background-color: #f0f9f4;
         cursor: pointer;
+    }
+
+
+    .fc .fc-event.event-completed {
+        background-color: #1e7e34 !important;
+        border-left: 3px solid #3DCD58 !important;
+    }
+
+    .fc .fc-event.event-upcoming {
+        background-color: #2f3d57 !important;
+    }
+
+    .fc .fc-event.event-overdue {
+        background-color: #6c757d !important;
     }
 </style>
 
@@ -167,8 +233,10 @@
 </section>
 
 <div class="container-fluid px-2 pb-4">
+
     <!-- KPI Cards -->
     <div class="row flex-nowrap overflow-auto mb-3 pb-1" style="margin-left: 0; margin-right: 0;">
+
         <div class="kpi-col" style="min-width: 155px; flex: 1;">
             <div class="kpi-card-wh" style="cursor: pointer;" onclick="openDetailsModal('TOTAL')">
                 <div class="kpi-icon-wh" style="background-color: #17a2b8;">
@@ -180,6 +248,7 @@
                 </div>
             </div>
         </div>
+
         <div class="kpi-col" style="min-width: 155px; flex: 1;">
             <div class="kpi-card-wh" style="cursor: pointer;" onclick="openDetailsModal('UPCOMING')">
                 <div class="kpi-icon-wh" style="background-color: #dc3545;">
@@ -191,6 +260,7 @@
                 </div>
             </div>
         </div>
+
         <div class="kpi-col" style="min-width: 155px; flex: 1;">
             <div class="kpi-card-wh" style="cursor: pointer;" onclick="openDetailsModal('COMPLETED')">
                 <div class="kpi-icon-wh" style="background-color: #28a745;">
@@ -202,6 +272,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 
     <!-- Calendar Card -->
@@ -226,6 +297,7 @@
             </div>
         </div>
     </div>
+
 </div>
 
 <!-- Modal Add Schedule -->
@@ -240,6 +312,8 @@
             </div>
             <form id="scheduleForm">
                 <div class="modal-body p-4">
+
+                    <!-- Summary Bar -->
                     <div class="d-flex align-items-center justify-content-between mb-3 p-3"
                          style="background: #f8f9fa; border-radius: 10px; border: 1px solid #e9ecef;">
                         <div>
@@ -253,21 +327,25 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="mb-3">
                         <label class="fw-bold small">Title <span class="text-danger">*</span></label>
                         <input type="text" class="form-control form-control-sm" id="title" name="title"
                                required placeholder="e.g., MCB 123 Project Review">
                     </div>
+
                     <div class="mb-3">
                         <label class="fw-bold small">Schedule Date & Time <span class="text-danger">*</span></label>
                         <input type="datetime-local" class="form-control form-control-sm" id="scheduleDate"
                                name="scheduleDate" required>
                     </div>
+
                     <div class="mb-3">
                         <label class="fw-bold small">Description</label>
                         <textarea class="form-control form-control-sm" id="description" name="description"
                                   rows="3" placeholder="Add additional details about this schedule..."></textarea>
                     </div>
+
                     <div class="mb-3">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="sendEmail" name="sendEmail" checked>
@@ -276,6 +354,7 @@
                             </label>
                         </div>
                     </div>
+
                 </div>
                 <div class="modal-footer" style="background: #f8f9fa; border-top: 1px solid #e9ecef;">
                     <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">
@@ -290,8 +369,6 @@
         </div>
     </div>
 </div>
-
-<!-- Modal KPI Detail -->
 <div class="modal fade" id="kpiDetailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
@@ -310,210 +387,277 @@
         </div>
     </div>
 </div>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    let calendar;
 
-@section Scripts {
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
-    <script>
-        var urlGetSchedules   = '/User/GetSchedules';
-        var urlCreateSchedule = '/User/CreateSchedule';
-        var urlMarkCompleted  = '/User/MarkScheduleCompleted';
-        var urlGetDetails     = '/User/GetScheduleDetailsPartial';
-
-        let calendar;
-
-        document.addEventListener('DOMContentLoaded', function () {
-            initializeCalendar();
-        });
+    document.addEventListener('DOMContentLoaded', function () {
+        initializeCalendar();
+    });
 
         function initializeCalendar() {
-            const calendarEl = document.getElementById('calendar');
-            calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,listWeek'
-                },
-                themeSystem: 'bootstrap5',
-                height: 650,
-                eventClick: function (info) { showEventDetails(info.event); },
-                dateClick: function (info) { openModal(info.dateStr); }
-            });
-            calendar.render();
-            loadSchedules();
-        }
-
-        function openDetailsModal(category) {
-            // FIX: ternary lengkap - sebelumnya putus di tengah
-            let title = category === 'TOTAL' ? 'All Schedules' :
-                        category === 'UPCOMING' ? 'Upcoming This Week' : 'Completed Schedules';
-            $('#kpiModalTitle').html('<i class="fas fa-list me-2"></i> ' + title);
-            $('#kpiDetailModal').modal('show');
-            $('#kpiModalContent').html('<div class="text-center p-5"><div class="spinner-border text-success"></div><p class="mt-2">Fetching data...</p></div>');
-            $.get(urlGetDetails, { category: category }, function (data) {
-                $('#kpiModalContent').html(data);
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Data Loaded',
-                    text: 'Showing ' + title,
-                    timer: 1500,
-                    showConfirmButton: false,
-                    toast: true,
-                    position: 'top-end'
-                });
-            }).fail(function () {
-                $('#kpiModalContent').html('<div class="alert alert-danger m-3">Failed to load data.</div>');
-            });
-        }
-
-        function loadSchedules() {
-            fetch(urlGetSchedules)
-                .then(response => {
-                    if (!response.ok) throw new Error('HTTP ' + response.status);
-                    return response.json();
-                })
-                .then(res => {
-                    if (res.success && res.data) {
-                        calendar.removeAllEventSources();
-                        calendar.getEvents().forEach(event => event.remove());
-                        const events = res.data.map(item => ({
-                            id: item.id,
-                            title: item.title,
-                            start: item.start,
-                            allDay: false,
-                            extendedProps: {
-                                description: item.description,
-                                isCompleted: item.isCompleted
-                            },
-                            backgroundColor: item.isCompleted ? '#28a745'
-                                           : new Date(item.start) < new Date() ? '#6c757d' : '#2f3d57',
-                            borderColor: 'transparent'
-                        }));
-                        calendar.addEventSource(events);
-                        setTimeout(() => updateStats(), 500);
-                    }
-                })
-                .catch(err => console.error('Fetch error:', err));
-         }
-
-        function updateStats() {
-            const events = calendar.getEvents();
-            const now = new Date();
-            const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-            const notCompleted = events.filter(e => !e.extendedProps.isCompleted);
-            document.getElementById('totalSchedules').textContent = events.length;
-            document.getElementById('upcomingSchedules').textContent = 
-                notCompleted.filter(e => e.start >= now && e.start <= nextWeek).length;
-            document.getElementById('completedSchedules').textContent =
-                events.filter(e => e.extendedProps.isCompleted).length;
-        }
-
-        document.getElementById('scheduleForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-            const payload = {
-                Title: document.getElementById('title').value,
-                ScheduledDate: document.getElementById('scheduleDate').value,
-                Description: document.getElementById('description').value,
-                SendEmail: document.getElementById('sendEmail').checked
-            };
-            Swal.fire({
-                title: 'Saving...',
-                text: 'Please wait',
-                allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
-            });
-            fetch(urlCreateSchedule, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-            .then(r => r.json())
-            .then(res => {
-                if (res.success) {
-                    $('#scheduleModal').modal('hide');
-                    document.getElementById('scheduleForm').reset();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Saved!',
-                        text: 'Schedule added successfully.',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                    loadSchedules();
-                } else {
-                    Swal.fire({ icon: 'error', title: 'Error', text: res.message });
-                }
-            })
-            .catch(err => {
-                Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to save: ' + err.message });
-            });
+        const calendarEl = document.getElementById('calendar');
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,listWeek'
+            },
+            themeSystem: 'bootstrap5',
+            height: 650,
+            eventContent: function(arg) {
+                let timeText = arg.timeText;
+                let title = arg.event.title;
+                let isCompleted = arg.event.extendedProps.isCompleted;
+                return {
+                    html: `<div style="display:flex; align-items:center; gap:3px; padding:2px 5px;">
+                            ${isCompleted ? '<span style="color:#fff; font-weight:bold; font-size:10px;">✓</span>' : ''}
+                            <span style="color:#fff; font-size:10px;">${timeText}</span>
+                            <span style="color:#fff; font-size:11px;">${title}</span>
+                           </div>`
+                };
+            },
+            eventClick: function (info) {
+                showEventDetails(info.event);
+            },
+            dateClick: function (info) {
+                openModal(info.dateStr);
+            }
         });
 
-        function openModal(date) {
-            $('#scheduleModal').modal('show');
-            if (date) {
-                document.getElementById('scheduleDate').value =
-                    date.includes('T') ? date : date + 'T09:00';
-            }
-        }
+        calendar.render();
+        loadSchedules();
+    }
 
-        function closeModal() {
-            $('#scheduleModal').modal('hide');
-            document.getElementById('scheduleForm').reset();
-        }
 
-        function showEventDetails(event) {
-            const eventDate = new Date(event.start);
-            const isCompleted = event.extendedProps.isCompleted;
-            const isPast = eventDate < new Date();
+         function openDetailsModal(category) {
+        let title = category === 'TOTAL' ? 'All Schedules' :
+                    category === 'UPCOMING' ? 'Upcoming This Week' : 'Completed Schedules';
+        $('#kpiModalTitle').html('<i class="fas fa-list me-2"></i> ' + title);
+        $('#kpiDetailModal').modal('show');
+        $('#kpiModalContent').html('<div class="text-center p-5"><div class="spinner-border text-success"></div><p class="mt-2">Fetching data...</p></div>');
+        $.get('/User/GetScheduleDetailsPartial', { category: category }, function (data) {
+            $('#kpiModalContent').html(data);
             Swal.fire({
-                title: event.title,
-                html: `
-                    <div style="text-align: left; padding: 10px;">
-                        <p><strong>Date:</strong> ${eventDate.toLocaleString('en-GB')}</p>
-                        <p><strong>Description:</strong> ${event.extendedProps.description || 'No description'}</p>
-                        <p><strong>Status:</strong>
-                            <span style="color: ${isCompleted ? '#28a745' : isPast ? '#ffc107' : '#17a2b8'}; font-weight: bold;">
-                                ${isCompleted ? '✅ Completed' : isPast ? '⚠️ Overdue' : '🕐 Upcoming'}
-                            </span>
-                        </p>
-                    </div>
-                `,
-                icon: 'info',
-                showCancelButton: true,
-                showConfirmButton: !isCompleted,
-                confirmButtonText: 'Mark as Done',
-                confirmButtonColor: '#2f3d57',
-                cancelButtonText: 'Close',
-                cancelButtonColor: '#6c757d'
-            }).then((result) => {
-                if (result.isConfirmed) markScheduleCompleted(event.id);
+                icon: 'success',
+                title: 'Data Loaded',
+                text: 'Showing ' + title,
+                timer: 1500,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
             });
-        }
-
-        function markScheduleCompleted(scheduleId) {
-            fetch(urlMarkCompleted, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(scheduleId)
+        }).fail(function() {
+            $('#kpiModalContent').html('<div class="alert alert-danger m-3">Failed to load data.</div>');
+        });
+    }
+      function loadSchedules() {
+        fetch('/User/GetSchedules')
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
             })
-            .then(r => r.json())
             .then(res => {
-                if (res.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Done!',
-                        text: 'Schedule marked as completed.',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                    loadSchedules();
-                } else {
-                    Swal.fire('Error', res.message, 'error');
-                }
-            });
-        }
+                if (res.success && res.data) {
+                    calendar.removeAllEventSources();
+                    calendar.getEvents().forEach(event => event.remove());
 
-        console.log("script ok");
-    </script>
-}
+                    const events = res.data.map(item => ({
+                        id: item.id,
+
+                   title: item.title,
+                        start: item.start,
+                        allDay: false,
+                        extendedProps: {
+                            description: item.description,
+                            isCompleted: item.isCompleted   // ← tambah
+                        },
+                      classNames: [item.isCompleted ? 'event-completed'
+                 : new Date(item.start) < new Date() ? 'event-overdue'
+                 : 'event-upcoming'],
+    backgroundColor: item.isCompleted ? '#1e7e34'
+                   : new Date(item.start) < new Date() ? '#6c757d'
+                   : '#2f3d57',                    // biru = upcoming
+                        borderColor: 'transparent'
+                    }));
+
+                    calendar.addEventSource(events);
+                    setTimeout(() => updateStats(), 500);
+                }
+            })
+            .catch(err => console.error('❌ Fetch error:', err));
+    }
+
+      function updateStats() {
+        const events = calendar.getEvents();
+        const now = new Date();
+        const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+        const notCompleted = events.filter(e => !e.extendedProps.isCompleted);
+
+        document.getElementById('totalSchedules').textContent = events.length;
+        document.getElementById('upcomingSchedules').textContent =
+            notCompleted.filter(e => e.start >= now && e.start <= nextWeek).length;
+        document.getElementById('completedSchedules').textContent =
+            events.filter(e => e.extendedProps.isCompleted).length;  // ← dari flag
+    }
+
+    document.getElementById('scheduleForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const payload = {
+            Title: document.getElementById('title').value,
+            ScheduledDate: document.getElementById('scheduleDate').value,
+            Description: document.getElementById('description').value,
+            SendEmail: document.getElementById('sendEmail').checked
+        };
+
+        Swal.fire({
+            title: 'Saving...',
+            text: 'Please wait',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        fetch('/User/CreateSchedule', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                // ✅ Tutup modal pakai Bootstrap
+                $('#scheduleModal').modal('hide');
+                document.getElementById('scheduleForm').reset();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Saved!',
+                    text: 'Schedule added successfully.',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                loadSchedules();
+            } else {
+                Swal.fire({ icon: 'error', title: 'Error', text: res.message });
+            }
+        })
+        .catch(err => {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to save: ' + err.message });
+        });
+    });
+
+    function openModal(date) {
+        // ✅ Pakai Bootstrap modal
+        $('#scheduleModal').modal('show');
+
+        if (date) {
+            document.getElementById('scheduleDate').value =
+                date.includes('T') ? date : date + 'T09:00';
+        }
+    }
+
+    function closeModal() {
+        // ✅ Pakai Bootstrap modal
+        $('#scheduleModal').modal('hide');
+        document.getElementById('scheduleForm').reset();
+    }
+       function showEventDetails(event) {
+        const eventDate = new Date(event.start);
+        const isCompleted = event.extendedProps.isCompleted;
+        const isPast = eventDate < new Date();
+
+        Swal.fire({
+            title: event.title,
+            html: `
+                <div style="text-align: left; padding: 10px;">
+                    <p><strong>Date:</strong> ${eventDate.toLocaleString('en-GB')}</p>
+                    <p><strong>Description:</strong> ${event.extendedProps.description || 'No description'}</p>
+                    <p><strong>Status:</strong>
+                        <span style="color: ${isCompleted ? '#28a745' : isPast ? '#ffc107' : '#17a2b8'}; font-weight: bold;">
+                            ${isCompleted ? '✅ Completed' : isPast ? '⚠️ Overdue' : '🕐 Upcoming'}
+                        </span>
+                    </p>
+                </div>
+            `,
+            icon: 'info',
+            showCancelButton: true,
+            showConfirmButton: !isCompleted,
+            showDenyButton: true,
+            confirmButtonText: 'Mark as Done',
+            confirmButtonColor: '#2f3d57',
+            denyButtonText: '🗑️ Delete',
+            denyButtonColor: '#dc3545',
+            cancelButtonText: 'Close',
+            cancelButtonColor: '#6c757d'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                markScheduleCompleted(event.id);
+            } else if (result.isDenied) {
+                deleteSchedule(event.id);
+            }
+        });
+    }
+
+
+        function deleteSchedule(scheduleId) {
+        Swal.fire({
+            title: 'Delete Schedule?',
+            text: 'This schedule will be permanently deleted and email notification will be cancelled.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Delete',
+            confirmButtonColor: '#dc3545',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/User/DeleteSchedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(scheduleId)
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Deleted!',
+                            text: 'Schedule has been deleted.',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                        loadSchedules();
+                    } else {
+                        Swal.fire('Error', res.message, 'error');
+                    }
+                });
+            }
+        });
+    }
+    function markScheduleCompleted(scheduleId) {
+        fetch('/User/MarkScheduleCompleted', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(scheduleId)
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Done!',
+                    text: 'Schedule marked as completed.',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                loadSchedules();
+            } else {
+                Swal.fire('Error', res.message, 'error');
+            }
+        });
+    }
+</script>

@@ -161,7 +161,7 @@
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
                         @if (user_level == "user")
                         {
-                            if (user_roles.HasAnyRole("requestor", "admin"))
+                            if (user_roles.HasAnyRole("requestor"))
                             {
                                 <li class="nav-item">
                                     <a href="@Url.Action("DashboardRequestor", "User")" class="nav-link @Html.IsActive("User", "DashboardRequestor")">
@@ -172,7 +172,18 @@
                                     </a>
                                 </li>
                             }
-                            if (user_roles.HasAnyRole("receiver", "admin"))
+
+
+                            @if (user_roles.HasAnyRole("admin"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("DashboardAdmin", "User")" class="nav-link @Html.IsActive("Admin", "DashboardAdmin")">
+                                        <i class="nav-icon fas fa-user-shield"></i>
+                                        <p>Dashboard Admin</p>
+                                    </a>
+                                </li>
+                            }
+                            if (user_roles.HasAnyRole("receiver"))
                             {
                                 <li class="nav-item">
                                     <a href="@Url.Action("DashboardReceiver", "User")" class="nav-link @Html.IsActive("User", "DashboardReceiver")">
@@ -486,7 +497,7 @@
                                         </a>
                                     </li>
                                 }
-                                @if (user_roles.HasAnyRole("plant_receiver", "admin"))
+                                @if (user_roles.HasAnyRole("plant_receiver", "admin", "receiver"))
                                 {
                                     <li class="nav-item">
                                         <a href="@Url.Action("PalletList", "User")" class="nav-link @Html.IsActive("User", "PalletList")">
@@ -577,7 +588,7 @@
             const $sidebar = $('.main-sidebar');
             const $img = $('#sidebar-brand-img');
 
-            const imgOpen = '@Url.Content("~/images/icon/sewhite2.svg")';
+              const imgOpen = '@Url.Content("~/images/icon/sewhite2.svg")';
             const imgClosed = '@Url.Content("~/images/icon/icon2.svg")';
 
             function updateSidebarLogo() {

@@ -121,23 +121,23 @@ namespace SEMB_ERP.Function
                     // Urutan kolom di bawah ini WAJIB sama dengan mapping di Bulk Insert
                     string query = @"
                 INSERT INTO tbl_order_template (
-                    material_type,       -- Map ke Column 1
-                    partno,              -- Map ke Column 2
-                    po_no,               -- Map ke Column 3
-                    qty,                 -- Map ke Column 4
-                    uom,                 -- Map ke Column 5
-                    revision,            -- Map ke Column 6
-                    project_name,        -- Map ke Column 7
-                    storage_requirement, -- Map ke Column 8
-                    supplier_name,       -- Map ke Column 9
-                    order_type,          -- Map ke Column 10
-                    unit_price,          -- Map ke Column 11
-                    priority_request,    -- Map ke Column 12 (Sesuai Bulk)
-                    length_mm,           -- Map ke Column 13
-                    width_mm,            -- Map ke Column 14
-                    height_mm,           -- Map ke Column 15
-                    remark,              -- Map ke Column 16
-                    gatepass,            -- Map ke Column 17
+                    material_type,       
+                    partno,              
+                    po_no,               
+                    qty,                 
+                    uom,                 
+                    revision,            
+                    project_name,        
+                    storage_requirement, 
+                    supplier_name,       
+                    order_type,         
+                    unit_price,         
+                    priority_request,    
+                    length_mm,          
+                    width_mm,            
+                    height_mm,           
+                    remark,              
+                    gatepass,            
                     status_code, 
                     created_date, 
                     created_by
@@ -889,66 +889,60 @@ namespace SEMB_ERP.Function
         }
 
         public (List<PalletProblem> data, int totalRecords) GetPalletProblems(
-       int start,
-       int length,
-       string searchValue,
-       string sortColumn,
-       string sortDirection)
+       int start, int length,
+       string searchPalletNo, string searchDate, string searchIssue,
+       string searchCreatedBy, string searchUpdatedBy,
+       string sortColumn, string sortDirection)
         {
             var palletProblems = new List<PalletProblem>();
             int totalRecords = 0;
-
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
                 conn.Open();
 
-                // Get total count
-                string countQuery = @"
-                    SELECT COUNT(*) 
-                    FROM pallet_problems 
-                    WHERE (@search IS NULL OR @search = '' OR 
-                           pallet_no LIKE '%' + @search + '%' OR 
-                           req_no LIKE '%' + @search + '%' OR 
-                           issue LIKE '%' + @search + '%' OR 
-                           created_by LIKE '%' + @search + '%')";
+                string whereClause = @"WHERE 
+            (@palletNo IS NULL OR pallet_no LIKE '%' + @palletNo + '%') AND
+            (@date IS NULL OR CONVERT(VARCHAR, date, 103) LIKE '%' + @date + '%') AND
+            (@issue IS NULL OR issue LIKE '%' + @issue + '%') AND
+            (@createdBy IS NULL OR created_by LIKE '%' + @createdBy + '%') AND
+            (@updatedBy IS NULL OR updated_by LIKE '%' + @updatedBy + '%')";
+
+                string countQuery = $"SELECT COUNT(*) FROM pallet_problems {whereClause}";
 
                 using (SqlCommand countCmd = new SqlCommand(countQuery, conn))
                 {
-                    countCmd.Parameters.AddWithValue("@search", string.IsNullOrEmpty(searchValue) ? DBNull.Value : (object)searchValue);
+                    countCmd.Parameters.AddWithValue("@palletNo", string.IsNullOrEmpty(searchPalletNo) ? DBNull.Value : (object)searchPalletNo);
+                    countCmd.Parameters.AddWithValue("@date", string.IsNullOrEmpty(searchDate) ? DBNull.Value : (object)searchDate);
+                    countCmd.Parameters.AddWithValue("@issue", string.IsNullOrEmpty(searchIssue) ? DBNull.Value : (object)searchIssue);
+                    countCmd.Parameters.AddWithValue("@createdBy", string.IsNullOrEmpty(searchCreatedBy) ? DBNull.Value : (object)searchCreatedBy);
+                    countCmd.Parameters.AddWithValue("@updatedBy", string.IsNullOrEmpty(searchUpdatedBy) ? DBNull.Value : (object)searchUpdatedBy);
                     totalRecords = (int)countCmd.ExecuteScalar();
                 }
 
-                // Get data with pagination
                 string orderBy = "created_date DESC";
                 switch (sortColumn)
                 {
-                    case "1":
-                        orderBy = $"pallet_no {sortDirection}";
-                        break;
-                    case "2":
-                        orderBy = $"req_no {sortDirection}";
-                        break;
-                    case "3":
-                        orderBy = $"date {sortDirection}";
-                        break;
+                    case "1": orderBy = $"pallet_no {sortDirection}"; break;
+                    case "2": orderBy = $"date {sortDirection}"; break;
+                    case "3": orderBy = $"issue {sortDirection}"; break;
                 }
 
                 string dataQuery = $@"
-                    SELECT * FROM (
-                        SELECT ROW_NUMBER() OVER (ORDER BY {orderBy}) AS RowNum, *
-                        FROM pallet_problems
-                        WHERE (@search IS NULL OR @search = '' OR 
-                               pallet_no LIKE '%' + @search + '%' OR 
-                               req_no LIKE '%' + @search + '%' OR 
-                               issue LIKE '%' + @search + '%' OR 
-                               created_by LIKE '%' + @search + '%')
-                    ) AS RowConstrainedResult
-                    WHERE RowNum > @start AND RowNum <= @start + @length
-                    ORDER BY RowNum";
+            SELECT * FROM (
+                SELECT ROW_NUMBER() OVER (ORDER BY {orderBy}) AS RowNum, *
+                FROM pallet_problems
+                {whereClause}
+            ) AS RowConstrainedResult
+            WHERE RowNum > @start AND RowNum <= @start + @length
+            ORDER BY RowNum";
 
                 using (SqlCommand dataCmd = new SqlCommand(dataQuery, conn))
                 {
-                    dataCmd.Parameters.AddWithValue("@search", string.IsNullOrEmpty(searchValue) ? DBNull.Value : (object)searchValue);
+                    dataCmd.Parameters.AddWithValue("@palletNo", string.IsNullOrEmpty(searchPalletNo) ? DBNull.Value : (object)searchPalletNo);
+                    dataCmd.Parameters.AddWithValue("@date", string.IsNullOrEmpty(searchDate) ? DBNull.Value : (object)searchDate);
+                    dataCmd.Parameters.AddWithValue("@issue", string.IsNullOrEmpty(searchIssue) ? DBNull.Value : (object)searchIssue);
+                    dataCmd.Parameters.AddWithValue("@createdBy", string.IsNullOrEmpty(searchCreatedBy) ? DBNull.Value : (object)searchCreatedBy);
+                    dataCmd.Parameters.AddWithValue("@updatedBy", string.IsNullOrEmpty(searchUpdatedBy) ? DBNull.Value : (object)searchUpdatedBy);
                     dataCmd.Parameters.AddWithValue("@start", start);
                     dataCmd.Parameters.AddWithValue("@length", length);
 
@@ -973,7 +967,6 @@ namespace SEMB_ERP.Function
                     }
                 }
             }
-
             return (palletProblems, totalRecords);
         }
 
@@ -1107,11 +1100,10 @@ namespace SEMB_ERP.Function
         }
 
         public (List<PalletProblem> data, int totalRecords) GetPalletList(
-      int start,
-      int length,
-      string searchValue,
-      string sortColumn,
-      string sortDirection)
+       int start, int length,
+       string searchPalletNo, string searchDate, string searchIssue,
+       string searchCreatedBy, string searchUpdatedBy,
+       string sortColumn, string sortDirection)
         {
             var palletList = new List<PalletProblem>();
             int totalRecords = 0;
@@ -1120,57 +1112,51 @@ namespace SEMB_ERP.Function
             {
                 conn.Open();
 
-                // 1. Hapus 'receiver' dari Count Query agar tidak error saat searching
-                string countQuery = @"
-            SELECT COUNT(*) 
-            FROM pallet_problems 
-            WHERE (@search IS NULL OR @search = '' OR 
-                   pallet_no LIKE '%' + @search + '%' OR 
-                   req_no LIKE '%' + @search + '%' OR 
-                   issue LIKE '%' + @search + '%')";
+                string whereClause = @"WHERE 
+            (@palletNo IS NULL OR pallet_no LIKE '%' + @palletNo + '%') AND
+            (@date IS NULL OR CONVERT(VARCHAR, date, 103) LIKE '%' + @date + '%') AND
+            (@issue IS NULL OR issue LIKE '%' + @issue + '%') AND
+            (@createdBy IS NULL OR created_by LIKE '%' + @createdBy + '%') AND
+            (@updatedBy IS NULL OR updated_by LIKE '%' + @updatedBy + '%')";
+
+                string countQuery = $"SELECT COUNT(*) FROM pallet_problems {whereClause}";
 
                 using (SqlCommand countCmd = new SqlCommand(countQuery, conn))
                 {
-                    countCmd.Parameters.AddWithValue("@search", string.IsNullOrEmpty(searchValue) ? DBNull.Value : (object)searchValue);
+                    countCmd.Parameters.AddWithValue("@palletNo", string.IsNullOrEmpty(searchPalletNo) ? DBNull.Value : (object)searchPalletNo);
+                    countCmd.Parameters.AddWithValue("@date", string.IsNullOrEmpty(searchDate) ? DBNull.Value : (object)searchDate);
+                    countCmd.Parameters.AddWithValue("@issue", string.IsNullOrEmpty(searchIssue) ? DBNull.Value : (object)searchIssue);
+                    countCmd.Parameters.AddWithValue("@createdBy", string.IsNullOrEmpty(searchCreatedBy) ? DBNull.Value : (object)searchCreatedBy);
+                    countCmd.Parameters.AddWithValue("@updatedBy", string.IsNullOrEmpty(searchUpdatedBy) ? DBNull.Value : (object)searchUpdatedBy);
                     totalRecords = (int)countCmd.ExecuteScalar();
                 }
 
-                // 2. Sesuaikan switch case berdasarkan indeks kolom di View terbaru
-                // Indeks: 0:No, 1:Pallet No, 2:Request No, 3:Date, 4:Issue, 5:Action
                 string orderBy = "created_date DESC";
                 switch (sortColumn)
                 {
-                    case "1":
-                        orderBy = $"pallet_no {sortDirection}";
-                        break;
-                    case "2":
-                        orderBy = $"req_no {sortDirection}";
-                        break;
-                    case "3":
-                        orderBy = $"date {sortDirection}";
-                        break;
-                    case "4":
-                        orderBy = $"issue {sortDirection}";
-                        break;
-                        // Case "5" dihapus karena sekarang kolom 5 adalah 'Action' yang tidak bisa di-sort
+                    case "1": orderBy = $"pallet_no {sortDirection}"; break;
+                    case "2": orderBy = $"date {sortDirection}"; break;
+                    case "3": orderBy = $"issue {sortDirection}"; break;
+                    case "4": orderBy = $"created_by {sortDirection}"; break;
+                    case "5": orderBy = $"updated_by {sortDirection}"; break;
                 }
 
-                // 3. Hapus 'receiver' dari Data Query
                 string dataQuery = $@"
             SELECT * FROM (
                 SELECT ROW_NUMBER() OVER (ORDER BY {orderBy}) AS RowNum, *
                 FROM pallet_problems
-                WHERE (@search IS NULL OR @search = '' OR 
-                       pallet_no LIKE '%' + @search + '%' OR 
-                       req_no LIKE '%' + @search + '%' OR 
-                       issue LIKE '%' + @search + '%')
+                {whereClause}
             ) AS RowConstrainedResult
             WHERE RowNum > @start AND RowNum <= @start + @length
             ORDER BY RowNum";
 
                 using (SqlCommand dataCmd = new SqlCommand(dataQuery, conn))
                 {
-                    dataCmd.Parameters.AddWithValue("@search", string.IsNullOrEmpty(searchValue) ? DBNull.Value : (object)searchValue);
+                    dataCmd.Parameters.AddWithValue("@palletNo", string.IsNullOrEmpty(searchPalletNo) ? DBNull.Value : (object)searchPalletNo);
+                    dataCmd.Parameters.AddWithValue("@date", string.IsNullOrEmpty(searchDate) ? DBNull.Value : (object)searchDate);
+                    dataCmd.Parameters.AddWithValue("@issue", string.IsNullOrEmpty(searchIssue) ? DBNull.Value : (object)searchIssue);
+                    dataCmd.Parameters.AddWithValue("@createdBy", string.IsNullOrEmpty(searchCreatedBy) ? DBNull.Value : (object)searchCreatedBy);
+                    dataCmd.Parameters.AddWithValue("@updatedBy", string.IsNullOrEmpty(searchUpdatedBy) ? DBNull.Value : (object)searchUpdatedBy);
                     dataCmd.Parameters.AddWithValue("@start", start);
                     dataCmd.Parameters.AddWithValue("@length", length);
 
@@ -1190,16 +1176,13 @@ namespace SEMB_ERP.Function
                                 updated_by = reader.IsDBNull(reader.GetOrdinal("updated_by")) ? null : reader.GetString(reader.GetOrdinal("updated_by")),
                                 updated_date = reader.IsDBNull(reader.GetOrdinal("updated_date")) ? null : (DateTime?)reader.GetDateTime(reader.GetOrdinal("updated_date")),
                                 status = reader.GetString(reader.GetOrdinal("status"))
-                                // Properti receiver di model tidak perlu diisi karena kolomnya sudah tidak ada
                             });
                         }
                     }
                 }
             }
-
             return (palletList, totalRecords);
         }
-
 
         public string UpdatePalletProblemStatus(int id, string status, string updated_by)
         {
@@ -1446,7 +1429,7 @@ OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY";
             return dt;
         }
 
-        public int CreateSchedule(string sesaId, string email, DateTime date, string title, string desc)
+        public int CreateSchedule(string sesaId, string email, DateTime date, string title, string desc, bool sendEmail)
         {
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
@@ -1458,7 +1441,7 @@ OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY";
                     cmd.Parameters.AddWithValue("@scheduled_date", date);
                     cmd.Parameters.AddWithValue("@title", title);
                     cmd.Parameters.AddWithValue("@description", (object)desc ?? DBNull.Value);
-
+                    cmd.Parameters.AddWithValue("@send_email", sendEmail); // ← tambah ini
                     conn.Open();
                     var result = cmd.ExecuteScalar();
                     return result != null ? Convert.ToInt32(result) : 0;
