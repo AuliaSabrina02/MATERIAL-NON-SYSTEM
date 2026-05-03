@@ -2178,13 +2178,13 @@ OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY";
 
                     string queryGetOrders = @"
                 SELECT DISTINCT pd.erp_id_order
-                FROM DBBLP.dbo.packagedetail pd
+                FROM dbo.packagedetail pd
                 WHERE pd.erp_id_order IS NOT NULL 
-                  AND pd.PKG_ID2 IN (
-                      SELECT PartName 
-                      FROM SEMB_DT.SEMB_ERP_QAS.dbo.tmp_bin_matrial 
-                      WHERE DoneBy = @user
-                  )";
+                AND pd.PKG_ID2 IN (
+                    SELECT PartName 
+                    FROM SEMB_ERP_QAS.dbo.tmp_bin_matrial 
+                    WHERE DoneBy = @user
+                )";
 
                     using (SqlCommand cmdGet = new SqlCommand(queryGetOrders, connBLP))
                     {
@@ -2213,6 +2213,7 @@ OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY";
                 using (SqlConnection conn = new SqlConnection(ConnectionStringBLP))
                 {
                     conn.Open();
+
                     using (SqlCommand cmd = new SqlCommand("UPDATE_BIN_V1", conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
@@ -2230,7 +2231,6 @@ OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY";
                 return "NOK;" + ex.Message;
             }
         }
-
         public string ClearBin(string sesa_id)
         {
             using (SqlConnection conn = new SqlConnection(ConnectionString))
