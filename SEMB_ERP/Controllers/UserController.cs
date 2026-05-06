@@ -740,7 +740,7 @@ namespace SEMB_ERP.Controllers
                 var palletData = _context.v_pallet_header
                     .Where(p => p.plant == "ALL" || p.plant == plant)
                     .Select(p => new { p.status_pallet }) // Ambil yang dibutuhkan saja
-                    .ToList(); // ✅ Execute query dulu
+                     .ToList(); // ✅ Execute query dulu
 
                 var summary = new
                 {
@@ -2929,7 +2929,7 @@ namespace SEMB_ERP.Controllers
                 return Ok(jsonData);
             }
             catch (Exception ex)
-            {
+             {
                 throw;
             }
         }
@@ -3724,7 +3724,7 @@ namespace SEMB_ERP.Controllers
             try
             {
                 var draw = Request.Form["draw"].FirstOrDefault();
-                var start = Request.Form["start"].FirstOrDefault();
+                 var start = Request.Form["start"].FirstOrDefault();
                 var length = Request.Form["length"].FirstOrDefault();
 
                 // Proteksi sortColumn agar tidak null

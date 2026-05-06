@@ -1,5 +1,4 @@
 ﻿@using SEMB_ERP.Models
-@*@model ViewModel*@
 @using System.Globalization;
 @using Microsoft.AspNetCore.Http;
 @using SEMB_ERP.Controllers;
@@ -26,7 +25,6 @@
         box-shadow: 1px 2px 8px 2px rgba(152,152,152,0.7);
     }
 
-    /* TAMBAH CSS HERO INI */
     #loadingSpinner {
         display: none;
         position: fixed;
@@ -36,7 +34,7 @@
         width: 100%;
         height: 100%;
         overflow: auto;
-        background-color: rgba(0, 0, 0, 0.5);
+        background-color: rgba(0,0,0,0.5);
     }
 
         #loadingSpinner img {
@@ -45,9 +43,13 @@
             left: 50%;
             transform: translate(-50%, -50%);
         }
+
+    .upload-info-box {
+        font-size: 13px;
+        color: #6c757d;
+    }
 </style>
 
-<!-- HERO -->
 <section id="hero1" class="hero bg-dark position-relative">
     <div class="inner d-flex justify-content-between align-items-center px-3 py-2 w-100">
         <div class="extract-info"></div>
@@ -67,56 +69,18 @@
                 <div class="card card-success card-outline">
                     <div class="card-header bg-success">
                         <h5 class="text-center"><i class="fa fa-plus"></i> Add New Request</h5>
-                        @*<div class="card-tools">
-                        <a href="~/Template/TemplateUploadPallet.xlsx" class="btn btn-danger mr-1">
-                        <i class="fa fa-download"></i> Template
-                        </a>
-                        <button class="btn btn-success mr-1" name="btn_filter" data-bs-toggle="modal" data-bs-target="#ImportDataModel"><i class="fas fa-file-import"></i> Upload Pallet List</button>
-                        </div>*@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="offset-1 col-10 pt-2 pb-2 pl-4 pr-4 box_form_input">
-                                <div class="text-center"><label class="badge bg-warning" style="font-size:16pt;border-radius:30px;padding:10px 20px"><i class="fas fa-upload"></i> Upload Request</label></div>
-                                <form id="form_upload_order">
-                                    <div class="row">
-                                        <div class="offset-3 col-6 mb-4" style="border-top: 2px #e3e3e3 solid"></div>
-                                        <div class="col-6 pl-4 pr-4">
-                                            <div class="form-group">
-                                                <label>Upload File Request (Excel File)<span class="text-danger">*</span></label>
-                                                @* <input class="form-control" type="file" name="file_upload" required /> *@
-                                                <div class="input-group">
-                                                    <input type="file" class="form-control" id="file_upload" name="file_upload" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" aria-label="Upload" required>
-                                                    <a href="~/Template/Template_Upload_Material.xlsx" class="btn btn-primary">
-                                                        <i class="fas fa-file-download"></i> Download Template
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-6 pl-4 pr-4">
-
-                                            <div class="form-group">
-                                                <label>Supporting Documents (Excel or PDF)</label>
-                                                <input type="file" class="form-control" name="file_support">
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="form-group text-center">
-                                        <button type="submit" class="btn btn-success mt-2" name="btn_confirm_upload">Submit Order <i class="fa fa-arrow-right"></i></button>
-                                    </div>
-                                </form>
-                            </div>
-
-                            <div class="offset-1 col-10 text-center p-2">
-                                <h4 style="color:grey">------------- OR -------------</h4>
-                            </div>
 
                             <div class="offset-1 col-10 pt-2 pb-2 pl-4 pr-4 box_form_input">
-                                <div class="text-center"><label class="badge bg-warning" style="font-size:16pt;border-radius:30px;padding:10px 20px"><i class="fas fa-file-alt"></i> Input Request</label></div>
+                                <div class="text-center">
+                                    <label class="badge bg-warning" style="font-size:16pt;border-radius:30px;padding:10px 20px">
+                                        <i class="fas fa-file-alt"></i> Input Request
+                                    </label>
+                                </div>
                                 <form id="form_add_order">
                                     <div class="row">
-                                        <div class="offset-3 col-6 mb-4" style="border-top: 2px #e3e3e3 solid"></div>
                                         <div class="col-6 pl-4 pr-4">
                                             <div class="form-group">
                                                 <label>Material Type<span class="text-danger">*</span></label>
@@ -196,19 +160,19 @@
                                                 <div class="col-4">
                                                     <div class="form-group">
                                                         <label>Length (mm)</label>
-                                                        <input class="form-control" type="number" name="length_mm" placeholder="Length (mm)" step="any" autocomplete="off" />
+                                                        <input class="form-control" type="number" name="length_mm" placeholder="Length" step="any" autocomplete="off" />
                                                     </div>
                                                 </div>
                                                 <div class="col-4">
                                                     <div class="form-group">
                                                         <label>Width (mm)</label>
-                                                        <input class="form-control" type="number" name="width_mm" placeholder="Width (mm)" step="any" autocomplete="off" />
+                                                        <input class="form-control" type="number" name="width_mm" placeholder="Width" step="any" autocomplete="off" />
                                                     </div>
                                                 </div>
                                                 <div class="col-4">
                                                     <div class="form-group">
                                                         <label>Height (mm)</label>
-                                                        <input class="form-control" type="number" name="height_mm" placeholder="Height (mm)" step="any" autocomplete="off" />
+                                                        <input class="form-control" type="number" name="height_mm" placeholder="Height" step="any" autocomplete="off" />
                                                     </div>
                                                 </div>
                                             </div>
@@ -230,12 +194,59 @@
                                                 <button type="button" class="btn btn-info mt-2" id="btn_save_template">
                                                     <i class="fas fa-file-excel"></i> Save as Template
                                                 </button>
-                                                <button type="submit" class="btn btn-success mt-2" name="btn_confirm">Submit Order <i class="fa fa-arrow-right"></i></button>
+                                                <button type="submit" class="btn btn-success mt-2" name="btn_confirm">
+                                                    Submit Order <i class="fa fa-arrow-right"></i>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
                                 </form>
                             </div>
+
+                            <div class="offset-1 col-10 text-center p-2">
+                                <h4 style="color:grey">------------- OR -------------</h4>
+                            </div>
+
+                            <div class="offset-1 col-10 pt-2 pb-2 pl-4 pr-4 box_form_input">
+                                <div class="text-center">
+                                    <label class="badge bg-warning" style="font-size:16pt;border-radius:30px;padding:10px 20px">
+                                        <i class="fas fa-upload"></i> Upload Request
+                                    </label>
+                                </div>
+                                <form id="form_upload_order">
+                                    <div class="row mt-3 align-items-end">
+                                        <div class="col-6 pl-4 pr-4">
+                                            <div class="upload-info-box mb-2">
+                                                <i class="fas fa-info-circle text-primary"></i>
+                                                <strong> Submit requests</strong> by uploading an Excel file (.xlsx).
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Upload File Request (Excel File)<span class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <input type="file" class="form-control" id="file_upload" name="file_upload"
+                                                           accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                                           aria-label="Upload" required>
+                                                    <a href="~/Template/Template_Upload_Material.xlsx" class="btn btn-primary">
+                                                        <i class="fas fa-file-download"></i> Download Template
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 pl-4 pr-4">
+                                            <div class="form-group">
+                                                <label>Supporting Documents (Excel or PDF)</label>
+                                                <input type="file" class="form-control" name="file_support">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group text-center">
+                                        <button type="submit" class="btn btn-success mt-2" name="btn_confirm_upload">
+                                            Submit Order <i class="fa fa-arrow-right"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -244,7 +255,6 @@
     </div>
 </div>
 
-<!-- MODAL REVIEW ORDER -->
 <div id="modal_temp_order" class="modal fade">
     <div class="modal-dialog" role="document" style="min-width:80%">
         <div class="modal-content">
@@ -265,265 +275,177 @@
     </div>
 </div>
 
-
 @section Scripts
 {
     <script>
-        var Table;
         var loading = "<i class='fa fa-4x fa-spinner fa-spin'></i>";
 
         $(document).ready(function () {
 
+            $("#btn_save_template").click(function (e) {
+                e.preventDefault();
 
-              $("#btn_save_template").click(function(e) {
-            e.preventDefault();
+                let materialType = $("select[name='material_type']").val();
+                let partNo       = $("input[name='partno']").val();
+                let poNo         = $("input[name='po_no']").val();
+                let qty          = $("input[name='qty']").val();
+                let uom          = $("input[name='uom']").val();
+                let revision     = $("input[name='revision']").val();
+                let projectName  = $("input[name='project_name']").val();
+                let storageReq   = $("select[name='storage_requirement']").val();
+                let supplierName = $("input[name='supplier_name']").val();
+                let orderType    = $("select[name='order_type']").val();
+                let price        = $("input[name='unit_price']").val();
+                let priority     = $("select[name='priority_request']").val();
+                let lengthMm     = $("input[name='length_mm']").val() || '0';
+                let widthMm      = $("input[name='width_mm']").val() || '0';
+                let heightMm     = $("input[name='height_mm']").val() || '0';
+                let remark       = $("textarea[name='remark']").val();
+                let gatepass     = $("input[name='gatepass']").val();
+                let pic          = $("input[name='pic']").val();
 
-            // 1. Ambil data dari form input
-            let materialType = $("select[name='material_type']").val();
-            let partNo = $("input[name='partno']").val();
-            let poNo = $("input[name='po_no']").val();
-            let qty = $("input[name='qty']").val();
-            let uom = $("input[name='uom']").val();
-            let revision = $("input[name='revision']").val();
-            let projectName = $("input[name='project_name']").val();
-            let storageReq = $("select[name='storage_requirement']").val();
-            let supplierName = $("input[name='supplier_name']").val();
-            let orderType = $("select[name='order_type']").val();
-            let price = $("input[name='unit_price']").val();
+                let missingFields = [];
+                if (!materialType)  missingFields.push("Material Type");
+                if (!partNo)        missingFields.push("Part No");
+                if (!poNo)          missingFields.push("PO No");
+                if (!qty)           missingFields.push("Qty");
+                if (!uom)           missingFields.push("UOM");
+                if (!revision)      missingFields.push("Revision");
+                if (!projectName)   missingFields.push("Project Name");
+                if (!storageReq)    missingFields.push("Storage Requirement");
+                if (!supplierName)  missingFields.push("Supplier Name");
+                if (!orderType)     missingFields.push("Order Type");
+                if (!price)         missingFields.push("Price");
+                if (!priority)      missingFields.push("Priority Request");
 
-            // Pastikan select name='priority_request' ada di HTML Anda
-            let priority = $("select[name='priority_request']").val();
-
-            let lengthMm = $("input[name='length_mm']").val() || '0';
-            let widthMm = $("input[name='width_mm']").val() || '0';
-            let heightMm = $("input[name='height_mm']").val() || '0';
-            let remark = $("textarea[name='remark']").val();
-            let gatepass = $("input[name='gatepass']").val();
-            let pic = $("input[name='pic']").val();
-
-            // 2. Validasi minimal ada satu data terisi
-                   let missingFields = [];
-
-        if (!materialType)   missingFields.push("Material Type");
-        if (!partNo)         missingFields.push("Part No");
-        if (!poNo)           missingFields.push("PO No");
-        if (!qty)            missingFields.push("Qty");
-        if (!uom)            missingFields.push("UOM");
-        if (!revision)       missingFields.push("Revision");
-        if (!projectName)    missingFields.push("Project Name");
-        if (!storageReq)     missingFields.push("Storage Requirement");
-        if (!supplierName)   missingFields.push("Supplier Name");
-        if (!orderType)      missingFields.push("Order Type");
-        if (!price)          missingFields.push("Price");
-        if (!priority)       missingFields.push("Priority Request");
-
-        if (missingFields.length > 0) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Required Fields Missing',
-                html: 'Please fill in the following fields:<br><b>' + missingFields.join(", ") + '</b>'
-            });
-            return;
-        }
-
-            Swal.fire({
-                title: 'Save as Template?',
-                text: "Current form data will be saved to database and downloaded as Excel",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#17a2b8',
-                confirmButtonText: 'Yes, Save & Download!',
-            }).then((result) => {
-                if (result.isConfirmed) {
-
-                    // 3. Siapkan data untuk dikirim ke C# Controller
-                    let formData = {
-                        material_type: materialType,
-                        partno: partNo,
-                        po_no: poNo,
-                        qty: qty,
-                        uom: uom,
-                        revision: revision,
-                        project_name: projectName,
-                        storage_requirement: storageReq,
-                        supplier_name: supplierName,
-                        order_type: orderType,
-                        unit_price: price,
-                        priority_request: priority, // Dikirim ke model.priority_request
-                        length_mm: lengthMm,
-                        width_mm: widthMm,
-                        height_mm: heightMm,
-                        remark: remark,
-                        gatepass: gatepass,
-                        pic: pic,
-                        status_code: "TEMPLATE"
-                    };
-
-                    $.ajax({
-                        url: "@Url.Action("SaveAsTemplate", "User")",
-                        type: "POST",
-                        data: formData,
-                        success: function (res) {
-                            // 4. Generate Excel dengan struktur kolom yang SINKRON (Priority di Kolom 12)
-                            let wsData = [
-                                [
-                                    'Material Type*', 'Part No*', 'PO No*', 'Qty*', 'UOM*',
-                                    'Revision*', 'Project Name*', 'Storage Requirement*', 'Supplier Name*',
-                                    'Order Type*', 'Price ($)*', 'Priority Request*', 'Length (mm)',
-                                    'Width (mm)', 'Height (mm)', 'Remark', 'Gatepass'
-                                ],
-                                [
-                                    materialType || '', partNo || '', poNo || '', qty || '', uom || '',
-                                    revision || '', projectName || '', storageReq || '', supplierName || '',
-                                    orderType || '', price || '', priority || 'Low', lengthMm || '0',
-                                    widthMm || '0', heightMm || '0', remark || '', gatepass || ''
-                                ]
-                            ];
-
-                            let wb = XLSX.utils.book_new();
-                            let ws = XLSX.utils.aoa_to_sheet(wsData);
-
-                            // Setup lebar kolom (Total 17 Kolom)
-                            ws['!cols'] = [
-                                { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 8 }, { wch: 8 },
-                                { wch: 10 }, { wch: 15 }, { wch: 20 }, { wch: 15 }, { wch: 12 },
-                                { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
-                                { wch: 20 }, { wch: 15 }
-                            ];
-
-                            XLSX.utils.book_append_sheet(wb, ws, "Order Template");
-                            let timestamp = new Date().toISOString().slice(0,19).replace(/:/g,'-');
-                            XLSX.writeFile(wb, `Order_Template_${timestamp}.xlsx`);
-
-                            Swal.fire("Success!", "Template saved and downloaded", "success");
-                        },
-                        error: function (xhr) {
-                            Swal.fire("Error!", "Failed to save template: " + xhr.responseText, "error");
-                        }
+                if (missingFields.length > 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Required Fields Missing',
+                        html: 'Please fill in the following fields:<br><b>' + missingFields.join(", ") + '</b>'
                     });
+                    return;
                 }
+
+                Swal.fire({
+                    title: 'Save as Template?',
+                    text: "Current form data will be saved and downloaded as Excel.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#17a2b8',
+                    confirmButtonText: 'Yes, Save & Download!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: "@Url.Action("SaveAsTemplate", "User")",
+                            type: "POST",
+                            data: {
+                                material_type: materialType, partno: partNo, po_no: poNo,
+                                qty: qty, uom: uom, revision: revision, project_name: projectName,
+                                storage_requirement: storageReq, supplier_name: supplierName,
+                                order_type: orderType, unit_price: price, priority_request: priority,
+                                length_mm: lengthMm, width_mm: widthMm, height_mm: heightMm,
+                                remark: remark, gatepass: gatepass, pic: pic, status_code: "TEMPLATE"
+                            },
+                            success: function () {
+                                let wsData = [
+                                    ['Material Type*','Part No*','PO No*','Qty*','UOM*','Revision*','Project Name*','Storage Requirement*','Supplier Name*','Order Type*','Price ($)*','Priority Request*','Length (mm)','Width (mm)','Height (mm)','Remark','Gatepass'],
+                                    [materialType,partNo,poNo,qty,uom,revision,projectName,storageReq,supplierName,orderType,price,priority||'Low',lengthMm,widthMm,heightMm,remark,gatepass]
+                                ];
+                                let wb = XLSX.utils.book_new();
+                                let ws = XLSX.utils.aoa_to_sheet(wsData);
+                                ws['!cols'] = [{wch:15},{wch:15},{wch:15},{wch:8},{wch:8},{wch:10},{wch:15},{wch:20},{wch:15},{wch:12},{wch:12},{wch:15},{wch:12},{wch:12},{wch:12},{wch:20},{wch:15}];
+                                XLSX.utils.book_append_sheet(wb, ws, "Order Template");
+                                XLSX.writeFile(wb, `Order_Template_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.xlsx`);
+                                Swal.fire("Success!", "Template saved and downloaded.", "success");
+                            },
+                            error: function (xhr) {
+                                Swal.fire("Error!", "Failed to save template: " + xhr.responseText, "error");
+                            }
+                        });
+                    }
+                });
             });
-        });
 
-
-          $("form#form_upload_order").submit(function (e) {
+            $("form#form_upload_order").submit(function (e) {
                 e.preventDefault();
                 $("div#body_temp_order").html("<div class='text-center'>" + loading + "</div>");
                 $("div#modal_temp_order").modal("show");
-                let formData = new FormData(this);
                 $.ajax({
                     url: "@Url.Action("UploadOrder")",
                     type: 'POST',
-                    data: formData,
+                    data: new FormData(this),
                     cache: false,
                     contentType: false,
                     processData: false,
-                    success: function(res) {
-                        $("div#body_temp_order").html(res);
-                    },
-                    error: function(xhr, status, error) {
+                    success: function (res) { $("div#body_temp_order").html(res); },
+                    error: function () {
                         Swal.fire("Error", "Upload Failed", "error");
                         $("div#modal_temp_order").modal("hide");
                     }
                 });
             });
 
-
-            $("button[name=btn_confirm_order]").click(function(){
-                let total_error = $("input[name=total_error]").val();
+            $("button[name=btn_confirm_order]").click(function () {
+                let total_error  = $("input[name=total_error]").val();
                 let total_upload = $("input[name=total_upload]").val();
                 if (total_error > 0) {
-                    swal.fire("Error!", "Cannot submit with error data!!", "error");
-                }
-                else if (total_upload == 0) {
-                    swal.fire("Error!", "No data!!", "error");
-                }
-                else {
-                    let id_upload = $("input[name=id_upload]").val();
-                    let file_support = $("form#form_upload_order").find("input[name=file_support]")[0].files[0];
-
-                    // var fileInput = $('#fileInput')[0];
-                    // var file = fileInput.files[0];
+                    Swal.fire("Error!", "Cannot submit with error data!!", "error");
+                } else if (total_upload == 0) {
+                    Swal.fire("Error!", "No data!!", "error");
+                } else {
                     let formData = new FormData();
-                    formData.append('id_upload', id_upload);
-                    formData.append('file_support', file_support);
-
+                    formData.append('id_upload', $("input[name=id_upload]").val());
+                    formData.append('file_support', $("form#form_upload_order").find("input[name=file_support]")[0].files[0]);
                     Swal.fire({
-                        title: 'Confirmation!!',
-                        text: "Are you sure ?",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#28a745',
-                        cancelButtonColor: '#dc3545',
-                        confirmButtonText: 'Yes!',
-                        cancelButtonText: 'No!',
-                        showLoaderOnConfirm: true,
+                        title: 'Confirmation!!', text: "Are you sure ?", icon: 'warning',
+                        showCancelButton: true, confirmButtonColor: '#28a745', cancelButtonColor: '#dc3545',
+                        confirmButtonText: 'Yes!', cancelButtonText: 'No!', showLoaderOnConfirm: true,
                         preConfirm: function () {
-                            return new Promise(function (resolve, reject) {
+                            return new Promise(function (resolve) {
                                 $.ajax({
                                     url: "@Url.Action("SubmitUploadOrder")",
-                                    type: 'POST',
-                                    data: formData,
-                                    processData: false, // Important: prevent jQuery from processing the data
-                                    contentType: false// Important: prevent jQuery from setting contentType
+                                    type: 'POST', data: formData, processData: false, contentType: false
                                 }).done(function (msg) {
                                     let arr = msg.split(";");
                                     if (arr[0] == "success") {
-                                        swal.fire("Success!", arr[1], "success").then(function () {
-                                            location.reload();
-                                        })
+                                        Swal.fire("Success!", arr[1], "success").then(() => location.reload());
+                                    } else {
+                                        Swal.fire("Failed!", msg, "error");
                                     }
-                                    else {
-                                        swal.fire("Failed!", msg, "error");
-                                    }
-                                })
-                            })
+                                });
+                            });
                         },
                         allowOutsideClick: () => !Swal.isLoading()
-                    })
+                    });
                 }
-            })
+            });
 
             $("form#form_add_order").submit(function (e) {
                 e.preventDefault();
                 let formData = new FormData(this);
-                // console.log(formData);
                 Swal.fire({
-                    title: 'Confirmation!!',
-                    text: "Are you sure ?",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#28a745',
-                    cancelButtonColor: '#dc3545',
-                    confirmButtonText: 'Yes!',
-                    cancelButtonText: 'No!',
-                    showLoaderOnConfirm: true,
+                    title: 'Confirmation!!', text: "Are you sure ?", icon: 'warning',
+                    showCancelButton: true, confirmButtonColor: '#28a745', cancelButtonColor: '#dc3545',
+                    confirmButtonText: 'Yes!', cancelButtonText: 'No!', showLoaderOnConfirm: true,
                     preConfirm: function () {
-                        return new Promise(function (resolve, reject) {
+                        return new Promise(function (resolve) {
                             $.ajax({
                                 url: "@Url.Action("SubmitOrder")",
-                                type: 'POST',
-                                data: formData,
-                                cache: false,
-                                contentType: false,
-                                processData: false
+                                type: 'POST', data: formData, cache: false, contentType: false, processData: false
                             }).done(function (msg) {
                                 let arr = msg.split(";");
                                 if (arr[0] == "success") {
-                                    swal.fire("Success!", arr[1], "success").then(function () {
-                                        location.reload();
-                                    })
+                                    Swal.fire("Success!", arr[1], "success").then(() => location.reload());
+                                } else {
+                                    Swal.fire("Failed!", msg, "error");
                                 }
-                                else {
-                                    swal.fire("Failed!", msg, "error");
-                                }
-                            })
-                        })
+                            });
+                        });
                     },
                     allowOutsideClick: () => !Swal.isLoading()
-                })
-            })
-        })
-
+                });
+            });
+        });
     </script>
 }

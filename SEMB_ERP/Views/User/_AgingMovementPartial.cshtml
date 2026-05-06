@@ -1,0 +1,170 @@
+﻿@{
+    string agingCategory = ViewBag.AgingCategory;
+}
+
+<style>
+    .professional-table {
+        font-size: 11px;
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        background-color: white;
+        overflow: hidden;
+        min-width: 1200px;
+        width: 100%;
+        table-layout: auto;
+    }
+
+        .professional-table thead th {
+            background-color: #2f3d57;
+            color: white;
+            font-weight: 600;
+            padding: 10px 12px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            border: none;
+        }
+
+        .professional-table tbody td {
+            padding: 8px 10px;
+            border: 1px solid #f0f0f0;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .professional-table tbody tr:hover {
+            background-color: #f0faf2 !important;
+        }
+
+    /* Hapus paksa semua indikator processing bawaan DataTables */
+    .dataTables_processing {
+        display: none !important;
+    }
+</style>
+
+<div class="modal-body p-3">
+    <div class="d-flex align-items-center justify-content-between mb-3 p-3"
+         style="background: #f8f9fa; border-radius: 10px; border: 1px solid #e9ecef;">
+        <div>
+            <span style="font-size: 11px; color: #6c757d; text-transform: uppercase; font-weight: 600;">
+                <i class="fas fa-filter me-1" style="color: #3DCD58;"></i> Aging Category
+            </span>
+            <div>
+                <span class="badge" style="background-color: #2f3d57; font-size: 12px; padding: 5px 12px; border-radius: 6px;">
+                    @agingCategory
+                </span>
+            </div>
+        </div>
+        <div class="text-end">
+            <span style="font-size: 11px; color: #6c757d; text-transform: uppercase; font-weight: 600;">
+                Total Records
+            </span>
+            <div>
+                <span class="badge" style="background-color: #3DCD58; font-size: 12px; padding: 5px 12px; border-radius: 6px;" id="aging-total-records">
+                    -
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div style="overflow-x: auto; width: 100%;">
+        <table class="table table-bordered table-striped professional-table" id="table_aging_modal">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Material Type</th>
+                    <th>Part No</th>
+                    <th>PO No</th>
+                    <th>Project Name</th>
+                    <th>Storage Req</th>
+                    <th>Supplier</th>
+                    <th>PIC</th>
+                    <th>Order Type</th>
+                    <th>Last Update</th>
+                    <th>Aging (Days)</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+
+<div class="modal-footer" style="background: #f8f9fa; border-top: 1px solid #e9ecef;">
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">
+        <i class="fas fa-times me-1"></i> Close
+    </button>
+</div>
+
+<script>
+    (function () {
+        if ($.fn.dataTable.isDataTable('#table_aging_modal')) {
+            $('#table_aging_modal').DataTable().clear().destroy();
+        }
+
+        var table = $('#table_aging_modal').DataTable({
+            processing: false, // Dimatikan agar tidak muncul teks 'Processing'
+            serverSide: true,
+            deferRender: true,
+            ajax: {
+                url: '@Url.Action("GetAgingMovementList", "User")',
+                type: 'POST',
+                data: function (d) {
+                    d.aging_category = '@agingCategory';
+                }
+            },
+            columns: [
+                {
+                    data: 'status_desc',
+                    className: 'text-center font-weight-bold',
+                    createdCell: function (td, cellData, rowData, row, col) {
+                        var status = (cellData || "").toUpperCase();
+                        $(td).css('color', 'white');
+
+                        if (status === "SUBMISSION") {
+                            $(td).css('background-color', '#ffc107').css('color', '#000');
+                        } else if (status === "RECEIVED") {
+                            $(td).css('background-color', '#28a745');
+                        } else if (status === "PUTAWAY" || status === "PARTIALLY PICKED") {
+                            $(td).css('background-color', '#17a2b8');
+                        } else if (status === "CLOSED") {
+                            $(td).css('background-color', '#6c757d');
+                        }
+                    }
+                },
+                { data: 'material_type' },
+                {
+                    data: 'partno',
+                    render: function(data) { return '<strong>' + data + '</strong>'; }
+                },
+                { data: 'po_no' },
+                { data: 'project_name' },
+                { data: 'storage_requirement' },
+                { data: 'supplier_name' },
+                { data: 'pic_name' },
+                { data: 'order_type' },
+                {
+                    data: 'last_updated',
+                    render: function (data) {
+                        return data ? data.split('T')[0] : '-';
+                    }
+                },
+                {
+                    data: 'aging',
+                    className: 'text-center'
+                }
+            ],
+            order: [[10, 'desc']],
+            pageLength: 10,
+            dom: '<"row p-2"<"col-sm-6"l><"col-sm-6"f>>rt<"row p-2"<"col-sm-6"i><"col-sm-6"p>>',
+            initComplete: function (settings, json) {
+                $('#aging-total-records').text(json.recordsTotal);
+            },
+            drawCallback: function (settings) {
+                var api = this.api();
+                $('#aging-total-records').text(api.page.info().recordsTotal);
+            }
+        });
+    })();
+</script> 

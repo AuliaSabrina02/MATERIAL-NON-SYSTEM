@@ -213,7 +213,7 @@
     }
 
     .fc .fc-event.event-overdue {
-        background-color: #6c757d !important;
+        background-color: #dc3545 !important;
     }
 </style>
 
@@ -478,7 +478,7 @@
                  : new Date(item.start) < new Date() ? 'event-overdue'
                  : 'event-upcoming'],
     backgroundColor: item.isCompleted ? '#1e7e34'
-                   : new Date(item.start) < new Date() ? '#6c757d'
+     : new Date(item.start) < new Date() ? '#dc3545'
                    : '#2f3d57',                    // biru = upcoming
                         borderColor: 'transparent'
                     }));

@@ -23,7 +23,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SEMB Material Non Stock</title>
+    <title>Material Non System</title>
 
     <link rel="icon" type="image/x-icon" href="~/favicon.ico">
 
@@ -205,9 +205,9 @@
                                     </a>
                                 </li>
                             }
-                            if (user_roles.HasAnyRole("requestor", "admin"))
+                            if (user_roles.HasAnyRole("requestor"))
                             {
-                                string checkMenuShipment = Html.IsMenuopen("User", "AddNewShipment") + Html.IsMenuopen("User", "ShipmentList");
+                                @* string checkMenuShipment = Html.IsMenuopen("User", "AddNewShipment") + Html.IsMenuopen("User", "ShipmentList");
                                 string checkActiveShipment = Html.IsActive("User", "AddNewShipment") + Html.IsMenuopen("User", "ShipmentList"); ;
                                 <li class="nav-item has-treeview @checkMenuShipment">
                                     <a href="#" class="nav-link @checkActiveShipment">
@@ -233,7 +233,7 @@
                                             </a>
                                         </li>
                                     </ul>
-                                </li>
+                                </li> *@
                                 <li class="nav-item">
                                     <a href="@Url.Action("AddNewOrder", "User")" class="nav-link @Html.IsActive("User","AddNewOrder")">
                                         <i class="nav-icon fas fa-plus"></i>
@@ -349,7 +349,7 @@
                                     </a>
                                 </li>
                             }
-                            @if (user_roles.HasAnyRole("requestor", "admin"))
+                            @if (user_roles.HasAnyRole("requestor"))
                             {
                                 <li class="nav-item">
                                     <a href="@Url.Action("MaterialReturn", "User")" class="nav-link @Html.IsActive("User", "MaterialReturn")">
@@ -407,7 +407,7 @@
                                 </li>
                             }
 
-                            if (user_roles.HasAnyRole("requestor", "receiver", "plant_receiver", "admin"))
+                            @* if (user_roles.HasAnyRole("requestor", "receiver", "plant_receiver", "admin"))
                             {
                                 <li class="nav-item">
                                     <a href="@Url.Action("RequestMonitoring", "User")" class="nav-link @Html.IsActive("User","RequestMonitoring")">
@@ -417,7 +417,7 @@
                                         </p>
                                     </a>
                                 </li>
-                            }
+                            } *@
                             @if (user_roles.HasAnyRole("requestor", "admin"))
                             {
                                 <li class="nav-item">
@@ -486,7 +486,7 @@
                                     </a>
                                 </li>
 
-                                @if (user_roles.HasAnyRole("receiver", "admin"))
+                                @if (user_roles.HasAnyRole("receiver"))
                                 {
                                     <li class="nav-item">
                                         <a href="@Url.Action("PalletProblem", "User")" class="nav-link @Html.IsActive("User", "PalletProblem")">
@@ -800,7 +800,7 @@
     .brand-link {
         padding: 10px 15px !important;
         min-height: 57px;
-        display: flex !important;
+         display: flex !important;
         align-items: center;
         justify-content: center;
     }

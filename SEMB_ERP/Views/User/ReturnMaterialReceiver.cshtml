@@ -98,9 +98,8 @@
                                     <thead class="bg-navy-custom align-middle text-center">
                                         <tr>
                                             <th>Status</th>
-                                            <th>Request No</th>
-                                            <th>PO Number</th>
                                             <th>Part Number</th>
+                                            <th>PO Number</th>
                                             <th>Qty</th>
                                             <th>UOM</th>
                                             <th>Condition</th>
@@ -128,7 +127,6 @@
                                             <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="6" /></td>
                                             <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="7" /></td>
                                             <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="8" /></td>
-                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="9" /></td>
                                             <td></td>
                                             <td></td>
                                         </tr>
@@ -199,27 +197,29 @@
                 "serverSide": true,
                 "ajax": {
                     "url": "@Url.Action("GetReturnList", "User")",
-                    "type": "POST"
+                    "type": "POST",
+                    "error": function (xhr, error, thrown) {
+                        console.log("DataTable Ajax Error:", xhr.responseText);
+                    }
                 },
                 "columns": [
                     { "data": "status_desc", "className": "align-middle text-center", "render": function (data) { return data || ""; } },
-                    { "data": "request_no", "className": "align-middle", "defaultContent": "" },
-                    { "data": "po_no", "className": "align-middle" },
                     { "data": "partno", "className": "align-middle" },
+                    { "data": "po_no", "className": "align-middle" },
                     { "data": "qty_return", "className": "text-center align-middle" },
                     { "data": "uom", "className": "text-center align-middle" },
                     { "data": "condition", "className": "text-center align-middle" },
                     { "data": "reason_return", "className": "align-middle", "defaultContent": "" },
                     { "data": "name", "className": "align-middle" },
-                        {
-            "data": "return_date",
-            "className": "text-center align-middle",
-            "render": function(data) {
-                if (!data) return "-";
-                return data.substring(0, 10);
-            }
-        },
-        {
+                    {
+                        "data": "return_date",
+                        "className": "text-center align-middle",
+                        "render": function (data) {
+                            if (!data) return "-";
+                            return data.substring(0, 10);
+                        }
+                    },
+                    {
                         "data": "image_support",
                         "className": "text-center align-middle",
                         "render": function (data) {
@@ -232,17 +232,16 @@
                     {
                         "data": null,
                         "className": "text-center align-middle",
-                                      "render": function (data, type, row) {
-            console.log("status_desc:", row.status_desc);
-            if ((row.status_desc || "").toLowerCase().trim() === "returned") {
-                return `<button class="btn btn-sm btn-secondary text-white" style="font-size:9px; padding: 2px 8px;" disabled>
-                            <i class="fas fa-lock"></i> Locked
-                        </button>`;
-            }
-            return `<button class="btn btn-sm btn-info text-white" style="font-size:9px; padding: 2px 8px;" onclick='open_receiver_modal(${JSON.stringify(row)})'>
-                        <i class="fas fa-edit"></i> Process
-                    </button>`;
-        }
+                        "render": function (data, type, row) {
+                            if ((row.status_desc || "").toLowerCase().trim() === "returned") {
+                                return `<button class="btn btn-sm btn-secondary text-white" style="font-size:9px; padding: 2px 8px;" disabled>
+                                            <i class="fas fa-lock"></i> Locked
+                                        </button>`;
+                            }
+                            return `<button class="btn btn-sm btn-info text-white" style="font-size:9px; padding: 2px 8px;" onclick='open_receiver_modal(${JSON.stringify(row)})'>
+                                        <i class="fas fa-edit"></i> Process
+                                    </button>`;
+                        }
                     }
                 ],
                 "drawCallback": function () {
@@ -259,7 +258,7 @@
                         $(rowNode).find('td:eq(0)').addClass(bg_color);
                     });
                 },
-                "order": [[9, 'desc']]
+                "order": [[8, 'desc']]
             });
 
             $('input.filter_table, select.filter_table').on('keyup change', function () {
@@ -269,15 +268,9 @@
                 }
             });
 
-            //per step
             $("#form_receiver_update").submit(function (e) {
                 e.preventDefault();
-                     var currentStatus = parseInt($("#rec_status").data("current"));
-        var selectedStatus = parseInt($("#rec_status").val());
-        if (selectedStatus > currentStatus + 1) {
-            Swal.fire("Error!", "Status can only be updated one step at a time.", "warning");
-            return;
-        }
+                var formData = $(this).serialize();
                 Swal.fire({
                     title: 'Confirmation',
                     text: "Update return status?",
@@ -290,9 +283,15 @@
                         $.ajax({
                             url: "@Url.Action("UpdateStatusByReceiver", "User")",
                             type: 'POST',
-                            data: $(this).serialize(),
+                            data: formData,
                             beforeSend: function () {
-                                Swal.fire({ title: 'Processing...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+                                Swal.fire({
+                                    title: 'Processing...',
+                                    allowOutsideClick: false,
+                                    didOpen: () => {
+                                        Swal.showLoading();
+                                    }
+                                });
                             },
                             success: function (msg) {
                                 if (msg.trim().toUpperCase() === "OK") {
@@ -302,32 +301,24 @@
                                 } else {
                                     Swal.fire("Error", msg, "error");
                                 }
+                            },
+                            error: function (xhr) {
+                                Swal.fire("Error", "Something went wrong: " + xhr.status, "error");
                             }
                         });
                     }
                 });
             });
-        });
 
-        // function open_receiver_modal(row) {
-        //     $("#rec_id_return").val(row.id_return);
-        //     $("#lbl_po").text(row.po_no);
-        //     $("#lbl_part").text(row.partno);
-        //     $("#rec_status").val(row.status);
-        //     $("#modal_receiver").modal("show");
-        // }
+        }); // end document.ready
 
-                function open_receiver_modal(row) {
+        function open_receiver_modal(row) {
             $("#rec_id_return").val(row.id_return);
             $("#lbl_po").text(row.po_no);
             $("#lbl_part").text(row.partno);
-                $("#rec_status").data("current", row.status); // ← tambah ini
 
-            // Hapus semua option dulu
-            $("#rec_status").empty();
-
-            // Tentukan status yang boleh dipilih (hanya yang lebih tinggi dari status saat ini)
             var currentStatus = parseInt(row.status);
+
             var allStatus = [
                 { val: 1, text: "Sent" },
                 { val: 2, text: "Approved" },
@@ -335,12 +326,13 @@
                 { val: 4, text: "Returned" }
             ];
 
-            // Hanya tampilkan status >= status saat ini
-            allStatus.forEach(function(s) {
-                if (s.val >= currentStatus) {
-                    var selected = s.val === currentStatus ? "selected" : "";
-                    $("#rec_status").append(`<option value="${s.val}" ${selected}>${s.text}</option>`);
-                }
+            $("#rec_status").empty();
+            allStatus.forEach(function (s) {
+                var isSelected = s.val === currentStatus ? "selected" : "";
+                var isDisabled = s.val < currentStatus || s.val > currentStatus + 1 ? "disabled" : "";
+                $("#rec_status").append(
+                    `<option value="${s.val}" ${isSelected} ${isDisabled}>${s.text}</option>`
+                );
             });
 
             $("#modal_receiver").modal("show");

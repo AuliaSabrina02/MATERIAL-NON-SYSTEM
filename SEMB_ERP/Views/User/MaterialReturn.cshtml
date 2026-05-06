@@ -106,9 +106,8 @@
                                     <thead class="bg-navy-custom align-middle text-center">
                                         <tr>
                                             <th>Status</th>
-                                            <th>Request No</th>
-                                            <th>PO Number</th>
                                             <th>Part Number</th>
+                                            <th>PO Number</th>
                                             <th>Qty</th>
                                             <th>UOM</th>
                                             <th>Condition</th>
@@ -136,7 +135,6 @@
                                             <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="6" /></td>
                                             <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="7" /></td>
                                             <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="8" /></td>
-                                            <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="9" /></td>
                                             <td></td>
                                             <td></td>
                                         </tr>
@@ -165,18 +163,20 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group mb-2">
-                                <label>Request No <span class="text-danger">*</span></label>
-                                <select name="request_no" id="request_no" class="form-control" style="width:100%;">
-                                    <option value="">-- Select Request No --</option>
+                                <label>Part Number <span class="text-danger">*</span></label>
+                                <select name="partno" id="sel_partno" class="form-control" style="width:100%;" required>
+                                    <option value="">-- Select Part Number --</option>
                                 </select>
                             </div>
                             <div class="form-group mb-2">
                                 <label>PO Number <span class="text-danger">*</span></label>
-                                <input type="text" name="po_no" id="po_no" class="form-control" required />
+                                <input type="text" name="po_no" id="po_no" class="form-control" readonly
+                                       style="background:#f8f9fa;" required />
                             </div>
                             <div class="form-group mb-2">
-                                <label>Part Number <span class="text-danger">*</span></label>
-                                <input type="text" name="partno" id="partno" class="form-control" required />
+                                <label>UOM <span class="text-danger">*</span></label>
+                                <input type="text" name="uom" id="uom" class="form-control" readonly
+                                       style="background:#f8f9fa;" />
                             </div>
                             <div class="form-group mb-2">
                                 <label>Return Quantity <span class="text-danger">*</span></label>
@@ -184,10 +184,6 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="form-group mb-2">
-                                <label>UOM <span class="text-danger">*</span></label>
-                                <input type="text" name="uom" id="uom" class="form-control" required />
-                            </div>
                             <div class="form-group mb-2">
                                 <label>Condition <span class="text-danger">*</span></label>
                                 <select name="condition" id="condition" class="form-control" required>
@@ -202,11 +198,13 @@
                             </div>
                             <div class="form-group mb-2">
                                 <label>Document Support <small class="text-muted">(PDF)</small></label>
-                                <input type="file" name="image_support_file" id="file_pdf" class="form-control" accept="application/pdf" />
+                                <input type="file" name="image_support_file" id="file_pdf"
+                                       class="form-control" accept="application/pdf" />
                                 <div id="current_file_info" class="mt-1" style="display:none;">
                                     <small class="text-muted">Current file: </small>
                                     <a id="current_file_link" href="#" target="_blank" class="text-primary">
-                                        <i class="fas fa-file-pdf text-danger"></i> <span id="current_file_name"></span>
+                                        <i class="fas fa-file-pdf text-danger"></i>
+                                        <span id="current_file_name"></span>
                                     </a>
                                 </div>
                             </div>
@@ -239,221 +237,186 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-            var table;
+              var table;
 
-            $(document).ready(function () {
+        $(document).ready(function () {
 
-                table = $("#table_return").DataTable({
-                    "orderCellsTop": true,
-                    "processing": true,
-                    "serverSide": true,
-                    "ajax": { "url": "@Url.Action("GetReturnList", "User")", "type": "POST" },
-                    "columns": [
-                        { "data": "status_desc", "className": "align-middle" },
-                        { "data": "request_no", "className": "align-middle", "defaultContent": "" },
-                        { "data": "po_no", "className": "align-middle" },
-                        { "data": "partno", "className": "align-middle" },
-                        { "data": "qty_return", "className": "text-center align-middle" },
-                        { "data": "uom", "className": "text-center align-middle" },
-                        { "data": "condition", "className": "text-center align-middle" },
-                        { "data": "reason_return", "className": "align-middle", "defaultContent": "" },
-                        { "data": "name", "className": "align-middle" },
-                               {
+            table = $("#table_return").DataTable({
+                "orderCellsTop": true,
+                "processing": true,
+                "serverSide": true,
+                "ajax": { "url": "@Url.Action("GetReturnList", "User")", "type": "POST" },
+                       "columns": [
+            { "data": "status_desc", "className": "align-middle" },
+            { "data": "partno", "className": "align-middle" },
+            { "data": "po_no", "className": "align-middle" },
+            { "data": "qty_return", "className": "text-center align-middle" },
+            { "data": "uom", "className": "text-center align-middle" },
+            { "data": "condition", "className": "text-center align-middle" },
+            { "data": "reason_return", "className": "align-middle", "defaultContent": "" },
+            { "data": "name", "className": "align-middle" },
+            {
                 "data": "return_date",
                 "className": "text-center align-middle",
-                "render": function(data) {
+                "render": function (data) {
                     if (!data) return "-";
                     return data.substring(0, 10);
                 }
             },
-                        {
-                            "data": "image_support",
-                            "className": "text-center align-middle",
-                            "render": function (data) {
-                                if (!data) return "-";
-                                var pathNew = "/Uploads/returns/" + data;
-                                var pathOld = "/Uploads/" + data;
-                                var path = data.includes("/") ? data : pathNew;
-                                return `<a href="${pathNew}" target="_blank" class="text-danger fw-bold" title="Open PDF">
-                                            <i class="fas fa-file-pdf"></i> View
-                                        </a>`;
-                            }
-                        },
-                        {
-                            "data": null,
-                            "className": "text-center align-middle",
-                            "render": function (data, type, row) {
-                                if (row.status_desc === "Sent") {
-                                    return `
-                                        <div class="action-gap">
-                                            <button class="btn btn-xs btn-warning" onclick='open_modal_edit(${JSON.stringify(row)})' title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-xs btn-danger" onclick="delete_data('${row.id_return}')" title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>`;
-                                } else {
-                                    return `<i class="fas fa-lock text-muted" title="Locked"></i>`;
-                                }
-                            }
-                        }
-                    ],
-                    "drawCallback": function () {
-                        this.api().rows().every(function () {
-                            var status = (this.data().status_desc || "").toLowerCase().trim();
-                            var bg = status === "sent" ? "bg-warning"
-                                   : status === "approved" ? "bg-success"
-                                   : status === "in transit" ? "bg-info"
-                                   : "bg-secondary";
-                            $(this.node()).find('td:eq(0)').addClass(bg);
-                        });
+            {
+                "data": "image_support",
+                "className": "text-center align-middle",
+                "render": function (data) {
+                    if (!data) return "-";
+                    var pathNew = "/Uploads/returns/" + data;
+                    return `<a href="${pathNew}" target="_blank" class="text-danger fw-bold" title="Open PDF">
+                                <i class="fas fa-file-pdf"></i> View
+                            </a>`;
+                }
+            },
+            {
+                "data": null,
+                "className": "text-center align-middle",
+                "render": function (data, type, row) {
+                    if (row.status_desc === "Sent") {
+                        return `
+                            <div class="action-gap">
+                                <button class="btn btn-xs btn-warning" onclick='open_modal_edit(${JSON.stringify(row)})' title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-xs btn-danger" onclick="delete_data('${row.id_return}')" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>`;
+                    } else {
+                        return `<i class="fas fa-lock text-muted" title="Locked"></i>`;
                     }
-                });
-
-                $('.filter_table').on('keyup change', function () {
-                    table.column($(this).attr('target')).search(this.value).draw();
-                });
-
-                $('#request_no').select2({
-                    dropdownParent: $('#modal_return'),
-                    placeholder: '-- Select or Search Request No --',
-                    allowClear: true,
-                    minimumInputLength: 0,
-                    ajax: {
-                        url: '@Url.Action("GetRequestList", "User")',
-                        type: 'POST',
-                        delay: 300,
-                        data: function (params) {
-                            return {
-                                draw: 1,
-                                start: 0,
-                                length: 50,
-                                'search[value]': params.term || ''
-                            };
-                        },
-                        processResults: function (res) {
-                            if (!res.data) return { results: [] };
-                            return {
-                                results: res.data.map(function (item) {
-                                    return { id: item.request_no, text: item.request_no };
-                                })
-                            };
-                        },
-                        cache: true
-                    }
-                });
-
-               $("#form_return").submit(function (e) {
-        e.preventDefault();
-        var requestNo = $("#request_no").val();
-        if (!requestNo) {
-            Swal.fire("Required!", "Please select a Request No.", "warning");
-            return;
-        }
-        var formData = new FormData(this);
-
-                    var fileInput = document.getElementById('file_pdf');
-                    if (fileInput.files.length > 0) {
-                        var file = fileInput.files[0];
-                        if (file.type !== 'application/pdf') {
-                            Swal.fire("Invalid File!", "Only PDF files are allowed.", "warning");
-                            return;
-                        }
-                    }
-
-                    const url = $("#id_return").val()
-                        ? "@Url.Action("UpdateReturn", "User")"
-                        : "@Url.Action("CreateReturn", "User")";
-
-                    Swal.fire({
-                        title: 'Confirmation!!',
-                        text: "Are you sure you want to save this data?",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#28a745',
-                        confirmButtonText: 'Yes, Save!',
-                        showLoaderOnConfirm: true,
-                        preConfirm: () => {
-                            return $.ajax({
-                                url: url,
-                                type: 'POST',
-                                data: formData,
-                                contentType: false,
-                                processData: false
-                            }).done(function (msg) {
-                                if (msg.trim().toUpperCase() === "OK") {
-                                    Swal.fire("Success!", "Data processed successfully.", "success");
-                                    $("#modal_return").modal("hide");
-                                    table.ajax.reload(null, false);
-                                } else {
-                                    Swal.fire("Failed!", msg, "error");
-                                }
-                            });
-                        }
+                }
+            }
+        ],
+                "drawCallback": function () {
+                    this.api().rows().every(function () {
+                        var status = (this.data().status_desc || "").toLowerCase().trim();
+                        var bg = status === "sent" ? "bg-warning"
+                               : status === "approved" ? "bg-success"
+                               : status === "in transit" ? "bg-info"
+                               : "bg-secondary";
+                        $(this.node()).find('td:eq(0)').addClass(bg);
                     });
-                });
+                }
             });
 
-                   function open_modal_add() {
-                $("#form_return")[0].reset();
-                $("#id_return").val("");
-                $('#request_no').val(null).trigger('change');
-                $("#current_file_info").hide();
-                // $("#file_pdf").attr("required", true); ← tambah ini
-                $("#modalLabel").html('<i class="fas fa-plus-circle"></i> Create Material Return');
-                $("#modal_return").modal("show");
-            }
+            $('.filter_table').on('keyup change', function () {
+                table.column($(this).attr('target')).search(this.value).draw();
+            });
 
-            function open_modal_edit(data) {
-                $("#form_return")[0].reset();
-                $("#id_return").val(data.id_return);
+            // ===== SELECT2 PART NUMBER =====
+            // Menyimpan data order yang dipilih untuk auto-fill PO & UOM
+            var selectedOrderData = {};
 
-                if (data.request_no) {
-                    var option = new Option(data.request_no, data.request_no, true, true);
-                    $('#request_no').empty().append(option).trigger('change');
-                } else {
-                    $('#request_no').val(null).trigger('change');
+            $('#sel_partno').select2({
+                dropdownParent: $('#modal_return'),
+                placeholder: '-- Select or Search Part Number --',
+                allowClear: true,
+                minimumInputLength: 0,
+                ajax: {
+                    url: '@Url.Action("GetOrderList", "User")',
+                    type: 'POST',
+                    delay: 300,
+                    data: function (params) {
+                        // Kirim parameter DataTables server-side dengan filter partno
+                        return {
+                            draw: 1,
+                            start: 0,
+                            length: 50,
+                            'search[value]': params.term || '',
+                            'columns[3][data]': 'partno',
+                            'columns[3][searchable]': true,
+                            'columns[3][search][value]': params.term || ''
+                        };
+                    },
+                    processResults: function (res) {
+                        if (!res.data) return { results: [] };
+
+                        // Deduplicate by partno, simpan semua data order
+                        var seen = {};
+                        var results = [];
+                        res.data.forEach(function (item) {
+                            if (!seen[item.partno]) {
+                                seen[item.partno] = true;
+                                results.push({
+                                    id: item.partno,
+                                    text: item.partno,
+                                    orderData: item   // simpan full data untuk auto-fill
+                                });
+                            }
+                        });
+                        return { results: results };
+                    },
+                    cache: true
+                }
+            });
+
+            // Event: saat Part Number dipilih → auto-fill PO No & UOM
+            $('#sel_partno').on('select2:select', function (e) {
+                var data = e.params.data;
+                if (data.orderData) {
+                    selectedOrderData = data.orderData;
+                    $('#po_no').val(data.orderData.po_no || '');
+                    $('#uom').val(data.orderData.uom || '');
+                }
+            });
+
+            // Event: saat Part Number di-clear
+            $('#sel_partno').on('select2:clear', function () {
+                selectedOrderData = {};
+                $('#po_no').val('');
+                $('#uom').val('');
+            });
+
+            // ===== SUBMIT FORM =====
+            $("#form_return").submit(function (e) {
+                e.preventDefault();
+
+                var partno = $("#sel_partno").val();
+                if (!partno) {
+                    Swal.fire("Required!", "Please select a Part Number.", "warning");
+                    return;
                 }
 
-                $("#po_no").val(data.po_no);
-                $("#partno").val(data.partno);
-                $("#qty_return").val(data.qty_return);
-                $("#uom").val(data.uom);
-                $("#condition").val(data.condition);
-                $("#remark").val(data.reason_return);
+                var fileInput = document.getElementById('file_pdf');
+                if (fileInput.files.length > 0) {
+                    var file = fileInput.files[0];
+                    if (file.type !== 'application/pdf') {
+                        Swal.fire("Invalid File!", "Only PDF files are allowed.", "warning");
+                        return;
+                    }
+                }
 
-                        if (data.image_support) {
-                $("#current_file_name").text(data.image_support);
-                $("#current_file_link").attr("href", "/Uploads/returns/" + data.image_support);
-                $("#current_file_info").show();
-                // $("#file_pdf").removeAttr("required"); ← tambah ini
-            } else {
-                $("#current_file_info").hide();
-                // $("#file_pdf").attr("required", true); ← tambah ini
-            }
-                $("#modalLabel").html('<i class="fas fa-edit"></i> Edit Material Return');
-                $("#modal_return").modal("show");
-            }
+                const url = $("#id_return").val()
+                    ? "@Url.Action("UpdateReturn", "User")"
+                    : "@Url.Action("CreateReturn", "User")";
 
-            function delete_data(id) {
                 Swal.fire({
-                    title: 'Are you sure?',
-                    text: "You won't be able to revert this!",
+                    title: 'Confirmation!!',
+                    text: "Are you sure you want to save this data?",
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Yes, delete it!',
+                    confirmButtonColor: '#28a745',
+                    confirmButtonText: 'Yes, Save!',
                     showLoaderOnConfirm: true,
                     preConfirm: () => {
+                        var formData = new FormData($("#form_return")[0]);
                         return $.ajax({
-                            url: "@Url.Action("DeleteReturn", "User")",
+                            url: url,
                             type: 'POST',
-                            data: { id: id }
+                            data: formData,
+                            contentType: false,
+                            processData: false
                         }).done(function (msg) {
                             if (msg.trim().toUpperCase() === "OK") {
-                                 Swal.fire("Deleted!", "Your file has been deleted.", "success");
+                                Swal.fire("Success!", "Data processed successfully.", "success");
+                                $("#modal_return").modal("hide");
                                 table.ajax.reload(null, false);
                             } else {
                                 Swal.fire("Failed!", msg, "error");
@@ -461,6 +424,79 @@
                         });
                     }
                 });
+            });
+        });
+
+        // ===== OPEN MODAL ADD =====
+        function open_modal_add() {
+            $("#form_return")[0].reset();
+            $("#id_return").val("");
+            $('#sel_partno').val(null).trigger('change');
+            $("#po_no").val('');
+            $("#uom").val('');
+            $("#current_file_info").hide();
+            $("#modalLabel").html('<i class="fas fa-plus-circle"></i> Create Material Return');
+            $("#modal_return").modal("show");
+        }
+
+        // ===== OPEN MODAL EDIT =====
+        function open_modal_edit(data) {
+            $("#form_return")[0].reset();
+            $("#id_return").val(data.id_return);
+
+            // Set partno ke Select2
+            if (data.partno) {
+                var option = new Option(data.partno, data.partno, true, true);
+                $('#sel_partno').empty().append(option).trigger('change');
+            } else {
+                $('#sel_partno').val(null).trigger('change');
             }
+
+            // Auto-fill PO No & UOM dari data yang ada
+            $("#po_no").val(data.po_no || '');
+            $("#uom").val(data.uom || '');
+            $("#qty_return").val(data.qty_return);
+            $("#condition").val(data.condition);
+            $("#remark").val(data.reason_return);
+
+            if (data.image_support) {
+                $("#current_file_name").text(data.image_support);
+                $("#current_file_link").attr("href", "/Uploads/returns/" + data.image_support);
+                $("#current_file_info").show();
+            } else {
+                $("#current_file_info").hide();
+            }
+
+            $("#modalLabel").html('<i class="fas fa-edit"></i> Edit Material Return');
+            $("#modal_return").modal("show");
+        }
+
+        // ===== DELETE =====
+        function delete_data(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!',
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    return $.ajax({
+                        url: "@Url.Action("DeleteReturn", "User")",
+                        type: 'POST',
+                        data: { id: id }
+                    }).done(function (msg) {
+                        if (msg.trim().toUpperCase() === "OK") {
+                            Swal.fire("Deleted!", "Your file has been deleted.", "success");
+                            table.ajax.reload(null, false);
+                        } else {
+                            Swal.fire("Failed!", msg, "error");
+                        }
+                    });
+                }
+            });
+        }
     </script>
 }
