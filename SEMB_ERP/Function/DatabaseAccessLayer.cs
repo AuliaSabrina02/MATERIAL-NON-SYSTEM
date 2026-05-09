@@ -707,24 +707,32 @@ namespace SEMB_ERP.Function
                     int recordsFiltered = (int)filteredCountCmd.ExecuteScalar();
 
                     string query = $@"
-                SELECT 
-                    id_return, request_no, project_name, po_no, partno, 
-                    qty_return, uom, condition, image_support, pic,
-                    ISNULL((SELECT name FROM mst_users WHERE sesa_id = material_return.pic), '') as name,
-                    CONVERT(VARCHAR, return_date, 23) as return_date,
-                    status,
-                    CASE 
-                        WHEN status = 1 THEN 'Sent'
-                        WHEN status = 2 THEN 'Approved'
-                        WHEN status = 3 THEN 'In Transit'
-                        WHEN status = 4 THEN 'Returned'
-                        ELSE 'Unknown'
-                    END as status_desc,
-                    reason_return, storage_requirement
-                FROM material_return
-                {whereClause}
-                ORDER BY return_date DESC
-                OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY";
+SELECT 
+    id_return, request_no, project_name, po_no, partno, 
+    qty_return, uom, condition, image_support, pic,
+    ISNULL((SELECT name FROM mst_users WHERE sesa_id = material_return.pic), '') as name,
+    CONVERT(VARCHAR, return_date, 23) as return_date,
+    status,
+    CASE 
+        WHEN status = 1 THEN 'Sent'
+        WHEN status = 2 THEN 'Approved'
+        WHEN status = 3 THEN 'In Transit'
+        WHEN status = 4 THEN 'Returned'
+        ELSE 'Unknown'
+    END as status_desc,
+    reason_return, storage_requirement
+FROM material_return
+{whereClause}
+ORDER BY 
+    CASE status 
+        WHEN 1 THEN 0
+        WHEN 2 THEN 1
+        WHEN 3 THEN 2
+        WHEN 4 THEN 3
+        ELSE 4 
+    END ASC,
+    return_date DESC
+OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY";
 
                     SqlCommand cmd = new SqlCommand(query, conn);
                     cmd.Parameters.AddRange(parameters.ToArray());
@@ -889,10 +897,10 @@ namespace SEMB_ERP.Function
         }
 
         public (List<PalletProblem> data, int totalRecords) GetPalletProblems(
-       int start, int length,
-       string searchPalletNo, string searchDate, string searchIssue,
-       string searchCreatedBy, string searchUpdatedBy,
-       string sortColumn, string sortDirection)
+    int start, int length,
+    string searchPalletNo, string searchDate, string searchIssue,
+    string searchCreatedBy, string searchUpdatedBy,
+    string sortColumn, string sortDirection)
         {
             var palletProblems = new List<PalletProblem>();
             int totalRecords = 0;
@@ -901,11 +909,11 @@ namespace SEMB_ERP.Function
                 conn.Open();
 
                 string whereClause = @"WHERE 
-            (@palletNo IS NULL OR pallet_no LIKE '%' + @palletNo + '%') AND
-            (@date IS NULL OR CONVERT(VARCHAR, date, 103) LIKE '%' + @date + '%') AND
-            (@issue IS NULL OR issue LIKE '%' + @issue + '%') AND
-            (@createdBy IS NULL OR created_by LIKE '%' + @createdBy + '%') AND
-            (@updatedBy IS NULL OR updated_by LIKE '%' + @updatedBy + '%')";
+      (@palletNo IS NULL OR pallet_no LIKE '%' + @palletNo + '%') AND
+      (@date IS NULL OR CONVERT(VARCHAR, date, 103) LIKE '%' + @date + '%') AND
+      (@issue IS NULL OR issue LIKE '%' + @issue + '%') AND
+      (@createdBy IS NULL OR created_by LIKE '%' + @createdBy + '%') AND
+      (@updatedBy IS NULL OR updated_by LIKE '%' + @updatedBy + '%')";
 
                 string countQuery = $"SELECT COUNT(*) FROM pallet_problems {whereClause}";
 
@@ -919,22 +927,22 @@ namespace SEMB_ERP.Function
                     totalRecords = (int)countCmd.ExecuteScalar();
                 }
 
-                string orderBy = "created_date DESC";
+                string orderBy = "CASE status WHEN 'Active' THEN 0 ELSE 1 END ASC, created_date DESC";
                 switch (sortColumn)
                 {
-                    case "1": orderBy = $"pallet_no {sortDirection}"; break;
-                    case "2": orderBy = $"date {sortDirection}"; break;
-                    case "3": orderBy = $"issue {sortDirection}"; break;
+                    case "1": orderBy = $"CASE status WHEN 'Active' THEN 0 ELSE 1 END ASC, pallet_no {sortDirection}"; break;
+                    case "2": orderBy = $"CASE status WHEN 'Active' THEN 0 ELSE 1 END ASC, date {sortDirection}"; break;
+                    case "3": orderBy = $"CASE status WHEN 'Active' THEN 0 ELSE 1 END ASC, issue {sortDirection}"; break;
                 }
 
                 string dataQuery = $@"
-            SELECT * FROM (
-                SELECT ROW_NUMBER() OVER (ORDER BY {orderBy}) AS RowNum, *
-                FROM pallet_problems
-                {whereClause}
-            ) AS RowConstrainedResult
-            WHERE RowNum > @start AND RowNum <= @start + @length
-            ORDER BY RowNum";
+      SELECT * FROM (
+          SELECT ROW_NUMBER() OVER (ORDER BY {orderBy}) AS RowNum, *
+          FROM pallet_problems
+          {whereClause}
+      ) AS RowConstrainedResult
+      WHERE RowNum > @start AND RowNum <= @start + @length
+      ORDER BY RowNum";
 
                 using (SqlCommand dataCmd = new SqlCommand(dataQuery, conn))
                 {
@@ -971,15 +979,15 @@ namespace SEMB_ERP.Function
         }
 
         public bool CheckPalletNoExists(string palletNo, int? excludeId = null)
-        {
+         {
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
                 string query = "SELECT COUNT(*) FROM pallet_problems WHERE pallet_no = @pallet_no";
 
-                if (excludeId.HasValue)
+                 if (excludeId.HasValue)
                 {
                     query += " AND id != @id";
-                }
+                 }
 
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@pallet_no", palletNo);

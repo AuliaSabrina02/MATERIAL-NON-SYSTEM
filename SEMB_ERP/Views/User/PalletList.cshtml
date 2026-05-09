@@ -96,7 +96,7 @@
                                             <th>Issue</th>
                                             <th>Created By</th>
                                             <th>Updated By</th>
-                                            @* <th>Action</th> *@
+                                            <th>Status</th>
                                         </tr>
                                         <tr>
                                             <td></td>
@@ -105,7 +105,7 @@
                                             <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="3" /></td>
                                             <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="4" /></td>
                                             <td><input type="text" class="form-control smaller-input filter_table" placeholder="Filter..." target="5" /></td>
-                                            @* <td></td> *@
+                                            <td></td>
                                         </tr>
                                     </thead>
                                     <tbody></tbody>
@@ -118,30 +118,11 @@
         </div>
     </div>
 </div>
-@* 
-<div id="modal_view_pallet" class="modal fade">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h6 class="modal-title">
-                    <i class="fas fa-eye"></i> Pallet Detail
-                </h6>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="detail_content">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div> *@
 
 @section Scripts
 {
     <script>
         var Table;
-        var loading = "<i class='fa fa-4x fa-spinner fa-spin'></i>";
 
         $(document).ready(function () {
             Table = $("#table_pallet_list").DataTable({
@@ -185,18 +166,15 @@
                             return data ? data : '-';
                         }
                     },
-                    // {
-                    //     "data": null,
-                    //     "className": "text-center align-middle",
-                    //     "orderable": false,
-                    //     "render": function (data, type, row) {
-                    //         return `
-                    //             <button class="btn btn-xs btn-info btn-view" data-id="${row.id}" title="View Detail">
-                    //                 <i class="fas fa-eye"></i>
-                    //             </button>
-                    //         `;
-                    //     }
-                    // }
+                    {
+                        "data": "status",
+                        "className": "text-center align-middle",
+                        "render": function (data) {
+                            return data === 'Active'
+                                ? '<span class="badge bg-success">Active</span>'
+                                : '<span class="badge bg-secondary">Closed</span>';
+                        }
+                    }
                 ],
                 "order": [[2, 'desc']]
             });
@@ -207,23 +185,6 @@
                     Table.column(trgt).search(this.value).draw();
                 }
             });
-
-            // $(document).on('click', '.btn-view', function () {
-            //     let id = $(this).data('id');
-            //     $("#detail_content").html("<div class='text-center'>" + loading + "</div>");
-            //     $("#modal_view_pallet").modal("show");
-            //     $.ajax({
-            //         url: "@Url.Action("GetPalletListDetail", "User")",
-            //         type: 'GET',
-            //         data: { id: id },
-            //         success: function (res) {
-            //             $("#detail_content").html(res);
-            //         },
-            //         error: function () {
-            //             $("#detail_content").html("<p class='text-danger'>Failed to load data</p>");
-            //         }
-            //     });
-            // });
         });
     </script>
 }
