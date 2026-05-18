@@ -1710,7 +1710,7 @@ namespace SEMB_ERP.Controllers
                 var departments = user.other_dept.Split(',').Select(d => d.Trim()).ToList();
 
                 var mstData = (from StoragebinList in _context.v_order_sbin
-                               where user_roles.Contains("receiver") || user_roles.Contains("admin") || (user_roles.Contains("requestor") && departments.Contains(StoragebinList.pic_department))
+                               where user_roles.Contains("receiver") || user_roles.Contains("admin") || user_roles.Contains("requestor")
                                select
                                    new
                                    {
@@ -1819,7 +1819,7 @@ namespace SEMB_ERP.Controllers
                         else if (fieldName == "pic_name")
                         {
                             mstData = mstData.Where(m => m.pic_name.Contains(searchColVal));
-                        }
+                         }
                         else if (fieldName == "order_type")
                         {
                             mstData = mstData.Where(m => m.order_type.Contains(searchColVal));
@@ -1846,8 +1846,8 @@ namespace SEMB_ERP.Controllers
         }
 
         [HttpGet]
-        public IActionResult ExportStoragebinList()
-        {
+         public IActionResult ExportStoragebinList()
+         {
             using (XLWorkbook wb = new XLWorkbook())
             {
 
@@ -4551,11 +4551,12 @@ namespace SEMB_ERP.Controllers
                     picking = pickingQuery.Count(x => x.status_desc.Trim().ToLower() == "picking"),
                     consolidation = pickingQuery.Count(x => x.status_desc.Trim().ToLower() == "consolidation"),
                     transferring = pickingQuery.Count(x => x.status_desc.Trim().ToLower() == "transferring"),
-                    supplied = pickingQuery.Count(x => x.status_desc.Trim().ToLower() == "supplied")
+                    supplied = pickingQuery.Count(x => x.status_desc.Trim().ToLower() == "supplied"),
+                    donePicking = pickingQuery.Count(x => x.status_desc.Trim().ToLower() == "done picking")  // tambah ini
                 };
 
                 // ===== RECENT PICKING =====
-                var recentPicking = pickingQuery
+                 var recentPicking = pickingQuery
                     .OrderByDescending(r => r.record_date)
                     .Take(5)
                     .Select(r => new {

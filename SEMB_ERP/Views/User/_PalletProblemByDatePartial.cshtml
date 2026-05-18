@@ -77,7 +77,7 @@
                 <tr>
                     <th>No.</th>
                     <th>Pallet No</th>
-                    <th>Request No</th>
+                    @* <th>Request No</th> *@
                     <th>Date</th>
                     <th>Issue</th>
                     <th>Status</th>
@@ -102,7 +102,7 @@
                         <tr>
                             <td class="text-center">@no</td>
                             <td><strong>@(item.pallet_no ?? "-")</strong></td>
-                            <td>@(item.req_no ?? "-")</td>
+                            @* <td>@(item.req_no ?? "-")</td> *@
                             <td>@(item.date.ToString("dd-MM-yyyy"))</td>
                             <td>@(item.issue ?? "-")</td>
                             <td class="text-center @statusClass">@(item.status ?? "-")</td>

@@ -619,15 +619,15 @@
         }
 
         function filterRequestByPickingStatus(statusName) {
-            const statusMapping = {
-                'Request': 'REQUEST',
-                'Start Picking': 'START PICKING',
-                'Picking': 'PICKING',
-                'Consolidation': 'CONSOLIDATION',
-                'Transfering': 'TRANSFERING',
-                'Supplied': 'SUPPLIED'
-            };
-
+                   const statusMapping = {
+            'Request': 'REQUEST',
+            'Start Picking': 'START PICKING',
+            'Picking': 'PICKING',
+            'Consolidation': 'CONSOLIDATION',
+            'Transfering': 'TRANSFERING',
+            'Supplied': 'SUPPLIED',
+            'Done Picking': 'DONE PICKING'  // tambah ini
+        };
             const statusValue = statusMapping[statusName] || statusName;
             console.log('Loading requests with status:', statusValue);
 
@@ -1365,7 +1365,8 @@
                 'PICKING': '#ffc107',
                 'CONSOLIDATION': '#fd7e14',
                 'TRANSFERING': '#007bff',
-                'SUPPLIED': '#28a745'
+                'SUPPLIED': '#28a745',
+                 'DONE PICKING': '#20c997'
             };
 
             const pieChartData = data.pickingStatusStats.map(item => {

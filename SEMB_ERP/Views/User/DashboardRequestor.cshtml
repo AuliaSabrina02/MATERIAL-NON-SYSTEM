@@ -800,10 +800,11 @@
                     data: [
                         { name: 'Request',       y: data.pickingSummary?.request       || 0, color: '#6c757d' },
                         { name: 'Start Picking', y: data.pickingSummary?.startPicking  || 0, color: '#17a2b8' },
-                        { name: 'Picking',       y: data.pickingSummary?.picking       || 0, color: '#ffc107' },
+                        // { name: 'Picking',       y: data.pickingSummary?.picking       || 0, color: '#ffc107' },
                         { name: 'Consolidation', y: data.pickingSummary?.consolidation || 0, color: '#fd7e14' },
-                        { name: 'Transferring',  y: data.pickingSummary?.transferring  || 0, color: '#007bff' },
-                        { name: 'Supplied',      y: data.pickingSummary?.supplied      || 0, color: '#28a745' }
+                        { name: 'Transfering',  y: data.pickingSummary?.transferring  || 0, color: '#007bff' },
+                        { name: 'Supplied',      y: data.pickingSummary?.supplied      || 0, color: '#28a745' },
+                        { name: 'Done Picking', y: data.pickingSummary?.donePicking || 0, color: '#20c997' }
                     ]
                 }]
             });
@@ -908,7 +909,8 @@
                 'Picking': 'PICKING',
                 'Consolidation': 'CONSOLIDATION',
                 'Transferring': 'TRANSFERRING',
-                'Supplied': 'SUPPLIED'
+                'Supplied': 'SUPPLIED',
+                'Done Picking': 'DONE PICKING'
             };
             const statusValue = statusMapping[statusName] || statusName;
 
