@@ -1359,15 +1359,16 @@
             ];
 
             // === DATA UNTUK PIE CHART ===
-            const pickingColors = {
-                'REQUEST': '#6c757d',
-                'START PICKING': '#17a2b8',
-                'PICKING': '#ffc107',
-                'CONSOLIDATION': '#fd7e14',
-                'TRANSFERING': '#007bff',
-                'SUPPLIED': '#28a745',
-                 'DONE PICKING': '#20c997'
-            };
+                const pickingColors = {
+            'REQUEST': '#6c757d',
+            'START PICKING': '#17a2b8',
+            'PICKING': '#ffc107',
+            'CONSOLIDATION': '#fd7e14',
+            'TRANSFERING': '#007bff',
+            'SUPPLIED': '#28a745',
+            'DONE PICKING': '#20c997',
+            'PLANT RECEIVED': '#e83e8c'
+        };
 
             const pieChartData = data.pickingStatusStats.map(item => {
                 let formattedName = item.label.toLowerCase().split(' ').map(word =>

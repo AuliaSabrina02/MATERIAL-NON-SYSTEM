@@ -2161,10 +2161,10 @@ namespace SEMB_ERP.Controllers
                 // --- 3. DATA UNTUK PIE CHART ---
                 var pickingStatusStats = _context.v_request
                     .GroupBy(r => r.status_desc)
-                    .Select(g => new {
-                        Label = g.Key.ToUpper(),
-                        Count = g.Count()
-                    }).ToList();
+                  .Select(g => new {
+                      label = g.Key.ToUpper(),
+                      count = g.Count()
+                  }).ToList();
 
                 var result = new
                 {
@@ -4524,7 +4524,6 @@ namespace SEMB_ERP.Controllers
                 return Content(result, "text/plain");
             }
         }
-
         [HttpPost]
         public IActionResult GetRequestorSummary()
         {
@@ -4550,13 +4549,14 @@ namespace SEMB_ERP.Controllers
                     startPicking = pickingQuery.Count(x => x.status_desc.Trim().ToLower() == "start picking"),
                     picking = pickingQuery.Count(x => x.status_desc.Trim().ToLower() == "picking"),
                     consolidation = pickingQuery.Count(x => x.status_desc.Trim().ToLower() == "consolidation"),
-                    transferring = pickingQuery.Count(x => x.status_desc.Trim().ToLower() == "transferring"),
+                    transferring = pickingQuery.Count(x => x.status_desc.Trim().ToLower() == "transfering"),
+                    plantReceived = pickingQuery.Count(x => x.status_desc.Trim().ToLower() == "plant received"), // ← tambah ini
                     supplied = pickingQuery.Count(x => x.status_desc.Trim().ToLower() == "supplied"),
-                    donePicking = pickingQuery.Count(x => x.status_desc.Trim().ToLower() == "done picking")  // tambah ini
+                    donePicking = pickingQuery.Count(x => x.status_desc.Trim().ToLower() == "done picking")
                 };
 
                 // ===== RECENT PICKING =====
-                 var recentPicking = pickingQuery
+                var recentPicking = pickingQuery
                     .OrderByDescending(r => r.record_date)
                     .Take(5)
                     .Select(r => new {
