@@ -4094,27 +4094,31 @@ namespace SEMB_ERP.Controllers
             try
             {
                 System.Diagnostics.Debug.WriteLine("=== GetSchedules CALLED ===");
-
                 string fullIdentity = User.Identity?.Name ?? "";
                 string sesaId = fullIdentity.Contains("\\")
                     ? fullIdentity.Split('\\')[1]
                     : fullIdentity;
-
                 if (string.IsNullOrEmpty(sesaId))
                 {
                     sesaId = User.FindFirstValue("sesa_id")
                         ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
                 }
-
-                System.Diagnostics.Debug.WriteLine($"SESA ID: {sesaId}");
-
                 if (string.IsNullOrEmpty(sesaId))
                     return Json(new { success = false, message = "User not authenticated" });
 
-                DatabaseAccessLayer dal = new DatabaseAccessLayer();
-                var schedules = dal.GetUserSchedules(sesaId);
+                // ← TAMBAH INI: cek role user
+                List<string> userRoles = User.Claims
+                    .Where(c => c.Type == "semb_erp_role")
+                    .Select(c => c.Value)
+                    .ToList();
+                bool isAdmin = userRoles.Contains("admin");
 
-                System.Diagnostics.Debug.WriteLine($"Rows fetched: {schedules.Rows.Count}");
+                DatabaseAccessLayer dal = new DatabaseAccessLayer();
+
+                // ← UBAH INI: kalau Admin ambil semua, kalau bukan ambil milik sendiri
+                var schedules = isAdmin
+                    ? dal.GetAllSchedules()
+                    : dal.GetUserSchedules(sesaId);
 
                 var data = new List<object>();
                 foreach (DataRow row in schedules.Rows)
@@ -4122,73 +4126,48 @@ namespace SEMB_ERP.Controllers
                     var scheduledDate = Convert.ToDateTime(row["scheduled_date"]);
                     var formattedDate = scheduledDate.ToString("yyyy-MM-ddTHH:mm:ss",
                         System.Globalization.CultureInfo.InvariantCulture);
-
-                    System.Diagnostics.Debug.WriteLine($"Schedule: {row["title"]} at {formattedDate}");
-
                     data.Add(new
                     {
                         id = Convert.ToInt32(row["id"]),
                         title = row["title"].ToString(),
                         start = formattedDate,
                         description = row["description"]?.ToString() ?? "",
-                        isCompleted = Convert.ToBoolean(row["is_completed"])  // ← tambah ini
+                        isCompleted = Convert.ToBoolean(row["is_completed"])
                     });
                 }
-
-                System.Diagnostics.Debug.WriteLine($"Total mapped: {data.Count}");
                 return Json(new { success = true, data = data });
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"ERROR: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"STACK: {ex.StackTrace}");
                 return Json(new { success = false, message = ex.Message });
             }
         }
         [HttpGet]
         public IActionResult GetScheduleDetailsPartial(string category)
         {
-            // 1. Ambil SESA ID
-            string fullIdentity = User.Identity?.Name ?? "";
-            string sesaId = fullIdentity.Contains("\\") ? fullIdentity.Split('\\')[1] : fullIdentity;
-            if (string.IsNullOrEmpty(sesaId))
-            {
-                sesaId = User.FindFirstValue("sesa_id") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
-            }
-
             try
             {
-                var list = new List<dynamic>(); // Ganti DataTable jadi List
-
+                var list = new List<dynamic>();
                 using (SqlConnection conn = new SqlConnection(_context.Database.GetDbConnection().ConnectionString))
                 {
                     string sql = @"SELECT [id], [scheduled_date], [title], [description], [is_completed]
-                           FROM [dbo].[scheduled_requests]
-                           WHERE [sesa_id] = @sesa_id";
+                     FROM [dbo].[scheduled_requests]
+                     WHERE 1=1";
 
                     if (category == "UPCOMING")
-                    {
                         sql += " AND is_completed = 0 AND scheduled_date >= GETDATE() ORDER BY scheduled_date ASC";
-                    }
                     else if (category == "COMPLETED")
-                    {
                         sql += " AND is_completed = 1 ORDER BY scheduled_date DESC";
-                    }
                     else
-                    {
                         sql += " ORDER BY scheduled_date DESC";
-                    }
 
                     using (SqlCommand cmd = new SqlCommand(sql, conn))
                     {
-                        cmd.Parameters.AddWithValue("@sesa_id", sesaId);
                         if (conn.State == ConnectionState.Closed) conn.Open();
-
                         using (SqlDataReader reader = cmd.ExecuteReader())
                         {
                             while (reader.Read())
                             {
-                                // Kita bungkus ke dynamic object supaya sinkron sama Model di UI kamu
                                 list.Add(new
                                 {
                                     id = reader["id"],
@@ -4201,9 +4180,7 @@ namespace SEMB_ERP.Controllers
                         }
                     }
                 }
-
                 ViewBag.Category = category;
-                // Sekarang ini sudah jadi IEnumerable<dynamic>, UI kamu bakal aman
                 return PartialView("_ScheduleDetailsTable", list);
             }
             catch (Exception ex)
@@ -4212,7 +4189,6 @@ namespace SEMB_ERP.Controllers
                 return Content("<div class='alert alert-danger'>Error: " + ex.Message + "</div>");
             }
         }
-
         //[HttpPost]
         //public IActionResult CreateSchedule([FromBody] ScheduledRequest model)
         //{

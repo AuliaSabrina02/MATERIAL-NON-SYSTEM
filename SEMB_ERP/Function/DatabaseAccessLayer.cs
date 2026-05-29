@@ -1437,6 +1437,22 @@ OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY";
             return dt;
         }
 
+
+        public DataTable GetAllSchedules()
+        {
+            DataTable dt = new DataTable();
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand("dbo.get_user_schedules", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@sesa_id", DBNull.Value);
+                    SqlDataAdapter da = new SqlDataAdapter(cmd);
+                    da.Fill(dt);
+                }
+            }
+            return dt;
+        }
         public int CreateSchedule(string sesaId, string email, DateTime date, string title, string desc, bool sendEmail)
         {
             using (SqlConnection conn = new SqlConnection(ConnectionString))
