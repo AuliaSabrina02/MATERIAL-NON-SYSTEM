@@ -757,7 +757,7 @@
                         return `<i class="text-danger fas fa-exclamation-circle" style="font-size:14pt" data-bs-toggle="tooltip" data-bs-placement="right" title="Please fill in dimension!!"></i>`;
                     }
                     else {
-                        return `<button class="btn btn-sm btn-warning " onclick="box_list(${data})"><i class="fas fa-clipboard"></i></button>`;
+        return `<button class="btn btn-sm btn-warning" onclick="box_list(${data}, '${row.partno}')"><i class="fas fa-clipboard"></i></button>`;
                     }
                 }
             },
@@ -927,12 +927,13 @@
                 }
             });
 
-            $("button[name=start_gr]").click(function () {
-                if (id_order_array.length > 0) {
-                    let id_order_string = id_order_array.join(";");
-                    $("div#body_gr").html(loading);
-                    $("div#modal_gr").modal("show");
-                    $.ajax({
+               $("button[name=start_gr]").click(function () {
+        if (id_order_array.length > 0) {
+            let id_order_string = id_order_array.join(";");
+            $("div#body_gr").html(""); // ← TAMBAH INI: clear dulu
+            $("div#body_gr").html(loading);
+            $("div#modal_gr").modal("show");
+            $.ajax({
                         type: "GET",
                         url: "@Url.Action("GetDataGR")",
                         data: {
@@ -966,6 +967,81 @@
             //         swal.fire("Error", err, "error");
             //     })
             // })
+                    $("div#modal_gr").on('hidden.bs.modal', function () {
+            $("div#body_gr").html("");
+            id_order_array = [];
+            $("span#total_gr_line").html("(0 Lines)");
+            $("#table_order").DataTable().ajax.reload(null, false);
+        });
+
+             $(document).on("click", "button[name=process_gr]", function () {
+                 console.log("id_order_array saat klik GR:", id_order_array);
+            let id_order_spq_array = [];
+            let errorFound = false;
+            $("table#table_gr tbody tr").each(function (i) {
+                let id_order = $(this).data("id");
+                let gr_qty = $(this).find("td.gr_qty").html();
+                let spq = $(this).find("td > input.qty_perbox").val();
+                if (parseFloat(spq) < 0 || parseFloat(spq) > parseFloat(gr_qty) || spq == "") {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid SPQ Detected (Line ' + (i + 1) + ')',
+                        text: 'Please enter a value greater than 0 and below or equal to request qty.',
+                    });
+                    errorFound = true;
+                    return false;
+                }
+                id_order_spq_array.push(id_order + "," + spq);
+            });
+            if (!errorFound) {
+                Swal.fire({
+                    title: 'Confirmation!',
+                    text: "Are you sure ?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#dc3545',
+                    confirmButtonText: 'Yes!',
+                    cancelButtonText: 'No!',
+                    showLoaderOnConfirm: true,
+                    preConfirm: function () {
+                        return new Promise(function (resolve, reject) {
+                                   let id_order_spq_string = id_order_spq_array.join(";");
+        console.log("STRING DIKIRIM:", id_order_spq_string);
+                            $.ajax({
+                                type: "POST",
+                                url: "@Url.Action("SubmitGR")",
+                                data: { id_order_spq_string: id_order_spq_string }
+                            }).done(function (res) {
+                                let arr = res.split(";");
+                                if (arr[0] == "OK") {
+                                       swal.fire("Success", "Success GR!", "success").then(function () {
+        id_order_array = [];
+        $("span#total_gr_line").html("(0 Lines)");
+        $("#table_order").DataTable().ajax.reload(null, false);
+        $("div#modal_gr").modal("hide");
+                                        $("div#body_gr_done").html(loading);
+                                        $("div#modal_gr_done").modal("show");
+                                        $.ajax({
+                                            type: "GET",
+                                            url: "@Url.Action("GetGRDetail")",
+                                            data: { id_gr: arr[1] }
+                                        }).done(function (res) {
+                                            $("div#body_gr_done").html(res);
+                                        }).fail(function (err) {
+                                            swal.fire("Error", err, "error");
+                                        });
+                                    });
+                                }
+                            }).fail(function (err) {
+                                swal.fire("Error!", err, "error");
+                            });
+                        });
+                    },
+                    allowOutsideClick: () => !Swal.isLoading()
+                });
+            }
+        });
         })
 
         function select_id(id_order) {
@@ -1012,14 +1088,20 @@
             $("#current_id_order").val(id_order);
 
             // Cek apakah user yang login adalah PIC order
-                 let isReceiver = user_roles.includes("receiver");
+                       let isReceiver = user_roles.includes("receiver");
         let isPic = pic_sesa_id.toUpperCase() === sesa_id.toUpperCase();
+        let isAdmin = user_roles.includes("admin");
         let canComment = isReceiver || isPic;
 
         if (canComment) {
             $("#message_input").prop("disabled", false);
             $("#message_input").attr("placeholder", "Type Something...");
             $("#btn_send_msg").show();
+            $("#not_allowed_msg").hide();
+        } else if (isAdmin) {
+            $("#message_input").prop("disabled", true);
+            $("#message_input").attr("placeholder", "");
+            $("#btn_send_msg").hide();
             $("#not_allowed_msg").hide();
         } else {
             $("#message_input").prop("disabled", true);
@@ -1366,7 +1448,7 @@
             })
         }
 
-        function box_list(orderId){
+        function box_list(orderId, partno){
             $("#modal_box_info").data("orderId", orderId);
             if ($.fn.DataTable.isDataTable('#tbl_box_list')) {
                 $('#tbl_box_list').DataTable().clear().destroy();
@@ -1377,7 +1459,8 @@
                 "ajax": {
                     "url": '@Url.Action("GetBoxList")',
                     "data": {
-                        orderId: orderId
+                        orderId: orderId,
+                          partno: partno
                     },
                     "dataSrc": function (json) {
                         console.log("AJAX response:", json);

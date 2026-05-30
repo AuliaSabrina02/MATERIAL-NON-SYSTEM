@@ -143,7 +143,9 @@ namespace SEMB_ERP.Controllers
             string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             ViewBag.sesa_id = sesa_id;
             ViewBag.listStatus = new List<string> { "Sent", "Approved", "In Transit", "Returned" };
-
+            var db = new DatabaseAccessLayer();
+            var userRoles = db.GetUserRole(sesa_id);
+            ViewBag.userRoles = userRoles.Select(r => r.role).ToList();
             return View();
         }
 

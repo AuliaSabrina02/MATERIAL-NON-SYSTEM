@@ -190,6 +190,7 @@
 @section Scripts {
     <script>
         var table;
+        var user_roles = @Html.Raw(Json.Serialize(ViewBag.userRoles ?? new List<string>()));
         $(document).ready(function () {
             table = $("#table_receiver").DataTable({
                 "orderCellsTop": true,
@@ -238,9 +239,14 @@
                                             <i class="fas fa-lock"></i> Locked
                                         </button>`;
                             }
-                            return `<button class="btn btn-sm btn-info text-white" style="font-size:9px; padding: 2px 8px;" onclick='open_receiver_modal(${JSON.stringify(row)})'>
-                                        <i class="fas fa-edit"></i> Process
-                                    </button>`;
+                                  if (user_roles.includes("admin") && !user_roles.includes("receiver")) {
+            return `<button class="btn btn-sm btn-secondary text-white" style="font-size:9px; padding: 2px 8px;" disabled>
+                        <i class="fas fa-eye"></i> View Only
+                    </button>`;
+        }
+        return `<button class="btn btn-sm btn-info text-white" style="font-size:9px; padding: 2px 8px;" onclick='open_receiver_modal(${JSON.stringify(row)})'>
+                    <i class="fas fa-edit"></i> Process
+                </button>`;
                         }
                     }
                 ],
