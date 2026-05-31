@@ -178,6 +178,12 @@
                                 <input type="text" name="uom" id="uom" class="form-control" readonly
                                        style="background:#f8f9fa;" />
                             </div>
+                            <!-- TAMBAHAN: Request Qty -->
+                            <div class="form-group mb-2">
+                                <label>Request Qty</label>
+                                <input type="text" id="request_qty" class="form-control" readonly
+                                       style="background:#f8f9fa;" />
+                            </div>
                             <div class="form-group mb-2">
                                 <label>Return Quantity <span class="text-danger">*</span></label>
                                 <input type="number" name="qty_return" id="qty_return" class="form-control" required />
@@ -237,7 +243,7 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-              var table;
+        var table;
 
         $(document).ready(function () {
 
@@ -246,54 +252,54 @@
                 "processing": true,
                 "serverSide": true,
                 "ajax": { "url": "@Url.Action("GetReturnList", "User")", "type": "POST" },
-                       "columns": [
-            { "data": "status_desc", "className": "align-middle" },
-            { "data": "partno", "className": "align-middle" },
-            { "data": "po_no", "className": "align-middle" },
-            { "data": "qty_return", "className": "text-center align-middle" },
-            { "data": "uom", "className": "text-center align-middle" },
-            { "data": "condition", "className": "text-center align-middle" },
-            { "data": "reason_return", "className": "align-middle", "defaultContent": "" },
-            { "data": "name", "className": "align-middle" },
-            {
-                "data": "return_date",
-                "className": "text-center align-middle",
-                "render": function (data) {
-                    if (!data) return "-";
-                    return data.substring(0, 10);
-                }
-            },
-            {
-                "data": "image_support",
-                "className": "text-center align-middle",
-                "render": function (data) {
-                    if (!data) return "-";
-                    var pathNew = "/Uploads/returns/" + data;
-                    return `<a href="${pathNew}" target="_blank" class="text-danger fw-bold" title="Open PDF">
-                                <i class="fas fa-file-pdf"></i> View
-                            </a>`;
-                }
-            },
-            {
-                "data": null,
-                "className": "text-center align-middle",
-                "render": function (data, type, row) {
-                    if (row.status_desc === "Sent") {
-                        return `
-                            <div class="action-gap">
-                                <button class="btn btn-xs btn-warning" onclick='open_modal_edit(${JSON.stringify(row)})' title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-xs btn-danger" onclick="delete_data('${row.id_return}')" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>`;
-                    } else {
-                        return `<i class="fas fa-lock text-muted" title="Locked"></i>`;
+                "columns": [
+                    { "data": "status_desc", "className": "align-middle" },
+                    { "data": "partno", "className": "align-middle" },
+                    { "data": "po_no", "className": "align-middle" },
+                    { "data": "qty_return", "className": "text-center align-middle" },
+                    { "data": "uom", "className": "text-center align-middle" },
+                    { "data": "condition", "className": "text-center align-middle" },
+                    { "data": "reason_return", "className": "align-middle", "defaultContent": "" },
+                    { "data": "name", "className": "align-middle" },
+                    {
+                        "data": "return_date",
+                        "className": "text-center align-middle",
+                        "render": function (data) {
+                            if (!data) return "-";
+                            return data.substring(0, 10);
+                        }
+                    },
+                    {
+                        "data": "image_support",
+                        "className": "text-center align-middle",
+                        "render": function (data) {
+                            if (!data) return "-";
+                            var pathNew = "/Uploads/returns/" + data;
+                            return `<a href="${pathNew}" target="_blank" class="text-danger fw-bold" title="Open PDF">
+                                        <i class="fas fa-file-pdf"></i> View
+                                    </a>`;
+                        }
+                    },
+                    {
+                        "data": null,
+                        "className": "text-center align-middle",
+                        "render": function (data, type, row) {
+                            if (row.status_desc === "Sent") {
+                                return `
+                                    <div class="action-gap">
+                                        <button class="btn btn-xs btn-warning" onclick='open_modal_edit(${JSON.stringify(row)})' title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-xs btn-danger" onclick="delete_data('${row.id_return}')" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>`;
+                            } else {
+                                return `<i class="fas fa-lock text-muted" title="Locked"></i>`;
+                            }
+                        }
                     }
-                }
-            }
-        ],
+                ],
                 "drawCallback": function () {
                     this.api().rows().every(function () {
                         var status = (this.data().status_desc || "").toLowerCase().trim();
@@ -310,8 +316,6 @@
                 table.column($(this).attr('target')).search(this.value).draw();
             });
 
-            // ===== SELECT2 PART NUMBER =====
-            // Menyimpan data order yang dipilih untuk auto-fill PO & UOM
             var selectedOrderData = {};
 
             $('#sel_partno').select2({
@@ -323,22 +327,23 @@
                     url: '@Url.Action("GetOrderList", "User")',
                     type: 'POST',
                     delay: 300,
-                    data: function (params) {
-                        // Kirim parameter DataTables server-side dengan filter partno
-                        return {
-                            draw: 1,
-                            start: 0,
-                            length: 50,
-                            'search[value]': params.term || '',
-                            'columns[3][data]': 'partno',
-                            'columns[3][searchable]': true,
-                            'columns[3][search][value]': params.term || ''
-                        };
-                    },
+                           data: function (params) {
+            return {
+                draw: 1,
+                start: 0,
+                length: 50,
+                'search[value]': params.term || '',
+                'columns[3][data]': 'partno',
+                'columns[3][searchable]': true,
+                'columns[3][search][value]': params.term || '',
+                'columns[0][data]': 'status_desc',
+                'columns[0][searchable]': true,
+                'columns[0][search][value]': 'Closed', //closed
+                'sesa_id_filter': '@sesa_id'
+            };
+        },
                     processResults: function (res) {
                         if (!res.data) return { results: [] };
-
-                        // Deduplicate by partno, simpan semua data order
                         var seen = {};
                         var results = [];
                         res.data.forEach(function (item) {
@@ -347,7 +352,7 @@
                                 results.push({
                                     id: item.partno,
                                     text: item.partno,
-                                    orderData: item   // simpan full data untuk auto-fill
+                                    orderData: item
                                 });
                             }
                         });
@@ -357,30 +362,38 @@
                 }
             });
 
-            // Event: saat Part Number dipilih → auto-fill PO No & UOM
+            // TAMBAHAN: auto-fill request_qty
             $('#sel_partno').on('select2:select', function (e) {
                 var data = e.params.data;
                 if (data.orderData) {
                     selectedOrderData = data.orderData;
                     $('#po_no').val(data.orderData.po_no || '');
                     $('#uom').val(data.orderData.uom || '');
+                    $('#request_qty').val(data.orderData.qty || ''); // TAMBAHAN
                 }
             });
 
-            // Event: saat Part Number di-clear
             $('#sel_partno').on('select2:clear', function () {
                 selectedOrderData = {};
                 $('#po_no').val('');
                 $('#uom').val('');
+                $('#request_qty').val(''); // TAMBAHAN
             });
 
-            // ===== SUBMIT FORM =====
             $("#form_return").submit(function (e) {
                 e.preventDefault();
 
                 var partno = $("#sel_partno").val();
                 if (!partno) {
                     Swal.fire("Required!", "Please select a Part Number.", "warning");
+                    return;
+                }
+
+                // TAMBAHAN: validasi qty
+                var request_qty = parseFloat($("#request_qty").val()) || 0;
+                var qty_return = parseFloat($("#qty_return").val()) || 0;
+                if (qty_return > request_qty) {
+                    Swal.fire("Invalid!", "Return quantity cannot exceed request quantity (" + request_qty + ").", "warning");
                     return;
                 }
 
@@ -427,24 +440,22 @@
             });
         });
 
-        // ===== OPEN MODAL ADD =====
         function open_modal_add() {
             $("#form_return")[0].reset();
             $("#id_return").val("");
             $('#sel_partno').val(null).trigger('change');
             $("#po_no").val('');
             $("#uom").val('');
+            $("#request_qty").val(''); // TAMBAHAN
             $("#current_file_info").hide();
             $("#modalLabel").html('<i class="fas fa-plus-circle"></i> Create Material Return');
             $("#modal_return").modal("show");
         }
 
-        // ===== OPEN MODAL EDIT =====
         function open_modal_edit(data) {
             $("#form_return")[0].reset();
             $("#id_return").val(data.id_return);
 
-            // Set partno ke Select2
             if (data.partno) {
                 var option = new Option(data.partno, data.partno, true, true);
                 $('#sel_partno').empty().append(option).trigger('change');
@@ -452,9 +463,9 @@
                 $('#sel_partno').val(null).trigger('change');
             }
 
-            // Auto-fill PO No & UOM dari data yang ada
             $("#po_no").val(data.po_no || '');
             $("#uom").val(data.uom || '');
+            $("#request_qty").val(data.qty || ''); // TAMBAHAN
             $("#qty_return").val(data.qty_return);
             $("#condition").val(data.condition);
             $("#remark").val(data.reason_return);
@@ -471,7 +482,6 @@
             $("#modal_return").modal("show");
         }
 
-        // ===== DELETE =====
         function delete_data(id) {
             Swal.fire({
                 title: 'Are you sure?',
