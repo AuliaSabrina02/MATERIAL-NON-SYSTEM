@@ -4,6 +4,7 @@ namespace SEMB_ERP.Models
 {
     public class MaterialReturnModel
     {
+        [Key]
         public int id_return { get; set; }
 
         // Kolom Baru

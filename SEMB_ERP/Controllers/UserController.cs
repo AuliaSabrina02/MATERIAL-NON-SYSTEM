@@ -149,6 +149,67 @@ namespace SEMB_ERP.Controllers
             return View();
         }
 
+        [HttpGet]
+        public IActionResult GetOrderListByStatusJson(string status, string search = "")
+        {
+            try
+            {
+                string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                List<string> user_roles = User.Claims
+                                              .Where(c => c.Type == "semb_erp_role")
+                                              .Select(c => c.Value)
+                                              .ToList();
+                if (string.IsNullOrEmpty(sesa_id))
+                    return Unauthorized("Sesi anda berakhir atau ID User tidak ditemukan.");
+
+                var db = new DatabaseAccessLayer();
+                List<UserDetailModel> userDetail = db.GetUserDetail(sesa_id);
+                if (userDetail == null || !userDetail.Any())
+                    return BadRequest("Detail user tidak ditemukan di database.");
+
+                var user = userDetail.First();
+                var departments = string.IsNullOrEmpty(user.other_dept)
+                    ? new List<string>()
+                    : user.other_dept.Split(',').Select(d => d.Trim()).ToList();
+
+                var query = _context.v_order.Where(o => o.status_desc == status);
+
+                if (!string.IsNullOrEmpty(search))
+                    query = query.Where(o => o.partno.Contains(search));
+
+                if (!user_roles.Contains("admin") && !user_roles.Contains("receiver"))
+                    query = query.Where(o => o.pic == sesa_id || departments.Contains(o.pic_department));
+
+                var orderData = query.Select(o => new OrderListModel
+                {
+                    id_order = o.id_order,
+                    partno = o.partno,
+                    po_no = o.po_no,
+                    qty = o.qty,
+                    uom = o.uom,
+                    status_desc = o.status_desc,
+                    record_date = o.record_date
+                }).ToList();
+
+                return Json(orderData);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetTotalReturned(string partno, string po_no)
+        {
+            var total = _context.material_return
+                    .Where(r => r.partno == partno
+         && r.po_no == po_no)
+                .Sum(r => (decimal?)r.qty_return) ?? 0;
+
+            return Json(total);
+        }
+
         [HttpPost]
         public string CreateReturn(MaterialReturnModel model, IFormFile image_support_file)
         {
