@@ -819,7 +819,7 @@ OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY";
                     if (image_support_file != null && image_support_file.Length > 0)
                     {
                         // Menggunakan System.IO secara eksplisit untuk menghindari error 'Path'
-                        string uploadFolder = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Uploads");
+                        string uploadFolder = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "returns");
                         if (!Directory.Exists(uploadFolder)) Directory.CreateDirectory(uploadFolder);
 
                         fileName = Guid.NewGuid().ToString() + System.IO.Path.GetExtension(image_support_file.FileName);
@@ -833,17 +833,17 @@ OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY";
 
                     // Query diperbarui: pic_updater dihapus agar tidak error
                     string query = @"
-                UPDATE material_return 
-                SET request_no = @request_no,
-                    project_name = @project_name,
-                    po_no = @po_no, 
-                    partno = @partno, 
-                    qty_return = @qty_return, 
-                    uom = @uom, 
-                    condition = @condition, 
-                    reason_return = @reason_return,
-                    storage_requirement = @storage_requirement,
-                    update_date = GETDATE() " +
+          UPDATE material_return 
+          SET request_no = @request_no,
+              project_name = @project_name,
+              po_no = @po_no, 
+              partno = @partno, 
+              qty_return = @qty_return, 
+              uom = @uom, 
+              condition = @condition, 
+              reason_return = @reason_return,
+              storage_requirement = @storage_requirement,
+              update_date = GETDATE() " +
                             (fileName != null ? ", image_support = @image_support " : "") +
                         " WHERE id_return = @id_return";
 
