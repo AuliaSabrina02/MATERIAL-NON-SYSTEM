@@ -177,7 +177,7 @@
                             @if (user_roles.HasAnyRole("admin"))
                             {
                                 <li class="nav-item">
-                                    <a href="@Url.Action("DashboardAdmin", "User")" class="nav-link @Html.IsActive("Admin", "DashboardAdmin")">
+                                    <a href="@Url.Action("DashboardAdmin", "User")" class="nav-link @Html.IsActive("User", "DashboardAdmin")">
                                         <i class="nav-icon fas fa-user-shield"></i>
                                         <p>Dashboard Admin</p>
                                     </a>

@@ -20,5 +20,7 @@ namespace SEMB_ERP.Models
         public DateTime? close_date { get; set; }
         public string? closed_by { get; set; }
         public string? close_comment { get; set; }
+        public string? pic_sesa { get; set; }
+        public string? created_by_sesa { get; set; }
     }
 }

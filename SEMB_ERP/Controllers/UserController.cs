@@ -2039,7 +2039,10 @@ namespace SEMB_ERP.Controllers
                 int skip = start != null ? Convert.ToInt32(start) : 0;
                 int recordsTotal = 0;
                 var mstData = (from NonConfList in _context.V_NON_CONF
-                               where NonConfList.pic == sesa_id
+                               where NonConfList.created_by_sesa == sesa_id
+   || user_roles.Contains("receiver")
+   || user_roles.Contains("admin")
+   || (user_roles.Contains("requestor") && NonConfList.pic_sesa == sesa_id)
                                select
                                    new
                                    {
@@ -2054,6 +2057,7 @@ namespace SEMB_ERP.Controllers
                                        NonConfList.category_issue,
                                        NonConfList.detail_issue,
                                        NonConfList.file_doc,
+                                       NonConfList.is_close,
                                        NonConfList.created_by,
                                        NonConfList.close_date,
                                        NonConfList.closed_by,
@@ -4759,9 +4763,16 @@ namespace SEMB_ERP.Controllers
         public IActionResult GetRecentNonConf()
         {
             string sesa_id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            List<string> user_roles = User.Claims
+                .Where(c => c.Type == "semb_erp_role")
+                .Select(c => c.Value)
+                .ToList();
 
             var data = _context.V_NON_CONF
-                .Where(x => x.pic == sesa_id)
+                .Where(x => x.created_by_sesa == sesa_id
+                    || user_roles.Contains("receiver")
+                    || user_roles.Contains("admin")
+                    || (user_roles.Contains("requestor") && x.pic_sesa == sesa_id))
                 .OrderByDescending(x => x.id_non_conf)
                 .Take(5)
                 .Select(x => new {
