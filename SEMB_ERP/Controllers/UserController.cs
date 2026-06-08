@@ -2131,6 +2131,33 @@ namespace SEMB_ERP.Controllers
             }
         }
 
+
+
+        [Authorize(Policy = "RequireRequestor")]
+ public JsonResult GetTemplateById(int id_template)
+ {
+     var db = new DatabaseAccessLayer();
+     var data = db.GetOrderTemplateById(id_template);
+     return Json(data);
+ }
+        [Authorize(Policy = "RequireRequestor")]
+        [HttpPost]
+        public JsonResult EditTemplate(OrderTemplateModel model)
+        {
+            try
+            {
+                var db = new DatabaseAccessLayer();
+                string result = db.UpdateOrderTemplate(model);
+                if (result.StartsWith("success"))
+                    return Json(new { status = "success", message = "Template updated successfully" });
+                else
+                    return Json(new { status = "error", message = result.Split(';')[1] });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { status = "error", message = ex.Message });
+            }
+        }
         [HttpGet]
         public IActionResult GetRequestListByStatus(string status)
         {

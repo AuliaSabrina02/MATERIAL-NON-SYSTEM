@@ -111,6 +111,106 @@ namespace SEMB_ERP.Function
             return dataList;
         }
 
+
+        public OrderTemplateModel GetOrderTemplateById(int id_template)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                string query = "SELECT * FROM tbl_order_template WHERE id_template = @id_template";
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@id_template", id_template);
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            return new OrderTemplateModel
+                            {
+                                id_template = Convert.ToInt32(reader["id_template"]),
+                                material_type = reader["material_type"]?.ToString(),
+                                partno = reader["partno"]?.ToString(),
+                                po_no = reader["po_no"]?.ToString(),
+                                qty = reader["qty"]?.ToString(),
+                                uom = reader["uom"]?.ToString(),
+                                revision = reader["revision"]?.ToString(),
+                                project_name = reader["project_name"]?.ToString(),
+                                storage_requirement = reader["storage_requirement"]?.ToString(),
+                                supplier_name = reader["supplier_name"]?.ToString(),
+                                order_type = reader["order_type"]?.ToString(),
+                                unit_price = reader["unit_price"]?.ToString(),
+                                priority_request = reader["priority_request"]?.ToString(),
+                                length_mm = reader["length_mm"]?.ToString(),
+                                width_mm = reader["width_mm"]?.ToString(),
+                                height_mm = reader["height_mm"]?.ToString(),
+                                gatepass = reader["gatepass"]?.ToString(),
+                                remark = reader["remark"]?.ToString()
+                            };
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        public string UpdateOrderTemplate(OrderTemplateModel template)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    string query = @"
+           UPDATE tbl_order_template SET
+               material_type        = @material_type,
+               partno               = @partno,
+               po_no                = @po_no,
+               qty                  = @qty,
+               uom                  = @uom,
+               revision             = @revision,
+               project_name         = @project_name,
+               storage_requirement  = @storage_requirement,
+               supplier_name        = @supplier_name,
+               order_type           = @order_type,
+               unit_price           = @unit_price,
+               priority_request     = @priority_request,
+               length_mm            = @length_mm,
+               width_mm             = @width_mm,
+               height_mm            = @height_mm,
+               gatepass             = @gatepass,
+               remark               = @remark
+           WHERE id_template = @id_template";
+
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@id_template", template.id_template);
+                        cmd.Parameters.AddWithValue("@material_type", template.material_type ?? "");
+                        cmd.Parameters.AddWithValue("@partno", template.partno ?? "");
+                        cmd.Parameters.AddWithValue("@po_no", template.po_no ?? "");
+                        cmd.Parameters.AddWithValue("@qty", template.qty ?? "0");
+                        cmd.Parameters.AddWithValue("@uom", template.uom ?? "");
+                        cmd.Parameters.AddWithValue("@revision", template.revision ?? "");
+                        cmd.Parameters.AddWithValue("@project_name", template.project_name ?? "");
+                        cmd.Parameters.AddWithValue("@storage_requirement", template.storage_requirement ?? "");
+                        cmd.Parameters.AddWithValue("@supplier_name", template.supplier_name ?? "");
+                        cmd.Parameters.AddWithValue("@order_type", template.order_type ?? "");
+                        cmd.Parameters.AddWithValue("@unit_price", template.unit_price ?? "0");
+                        cmd.Parameters.AddWithValue("@priority_request", template.priority_request ?? "");
+                        cmd.Parameters.AddWithValue("@length_mm", template.length_mm ?? "0");
+                        cmd.Parameters.AddWithValue("@width_mm", template.width_mm ?? "0");
+                        cmd.Parameters.AddWithValue("@height_mm", template.height_mm ?? "0");
+                        cmd.Parameters.AddWithValue("@gatepass", template.gatepass ?? "");
+                        cmd.Parameters.AddWithValue("@remark", template.remark ?? "");
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                return "success;Template updated successfully!";
+            }
+            catch (Exception ex)
+            {
+                return "error;" + ex.Message;
+            }
+        }
         public string SaveOrderTemplate(OrderTemplateModel template)
         {
             try
