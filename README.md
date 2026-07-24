@@ -12,7 +12,7 @@
 <img src="https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white">
 </p>
 
-A web-based Material Non System management application designed to streamline material requests, reservations, receiving, put away, picking, and warehouse monitoring within a single integrated platform.
+A web-based application designed to streamline the management of non-system materials by integrating material requests, reservations, receiving, put away, picking, and warehouse monitoring into a single platform.
 
 </div>
 
@@ -20,11 +20,9 @@ A web-based Material Non System management application designed to streamline ma
 
 # 📋 Overview
 
-Material Non System is a web-based application developed to support the management of non-system materials in warehouse operations at PT XYZ Manufacturing Batam.
+Material Non System is a web-based application developed to improve the management of non-system materials in warehouse operations. The system centralizes the entire material workflow, from request creation to warehouse monitoring, helping reduce manual processes and improve operational efficiency.
 
-The system aims to improve operational efficiency by reducing manual processes, centralizing material management, and providing real-time monitoring throughout the entire material lifecycle.
-
-It supports end-to-end warehouse operations, including material requests, reservations, receiving, put away, picking, scheduling, and monitoring through an integrated dashboard.
+The application supports multiple user roles and provides real-time visibility into warehouse activities through an integrated dashboard.
 
 ---
 
@@ -38,16 +36,16 @@ It supports end-to-end warehouse operations, including material requests, reserv
 
 ## 📦 Material Request
 
-- Create material requests
+- Create new material requests
 - View request history
-- Track request status
 - Search and filter requests
+- Track request status
 
 ## 📅 Material Reservation
 
 - Reserve materials before picking
-- Track reservation status
 - View reservation history
+- Track reservation status
 
 ## 📥 Receiving
 
@@ -64,52 +62,53 @@ It supports end-to-end warehouse operations, including material requests, reserv
 
 - Process material picking
 - Confirm picking completion
-- Track material delivery
+- Track delivery status
 
 ## 📊 Dashboard Monitoring
 
-- Real-time warehouse dashboard
-- Material statistics and reports
-- Operational monitoring
+- Real-time dashboard
+- Warehouse activity monitoring
+- Material statistics
 
 ## 💬 Discussion Room
 
-- Internal communication for requests
-- Discussion history and collaboration
+- Internal communication
+- Discussion history for each request
 
 ## 📆 Project Schedule
 
 - Schedule warehouse activities
-- Calendar-based planning
+- Calendar view
 - Deadline monitoring
 
 ## ⚠ Priority Request
 
-- Manage high-priority requests
-- Accelerate request processing
+- Manage urgent requests
+- Priority request processing
 
 ## 🚨 Pallet Problem
 
 - Report damaged pallets
-- Monitor issue resolution
+- Track problem resolution
 
 ---
 
 # 🛠 Tech Stack
 
-| Layer | Technology |
-|--------|------------|
-| Framework | ASP.NET Core MVC |
-| Programming Language | C# |
-| Database | Microsoft SQL Server |
-| Frontend | HTML5, CSS3, Bootstrap |
-| Client-side Scripting | JavaScript, jQuery |
-| IDE | Visual Studio 2022 |
-| Version Control | Git & GitHub |
+This project leverages a modern technology stack to build a scalable, maintainable, and user-friendly web application.
+
+| Technology | Badge |
+|------------|-------|
+| **Backend Framework** | ![ASP.NET Core MVC](https://img.shields.io/badge/ASP.NET_Core_MVC-512BD4?style=flat-square&logo=dotnet&logoColor=white) |
+| **Programming Language** | ![C#](https://img.shields.io/badge/C%23-239120?style=flat-square&logo=c-sharp&logoColor=white) |
+| **Database** | ![Microsoft SQL Server](https://img.shields.io/badge/Microsoft_SQL_Server-CC2927?style=flat-square&logo=microsoftsqlserver&logoColor=white) |
+| **Frontend** | ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white) ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white) ![Bootstrap](https://img.shields.io/badge/Bootstrap-7952B3?style=flat-square&logo=bootstrap&logoColor=white) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black) ![jQuery](https://img.shields.io/badge/jQuery-0769AD?style=flat-square&logo=jquery&logoColor=white) |
+| **IDE** | ![Visual Studio](https://img.shields.io/badge/Visual_Studio-5C2D91?style=flat-square&logo=visualstudio&logoColor=white) |
+| **Version Control** | ![Git](https://img.shields.io/badge/Git-F05032?style=flat-square&logo=git&logoColor=white) ![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white) |
 
 ---
 
-# ⚙ Installation & Setup
+# ⚙️ Installation
 
 ## Prerequisites
 
@@ -117,14 +116,16 @@ It supports end-to-end warehouse operations, including material requests, reserv
 - .NET SDK
 - Microsoft SQL Server
 - SQL Server Management Studio (SSMS)
+- Git
 
-## Clone the Repository
+## Clone Repository
 
 ```bash
 git clone https://github.com/AuliaSabrina02/MATERIAL-NON-SYSTEM.git
+cd MATERIAL-NON-SYSTEM
 ```
 
-## Configure the Database
+## Configure Database
 
 Update the SQL Server connection string in:
 
@@ -132,7 +133,9 @@ Update the SQL Server connection string in:
 appsettings.json
 ```
 
-## Build and Run
+Configure the connection according to your local SQL Server instance.
+
+## Restore and Run
 
 ```bash
 dotnet restore
@@ -140,7 +143,7 @@ dotnet build
 dotnet run
 ```
 
-Or simply open the solution in **Visual Studio** and press **F5** to start the application.
+Or simply open the solution file (`SEMB_ERP.sln`) in **Visual Studio** and press **F5**.
 
 ---
 
@@ -151,10 +154,14 @@ SEMB_ERP/
 ├── Controllers/
 ├── Models/
 ├── Views/
-├── wwwroot/
 ├── Services/
 ├── Data/
 ├── Helpers/
+├── wwwroot/
+│   ├── css/
+│   ├── js/
+│   ├── images/
+│   └── uploads/
 ├── Program.cs
 ├── appsettings.json
 └── SEMB_ERP.sln
