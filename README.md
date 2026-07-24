@@ -148,7 +148,7 @@ This project leverages a modern technology stack to build a scalable, maintainab
 
 ---
 
-# ⚙️ Instalasi (Installation)
+# ⚙️ Installation
 
 Follow these steps to get SEMB ERP up and running on your local machine.
 
