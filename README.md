@@ -148,71 +148,89 @@ This project leverages a modern technology stack to build a scalable, maintainab
 
 ---
 
-# ⚙️ Installation & Setup
+# ⚙️ Instalasi (Installation)
+
+Follow these steps to get SEMB ERP up and running on your local machine.
 
 ## Prerequisites
 
-Before running this project, make sure the following tools are installed:
+Before you begin, ensure you have the following installed:
 
-- Visual Studio 2022
-- .NET SDK
-- Microsoft SQL Server
-- SQL Server Management Studio (SSMS)
-- Git
+- **.NET SDK**: Version 6.0 or newer.
+- **Visual Studio**: 2019 or newer (Community, Professional, or Enterprise edition). Alternatively, you can use Visual Studio Code with the C# extension.
+- **SQL Server**: SQL Server LocalDB, SQL Server Express, or a full SQL Server instance.
 
 ---
 
-## Clone Repository
+## Step-by-Step Installation
+
+### 1. Clone the Repository
+
+Open your terminal or command prompt and clone the project:
 
 ```bash
 git clone https://github.com/AuliaSabrina02/MATERIAL-NON-SYSTEM.git
-
-cd MATERIAL-NON-SYSTEM
 ```
 
----
+### 2. Navigate to Project Directory
 
-## Configure Database
-
-Update the database connection string in:
-
-```text
-appsettings.json
-```
-
-Configure the connection according to your SQL Server environment.
-
----
-
-## Restore Database
-
-Restore the required SQL Server database before running the application.
-
----
-
-## Build and Run
-
-Using command line:
+Change your directory to the main project folder:
 
 ```bash
-dotnet restore
+cd MATERIAL-NON-SYSTEM/SEMB_ERP
+```
 
-dotnet build
+### 3. Open in Visual Studio
 
+Open the solution file `SEMB_ERP.sln` in Visual Studio.
+
+### 4. Restore NuGet Packages
+
+Visual Studio should automatically restore all necessary NuGet packages. If not, right-click on the solution in the Solution Explorer and select **"Restore NuGet Packages"**.
+
+### 5. Database Configuration
+
+- Open `appsettings.json` (and `appsettings.Development.json` for development environment settings) located in the `SEMB_ERP` project folder.
+- Update the `ConnectionStrings:DefaultConnection` entry to point to your local SQL Server instance.
+
+Example for SQL Server LocalDB:
+
+```json
+"ConnectionStrings": {
+  "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=SembErpDb;Trusted_Connection=True;MultipleActiveResultSets=true"
+}
+```
+
+### 6. Database Setup (Choose ONE option)
+
+**Option A: Using Entity Framework Core Migrations (Recommended)**
+
+1. Open the Package Manager Console in Visual Studio (Go to **Tools > NuGet Package Manager > Package Manager Console**).
+2. Ensure `SEMB_ERP` is selected as the default project in the console dropdown.
+3. Run the following command to apply any pending migrations and create the database schema:
+
+```powershell
+Update-Database
+```
+
+**Option B: Manual Database Setup**
+
+If Entity Framework Core migrations are not configured or preferred, you will need to manually create the database and its tables. Review the `Models` directory and `DatabaseAccessLayer.cs` for schema details and implement your database creation script accordingly.
+
+### 7. Build the Project
+
+Build the entire solution to ensure all dependencies are resolved and the project compiles successfully. You can do this by going to **Build > Build Solution** in Visual Studio, or by pressing **Ctrl + Shift + B**.
+
+### 8. Run the Application
+
+- Press **F5** in Visual Studio to run the application with debugging.
+- Alternatively, open a terminal in the `SEMB_ERP` project directory and run:
+
+```bash
 dotnet run
 ```
 
-Or open the solution file:
-
-```text
-SEMB_ERP.sln
-```
-
-using Visual Studio and press:
-
-```
-F5 (Start Debugging)
-```
+The application will typically launch in your default web browser at an address like `https://localhost:xxxx` (where `xxxx` is a dynamically assigned port number).
 
 ---
 
