@@ -2,6 +2,7 @@
 
 # 📦 Material Non System
 
+### Web-Based Material Management System
 
 <p>
 <img src="https://img.shields.io/badge/ASP.NET_Core_MVC-512BD4?style=for-the-badge&logo=dotnet&logoColor=white">
@@ -11,7 +12,7 @@
 <img src="https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white">
 </p>
 
-Sistem pengelolaan **Material Non System** berbasis web yang membantu proses material request, reservation, receiving, put away, picking, serta monitoring aktivitas warehouse secara terintegrasi.
+A web-based Material Non System management application designed to streamline material requests, reservations, receiving, put away, picking, and warehouse monitoring within a single integrated platform.
 
 </div>
 
@@ -19,9 +20,11 @@ Sistem pengelolaan **Material Non System** berbasis web yang membantu proses mat
 
 # 📋 Overview
 
-Material Non System adalah aplikasi berbasis web yang dikembangkan untuk membantu pengelolaan material non-system di lingkungan warehouse PT XYZ Manufacturing Batam. Sistem ini dirancang untuk mengurangi proses manual, meningkatkan efisiensi operasional, serta menyediakan monitoring status material secara real-time.
+Material Non System is a web-based application developed to support the management of non-system materials in warehouse operations at PT XYZ Manufacturing Batam.
 
-Aplikasi mendukung seluruh alur pengelolaan material mulai dari proses request, reservation, receiving, put away, picking, hingga monitoring melalui dashboard dalam satu platform yang terintegrasi.
+The system aims to improve operational efficiency by reducing manual processes, centralizing material management, and providing real-time monitoring throughout the entire material lifecycle.
+
+It supports end-to-end warehouse operations, including material requests, reservations, receiving, put away, picking, scheduling, and monitoring through an integrated dashboard.
 
 ---
 
@@ -29,66 +32,66 @@ Aplikasi mendukung seluruh alur pengelolaan material mulai dari proses request, 
 
 ## 🔐 Authentication & Authorization
 
-- Login Authentication
-- Role-based Access Control
-- Session Management
+- Secure user authentication
+- Role-based access control
+- Session management
 
 ## 📦 Material Request
 
-- Create Material Request
-- Request History
-- Request Status Tracking
-- Search & Filter Request
+- Create material requests
+- View request history
+- Track request status
+- Search and filter requests
 
 ## 📅 Material Reservation
 
-- Material Reservation
-- Reservation Status
-- Reservation History
+- Reserve materials before picking
+- Track reservation status
+- View reservation history
 
 ## 📥 Receiving
 
-- Material Receiving
-- Material Verification
-- Receiving Status
+- Record incoming materials
+- Verify received materials
+- Update receiving status
 
 ## 📦 Put Away
 
-- Storage Location Assignment
-- Rack/Bin Management
+- Assign storage locations
+- Manage rack and bin locations
 
 ## 🚚 Picking
 
-- Picking Process
-- Picking Confirmation
-- Material Delivery Tracking
+- Process material picking
+- Confirm picking completion
+- Track material delivery
 
 ## 📊 Dashboard Monitoring
 
-- Material Statistics
-- Warehouse Monitoring
-- Real-time Dashboard
+- Real-time warehouse dashboard
+- Material statistics and reports
+- Operational monitoring
 
 ## 💬 Discussion Room
 
-- Discussion per Request
-- Internal Communication
+- Internal communication for requests
+- Discussion history and collaboration
 
 ## 📆 Project Schedule
 
-- Schedule Management
-- Calendar View
-- Deadline Monitoring
+- Schedule warehouse activities
+- Calendar-based planning
+- Deadline monitoring
 
 ## ⚠ Priority Request
 
-- Priority Material Request
-- Fast Request Processing
+- Manage high-priority requests
+- Accelerate request processing
 
 ## 🚨 Pallet Problem
 
-- Report Damaged Pallet
-- Problem Monitoring
+- Report damaged pallets
+- Monitor issue resolution
 
 ---
 
@@ -97,39 +100,39 @@ Aplikasi mendukung seluruh alur pengelolaan material mulai dari proses request, 
 | Layer | Technology |
 |--------|------------|
 | Framework | ASP.NET Core MVC |
-| Language | C# |
+| Programming Language | C# |
 | Database | Microsoft SQL Server |
 | Frontend | HTML5, CSS3, Bootstrap |
-| Client Script | JavaScript, jQuery |
+| Client-side Scripting | JavaScript, jQuery |
 | IDE | Visual Studio 2022 |
 | Version Control | Git & GitHub |
 
 ---
 
-# ⚙ Installation
+# ⚙ Installation & Setup
 
 ## Prerequisites
 
 - Visual Studio 2022
 - .NET SDK
-- SQL Server
+- Microsoft SQL Server
 - SQL Server Management Studio (SSMS)
 
-## Clone Repository
+## Clone the Repository
 
 ```bash
 git clone https://github.com/AuliaSabrina02/MATERIAL-NON-SYSTEM.git
 ```
 
-## Configure Database
+## Configure the Database
 
-Update the SQL Server connection string inside:
+Update the SQL Server connection string in:
 
-```
+```text
 appsettings.json
 ```
 
-## Run Application
+## Build and Run
 
 ```bash
 dotnet restore
@@ -137,7 +140,7 @@ dotnet build
 dotnet run
 ```
 
-atau jalankan melalui **Visual Studio** dengan menekan **F5**.
+Or simply open the solution in **Visual Studio** and press **F5** to start the application.
 
 ---
 
@@ -169,4 +172,4 @@ SEMB_ERP/
 
 # 📄 License
 
-This project was developed for educational purposes as a Final Project.
+This project was developed for educational purposes as part of a Final Project.
