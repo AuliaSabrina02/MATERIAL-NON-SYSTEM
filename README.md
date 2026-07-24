@@ -20,11 +20,11 @@ A web-based application designed to manage non-system materials by integrating m
 
 # 📋 Overview
 
-Material Non System is a web-based warehouse management application developed to support the management of non-system materials at PT XYZ Manufacturing Batam.
+Material Non System is a web-based warehouse management application developed to support non-system material management in a manufacturing environment.
 
-The system is designed to improve warehouse operational efficiency by reducing manual processes, centralizing material information, and providing better visibility of material activities.
+The system is designed to improve warehouse operational efficiency by reducing manual processes, organizing material information, and providing better visibility of material activities.
 
-The application manages the complete material workflow, starting from material requests, reservation, receiving, put away, picking, scheduling, and monitoring through an integrated dashboard.
+The application manages the material workflow, including material requests, reservations, receiving, put away, picking, scheduling, and monitoring through an integrated dashboard.
 
 ---
 
