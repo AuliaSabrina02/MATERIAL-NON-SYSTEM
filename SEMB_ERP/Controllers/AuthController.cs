@@ -1,4 +1,5 @@
-﻿using SEMB_ERP.Function;
+
+using SEMB_ERP.Function;
 using SEMB_ERP.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Data.SqlClient;
