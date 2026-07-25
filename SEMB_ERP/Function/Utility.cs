@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+
+using Microsoft.AspNetCore.Http;
 
 namespace SEMB_ERP.Function
 {
