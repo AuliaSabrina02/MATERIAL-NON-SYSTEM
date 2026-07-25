@@ -48,14 +48,6 @@ The application manages the material workflow, including material requests, rese
 
 ---
 
-## 📅 Material Reservation
-
-- Reserve materials before picking
-- Manage reservation data
-- Track reservation status
-- View reservation history
-
----
 
 ## 📥 Receiving
 
