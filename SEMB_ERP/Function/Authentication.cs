@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+
+using System.Security.Cryptography;
 using System.Text;
 
 namespace SEMB_ERP.Function
